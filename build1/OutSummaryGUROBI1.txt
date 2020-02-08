@@ -1,0 +1,4 @@
+
+Total Number of Structural Constraints (Rows) is: 84
+
+Total Number of Decision Variables (Columns) is: 30
