@@ -1,5 +1,5 @@
 # HorMILP.cpp : Defines the entry point for the centralized/merged regions/Single control area Horizontal Investment Coordination MILP Simulation application.
-# Main Method for running the Horizontal Investment Coordination MILP Simulation
+# Main Method for running the Horizontal Investment Coordination MILP Simulation; Parts of the code follows the code design philosophy of Nick Laws of NREL
 import julia
 import os
 import subprocess
@@ -27,7 +27,7 @@ julSol = julia.Julia()
 julSol.using("Pkg")
 julSol.eval('Pkg.activate(".")')
 julSol.include(os.path.join("JuMP_src", "HorMILPCentralized.jl")) # definition of Gensolver class for base case scenario first interval
-log.info(("Julia took {:..2f} seconds to start and include LASCOPF models.".format(profiler.get_interval())))
+log.info(("Julia took {:..2f} seconds to start and include Horizontal Investment Coordination centralized models.".format(profiler.get_interval())))
 
 def HorMILPCentral(): # Main method begins program execution
 	'''Future Work
