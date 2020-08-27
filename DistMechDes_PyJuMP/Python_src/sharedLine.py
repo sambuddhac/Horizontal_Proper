@@ -40,60 +40,47 @@ class SELine(object):
 			return self.toZone #returns the ID number of the to zone if the intra-zonal node is the to node 
 		#end of getIntlZoneID() function
 
-	def getExtNodeID(): #returns ID number of outer-zonal node end to which the transmission line is connected
-{
-	if (fromToFlag==1)
-		return toNode; // returns the ID number of the from zone if the intra-zonal node is the from node
-	else 
-		return fromNode; // returns the ID number of the to zone if the intra-zonal node is the to node
-} // end of getGenNodeID function
+	def getExtNodeID(self): #returns ID number of outer-zonal node end to which the transmission line is connected
+		if self.fromToFlag==1:
+			return self.toNode #returns the ID number of the from zone if the intra-zonal node is the from node
+		else:
+			return self.fromNode #returns the ID number of the to zone if the intra-zonal node is the to node
+		#end of getGenNodeID function
 
-	def getExtZoneID(): #returns ID number of outer-zonal node end zone to which the transmission line is connected
-{
-	if (fromToFlag==1)
-		return toZone; // returns the ID number of the from zone if the intra-zonal node is the from node
-	else 
-		return fromZone; // returns the ID number of the to zone if the intra-zonal node is the to node
-} // end of getGenNodeID function
+	def getExtZoneID(self): #returns ID number of outer-zonal node end zone to which the transmission line is connected
+		if self.fromToFlag==1:
+			return self.toZone #returns the ID number of the from zone if the intra-zonal node is the from node
+		else:
+			return self.fromZone #returns the ID number of the to zone if the intra-zonal node is the to node
+		#end of getGenNodeID function
 
-	def getExtNodeRank(): #function getGenNodeID begins
-{
-	return otherNodeRank; // returns the ID number of the node to which the generator object is connected
-} // end of getGenNodeID function
+	def getExtNodeRank(self): #function getGenNodeID begins
+		return self.otherNodeRank #returns the ID number of the node to which the generator object is connected
+		#end of getGenNodeID function
 
-	def getExtNodeGlobalRank(): #function getExtNodeGlobalRank for the outside-zone node ID begins
-{
-	return otherNodeGlobal; // returns the global rank of the outside-zone node to which the SE line object is connected
-} // end of getExtNodeGlobalRank function
+	def getExtNodeGlobalRank(self): #function getExtNodeGlobalRank for the outside-zone node ID begins
+		return self.otherNodeGlobal #returns the global rank of the outside-zone node to which the SE line object is connected
+		#end of getExtNodeGlobalRank function
 
-	def getFlowLimit(): #Function getFlowLimit gets the value of power flow line limit	
-{
-	return ptMax;
-} // Function getFlowLimit ends
+	def getFlowLimit(self): #Function getFlowLimit gets the value of power flow line limit
+		return self.ptMax
+	#Function getFlowLimit ends
 
-	def getFlowDir(): #returns the value of the direction flag indicating whether the intra-zonal node end of the line is from (+1) or to (-1) end
-{
-	return fromToFlag;
-} // Function getFlowDir ends
+	def getFlowDir(self): #returns the value of the direction flag indicating whether the intra-zonal node end of the line is from (+1) or to (-1) end
+		return self.fromToFlag
+	#Function getFlowDir ends
 
-	def outerNodeIndex(int rankOfOuterNode, int dirFlag):
-{
-	otherNodeRank=rankOfOuterNode;
-	fromToOuter=dirFlag;
-	connNodetPtr->sendExtNodeInfo( otherNodeRank, fromToOuter, reacT, 0 );
-}
+	def outerNodeIndex(self, rankOfOuterNode, dirFlag):
+		self.otherNodeRank=rankOfOuterNode
+		self.fromToOuter=dirFlag
+		self.connNodetPtr.sendExtNodeInfo(self.otherNodeRank, self.fromToOuter, self.reacT, 0)
 
-	def getReactance():
-{
-	return reacT;
-}
-	def assignRank(int ranking): #assigns rank to the from/to node
-{
-	connNodetPtr->assignGlobalRank(ranking);		
-}
+	def getReactance(self):
+		return self.reacT
 
-	def connectRank(int ranking): #assigns rank to otherNodeGlobal
-{
-	otherNodeGlobal = ranking;
-	connNodetPtr->populateGlobalConn(ranking);		
-}
+	def assignRank(self, ranking): #assigns rank to the from/to node
+		self.connNodetPtr.assignGlobalRank(ranking)
+
+	def connectRank(self, ranking): #assigns rank to otherNodeGlobal
+		self.otherNodeGlobal = ranking
+		self.connNodetPtr.populateGlobalConn(ranking)
