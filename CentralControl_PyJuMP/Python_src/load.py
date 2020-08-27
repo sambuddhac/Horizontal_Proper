@@ -13,7 +13,7 @@ class Load(object):
 		self.connNodelPtr.setlConn(idOfLoad, self.Pl) #increments the load connection variable to node
 		#constructor ends
 
-	def __del__(): #destructor
+	#def __del__(): #destructor
 		#log.info("\nThe load object having ID {} have been destroyed.\n".format(self.loadID ))
 		#end of destructor
 

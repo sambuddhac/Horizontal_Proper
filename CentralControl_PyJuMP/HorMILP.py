@@ -32,7 +32,7 @@ log.info(("Julia took {:..2f} seconds to start and include Horizontal Investment
 def HorMILPCentral(): # Main method begins program execution
 	'''Future Work
 	#Choose the type of objective function
-    '''
+    	'''
 	systemChoice = int(input("Choose the type of System to be simulated: 1 for Simple two bus/two region, 2 for system combined of IEEE 14, 30, and 5 node systems"))
 	curveChoice = 1 # Number to indicate the type of Objective function among average heat rate, piecewise linear, or polynomial; Assume Average Heat Rate for now
 	# Read the master zones file, for deciding upon which other files to read for building the model

@@ -18,7 +18,7 @@ class transmissionLine(object):
 		self.connNodet2Ptr.settConn(self.idOfTransl, -1, self.reacT, self.fromNode) #increments the txr line connection variable to node 2
 		# constructor ends
 
-	def __del__(): #destructor
+	#def __del__(): #destructor
 		#log.info("\nThe transmission line object having ID {} have been destroyed.\n".format(self.translID))
 		#end of destructor
 
