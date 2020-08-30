@@ -1,5 +1,6 @@
 # HorMILP.cpp : Defines the entry point for Stage-I and Stage-II of the Horizontal Investment Coordination MILP Market Mechanism Design Simulation application.
 # Main Method for running the Horizontal Investment Coordination Stage-I and Stage-II MILP Market Mechanism Design Simulation based on Distributed Stochastic UC and APP; Parts of the code follows the code design philosophy of Nick Laws of NREL
+# Added Hosna Khajeh and Dr. Mohammad Reza Hesamzadeh as collaborators on 30th August, 2020
 import julia
 import os
 import subprocess
