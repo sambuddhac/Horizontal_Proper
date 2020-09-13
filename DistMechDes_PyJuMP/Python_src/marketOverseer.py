@@ -53,23 +53,24 @@ class Marketover(object):
 
 	def MILPMarketover(self, LagMultXi, LagMultPi, totalCandLineNum, totalSharedNodeNum): #Function MILPMarketover() implements the Mixed Integer Linear Programming Solver routine by calling GLPK routines for average heat rate objective
 		#CREATION OF THE MIP SOLVER INSTANCE */
-	clock_t begin = clock() #start the timer
-	vector<int>::iterator diffZNIt; // Iterator for diffZoneNodeID
-	vector<Node*>::iterator nodeIterator; // Iterator for node objects
-	vector<double>::iterator candCapIterator; // Iterator for candidate lines for capacity
-	vector<int>::iterator candIterator; // Iterator for candidate lines	
-	vector<double>::iterator exsharedCapIterator; // Iterator for shared existing lines for capacity
-	vector<int>::iterator exsharedIterator;
+		"""
+		clock_t begin = clock() #start the timer
+		vector<int>::iterator diffZNIt; // Iterator for diffZoneNodeID
+		vector<Node*>::iterator nodeIterator; // Iterator for node objects
+		vector<double>::iterator candCapIterator; // Iterator for candidate lines for capacity
+		vector<int>::iterator candIterator; // Iterator for candidate lines	
+		vector<double>::iterator exsharedCapIterator; // Iterator for shared existing lines for capacity
+		vector<int>::iterator exsharedIterator;
 
-	string outSummaryFileName = "/home/samie/code/Horizontal_Coordination_MILP_Dist_Mechanism_Design/Horizontal_Proper/output/outputSummaryGLPK/OutSummaryMOGLPK.txt";
-	ofstream outPutFile(outSummaryFileName, ios::out); // Create Output File to output the Summary of Results
-	if (!outPutFile){
+		string outSummaryFileName = "/home/samie/code/Horizontal_Coordination_MILP_Dist_Mechanism_Design/Horizontal_Proper/output/outputSummaryGLPK/OutSummaryMOGLPK.txt";
+		ofstream outPutFile(outSummaryFileName, ios::out); // Create Output File to output the Summary of Results
+		if (!outPutFile){
 		cerr << "\nCouldn't open the file" << endl;
 		exit(1);
-	}
-
-	int dimRow = countOfScenarios*(4 * candLineNumber + 2 * sharedELineNumber); // Total number of rows of the A matrix (number of structural constraints of the LP) first term to account for lower and upper line limits & lower and upper definition limits of candidate shared lines, and second term for lower and upper line limits for shared existing lines
-	int dimCol = countOfScenarios*nodeNumber+(countOfScenarios+1)*candLineNumber; // Total number of columns of the LP (number of Decision Variables) first term to account for voltage phase angles for inter-zonal lines' nodes, and second term for power flow values and binary integer decision variable values for shared candidate lines
+		}
+		"""
+		dimRow = countOfScenarios*(4 * candLineNumber + 2 * sharedELineNumber); // Total number of rows of the A matrix (number of structural constraints of the LP) first term to account for lower and upper line limits & lower and upper definition limits of candidate shared lines, and second term for lower and upper line limits for shared existing lines
+		dimCol = countOfScenarios*nodeNumber+(countOfScenarios+1)*candLineNumber; // Total number of columns of the LP (number of Decision Variables) first term to account for voltage phase angles for inter-zonal lines' nodes, and second term for power flow values and binary integer decision variable values for shared candidate lines
 	outPutFile << "\nTotal Number of Structural Constraints (Rows) is: " << dimRow << endl;
 	outPutFile << "\nTotal Number of Decision Variables (Columns) is: " << dimCol << endl;
 	//cout << "\nTotal Number of Structural Constraints (Rows) is: " << dimRow << endl;
@@ -1070,25 +1071,20 @@ class Marketover(object):
 	cout << "\nSimulation Completed.\nResults written on the different output files" << endl;
 	//%%calcMILPBounds(); // Calculate the bounds
 	return -z;
-} // Function MILP() ends
+ // Function MILP() ends
 
-	def bufferintermediateDecision(int iterCountOut):
-{
-	if (iterCountOut==0) {
-		for (int scenarioTrack = 0; scenarioTrack < countOfScenarios; ++scenarioTrack) {
-			for (int nodeTrack = 0; nodeTrack < nodeNumber; ++nodeTrack) {
-				interimContDecVarPrev.push_back(0);
-			}
-		}
-		for (int lineTrack = 0; lineTrack < candLineNumber; ++lineTrack) {
-			interimIntDecVarPrev.push_back(0);
-		}		
-	}
-	else {
-		interimContDecVarPrev = interimContDecVar;
-		interimIntDecVarPrev = interimIntDecVar;
-	}
-}
+	def bufferintermediateDecision(self, iterCountOut):
+		if iterCountOut==0: 
+			for scenarioTrack in range(self.countOfScenarios): 
+				for nodeTrack in range(self.nodeNumber):
+					self.interimContDecVarPrev.append(0)
+	
+			for lineTrack = 0; lineTrack < candLineNumber; ++lineTrack
+				interimIntDecVarPrev.push_back(0);
+		else: 
+			interimContDecVarPrev = interimContDecVar
+			interimIntDecVarPrev = interimIntDecVar
+	
 
 	def getGlobalUpper(double LagMultXi[], double LagMultPi[], double regionalUpper[], int numberOfZones): #Function getGlobalUpper() returns the global upper bound for the investment coordination problem
 {
