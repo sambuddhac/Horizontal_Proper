@@ -1,5 +1,4 @@
-#Include definition of Node class 
-from Python_src.node import Node
+#Include definition of Node class
 from Python_src.node import Node
 
 #constructor definition for the piecewise linear objective function

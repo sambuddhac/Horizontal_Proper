@@ -14,7 +14,7 @@ from Python_src.profiler import Profiler
 import gurobipy as gp
 from gurobipy import GRB
 from Python_src.nettran import Nettran
-from Python_src.marketoverseer import marketOverseer
+from Python_src.marketoverseer import Marketover
 
 profiler = Profiler()
 
@@ -30,6 +30,7 @@ julSol.using("Pkg")
 julSol.eval('Pkg.activate(".")')
 julSol.include(os.path.join("JuMP_src", "HorMILPDistMech.jl")) # definition of Gensolver class for base case scenario first interval
 log.info(("Julia took {:..2f} seconds to start and include Horizontal Investment Coordination mechanism design models.".format(profiler.get_interval())))
+
 def HorMILPCentral(): # Main method begins program execution
     	'''Future Work
 	#Choose the type of objective function
@@ -39,66 +40,29 @@ def HorMILPCentral(): # Main method begins program execution
 	curveChoice = 1 # Number to indicate the type of Objective function among average heat rate, piecewise linear, or polynomial; Assume Average Heat Rate for now
 	# Read the master zones file, for deciding upon which other files to read for building the model
 	#Read the master zones file, for deciding upon which other files to read for building the model
-	int numberOfFields; // Number of rows or individual file types for each of the zones
-	string inputMasterFile;
-	if (systemChoice==1)
-		inputMasterFile = "masterZonesSummary.json";
-	else
-		inputMasterFile = "masterZonesSummaryRevised.json";
-	UBIterate = 0.0 #Initial value for the global upper bound iterates at the end of every iteration
-	LBIterate = 0.0 #Initial value for the global lower bound iterates at the end of every iteration
-	UBItVec = [] #Vector for storing the values of the global upper bound iterates for every iteration
-	LBItVec = [] #Vector for storing the values of the global lower bound iterates for every iteration
-	ratioIterate = [] #Vector for storing the values of UB/LB iterates for every iteration
-	globalCons = [] #Vector for storing the values of global consensus for every iteration
-	ifstream zoneSummaryFile( inputMasterFile, ios::in ); // ifstream constructor opens the master zones summary file
-	stringstream buffer; // stringstream object to store the read information from the summary file
-	// exit program if ifstream could not open file
-	if ( !zoneSummaryFile ) {
-		cerr << "\nMaster file for Zones Summary could not be opened\n" << endl;
-		exit( 1 );
-	} // end if
+	systemChoice = int(input("Choose the type of System to be simulated: 1 for Simple two bus/two region, 2 for system combined of IEEE 14, 30, and 5 node systems"))
+	curveChoice = 1 # Number to indicate the type of Objective function among average heat rate, piecewise linear, or polynomial; Assume Average Heat Rate for now
+	# Read the master zones file, for deciding upon which other files to read for building the model
+	if systemChoice==1:
+		zoneSummaryFile = open(os.path.join("data", "masterZonesSummary.json")) #opens the master zones summary file
+	else:
+		zoneSummaryFile = open(os.path.join("data", "masterZonesSummaryRevised.json")) #opens the master zones summary file
+	
+	matrixFirstFile = json.load(zoneSummaryFile) #opens the file
 
-	//zoneSummaryFile >> numberOfZones >> numberOfFields; // get the number of zones and the number of fields: Future expansion
-	#Number of zones between which horizontal investment coordination for transmission lines to be built is considered
-	numberOfZones = int(input("\nEnter the number of zones")) #User input the number of zones/regions
+	numberOfZones = int(input("\nEnter the number of zones")) #Number of zones between which horizontal investment coordination for transmission lines to be built is considered
+	numberOfFields = 7 #Number of rows or individual file types for each of the zones
 	solverChoice = int(input("\nChoose either the GLPK (1) or GUROBI (2) as the Solver. ")) #Choice of the solver
 	if solverChoice==1:
 		lpMethodChoice = int(input("\nChoose either the Simplex LP Rlaxation (1) or Interior Point Method LP Relaxation (2) as the method to provide the initial basis to the Mixed Integer Unit Commitment Problem. ")) #Simplex or interior method algorithm for MILP
-	}
-	#GRBEnv* environmentGUROBI = new GRBEnv("GUROBILogFile.log"); // GUROBI Environment object for storing the different optimization models
-	numberOfFields = 7; // Number of fields
-   	buffer << zoneSummaryFile.rdbuf(); // reads the data in the summary file 
-   	string test = buffer.str(); // Extract the strings from the buffer to "test"
-
-   	//create variables that will act as "cursors". we'll take everything between them.
-   	size_t pos1 = 0;
-   	size_t pos2;
-   	//create the array to store the strings.
-   	string str[numberOfFields*numberOfZones];
-	#Read the summary input file
-   	for i in range(numberOfFields):
-		for j in range(numberOfZones):
-			if j==numberOfZones-1:
-				pos2 = test.find("\n", pos1); //search for the bar "\n". pos2 will be where the bar was found.
-        			str[i*numberOfZones+j] = test.substr(pos1, (pos2-pos1)); //make a substring, wich is nothing more 
-                                              //than a copy of a fragment of the big string.
-        			pos1 = pos2+1; // sets pos1 to the next character after pos2.
-			else:
-        			pos2 = test.find(" ", pos1); //search for the bar " ". pos2 will be where the bar was found.
-        			str[i*numberOfZones+j] = test.substr(pos1, (pos2-pos1)); //make a substring, wich is nothing more 
-                                              //than a copy of a fragment of the big string.
-        			pos1 = pos2+1; // sets pos1 to the next character after pos2. 
-    			}
-    		}
- 	}	
+	#GRBEnv* environmentGUROBI = new GRBEnv("GUROBILogFile.log"); // GUROBI Environment object for storing the different optimization models	
 
 	zonalNetVector = [] #Vector of zonal network objects
 	log.info("\n*** NETWORK INITIALIZATION STAGE BEGINS ***\n")
 	upperBoundVector = np.zeros(float, numberOfZones) #Vector of upper bounds by iteration
 	lowerBoundVector = np.zeros(float, numberOfZones) #Vector of lower bounds by iteration
-	for i in range(numberOfZones):
-		zonalNetVector.append(Nettran( str, (i+1), numberOfZones, curveChoice, lpMethodChoice )) #push to the vector of zonal networks
+	for jSONIndex in matrixFirstFile:
+		zonalNetVector.append(Nettran(jSONIndex, numberOfZones, curveChoice, lpMethodChoice)) #push to the vector of zonal networks
 	log.info("\n*** NETWORK INITIALIZATION STAGE ENDS: ZONAL SUB-NETWORKS CREATED ***\n")
 	"""
 	#Initialize the Lagrange Multipliers/Dual Variables/Rewards/Penalties to zero for the first iteration
@@ -363,29 +327,13 @@ def HorMILPCentral(): # Main method begins program execution
 	#and (consensus<=0.05)) # while the tolerance is reached//%%
 	log.info("\nZonal Calculations of Beliefs about the Investment decision MILP ends")
 	ofstream UBIteratesOut("/home/samie/code/Horizontal_Coordination_MILP_Dist_Mechanism_Design/Horizontal_Proper/output/outputMetrics/UpperBoundIterates.txt", ios::out);
-	// exit program if ifstream could not open file
-	if ( !UBIteratesOut ) {
-		cerr << "\nUpperBoundIterates file could not be opened\n" << endl;
-		exit( 1 );
-	} // end if
+
 	ofstream LBIteratesOut("/home/samie/code/Horizontal_Coordination_MILP_Dist_Mechanism_Design/Horizontal_Proper/output/outputMetrics/LowerBoundIterates.txt", ios::out);
-	// exit program if ifstream could not open file
-	if ( !LBIteratesOut ) {
-		cerr << "\nLowerBoundIterates file could not be opened\n" << endl;
-		exit( 1 );
-	} // end if
+
 	ofstream ratioIteratesOut("/home/samie/code/Horizontal_Coordination_MILP_Dist_Mechanism_Design/Horizontal_Proper/output/outputMetrics/RatioIterates.txt", ios::out);
-	// exit program if ifstream could not open file
-	if ( !ratioIteratesOut ) {
-		cerr << "\nRatioIterates file could not be opened\n" << endl;
-		exit( 1 );
-	} // end if
+
 	ofstream globalConsensusOut("/home/samie/code/Horizontal_Coordination_MILP_Dist_Mechanism_Design/Horizontal_Proper/output/outputMetrics/globalConsensus.txt", ios::out);
-	// exit program if ifstream could not open file
-	if ( !globalConsensusOut ) {
-		cerr << "\nglobalConsensus file could not be opened\n" << endl;
-		exit( 1 );
-	} // end if
+
 	int countOfIterate = 1; 
 	for (UBItIterator = UBItVec.begin(); UBItIterator != UBItVec.end(); ++UBItIterator){
 		UBIteratesOut << countOfIterate << "\t" << *UBItIterator << endl;
@@ -406,25 +354,21 @@ def HorMILPCentral(): # Main method begins program execution
 		globalConsensusOut << countOfIterate << "\t" << *globalConsIterator << endl;
 		++countOfIterate;
 	}
-	cout << endl << "\n*** DISTRIBUTED STOCHASTIC OPTIMIZATION ALGORITHMIC MARKET MECHANISM DESIGN FIRST STAGE ENDS ***\n" << endl << endl;
-	marketoverInstance->finDecLineConstr();	// Populate the list of constructed shared candidate lines, according to Stage-I
-	int dimAPPLagArray = 0; // Initialize the Dimension of the Lagrange multipliers for APP
-	for ( int i = 0; i < numberOfZones; ++i ) { // Each region solves its own MILP optimization problem
-		zonalNetVector[i]->setRealizedCLines(*marketoverInstance); // Perform unit commitment for average heat rate objective
-		dimAPPLagArray += zonalNetVector[i]->returnMultiplicity(); // 
-	} 
-	for ( int i = 0; i < numberOfZones; ++i ) {
-		zonalNetVector[i]->TestBuiltExternalNodes();
-	} 
-	double APPLagMultipliers[dimAPPLagArray];
-	for (int i = 0; i < dimAPPLagArray; ++i) 
-		APPLagMultipliers[i] = 0;
-/*
+	log.info("\n*** DISTRIBUTED STOCHASTIC OPTIMIZATION ALGORITHMIC MARKET MECHANISM DESIGN FIRST STAGE ENDS ***\n")
+	marketoverInstance.finDecLineConstr() #Populate the list of constructed shared candidate lines, according to Stage-I
+	dimAPPLagArray = 0 #Initialize the Dimension of the Lagrange multipliers for APP
+	for i  in range(numberOfZones): #Each region solves its own MILP optimization problem
+		zonalNetVector[i].setRealizedCLines(marketoverInstance) #Perform unit commitment for average heat rate objective
+		dimAPPLagArray += zonalNetVector[i].returnMultiplicity()
+	for i in range(numberOfZones):
+		zonalNetVector[i].TestBuiltExternalNodes()
+	APPLagMultipliers = [np.zeros(float, dimAPPLagArray)]
+
 	log.info("\n*** AUXILIARY PROBLEM PRINCIPLE (APP) OPTIMIZATION ALGORITHMIC MARKET MECHANISM DESIGN SECOND STAGE BEGINS ***\n")
 	interAngleMessage = [np.zeros(float, numberOfZones)] #Array of the zonal vectors of the intermediate values of Lagrange Multipliers
 	zonalGlobRank = [np.zeros(float, numberOfZones)] #Array of the global ranks of the shared nodes for each zone
 	ObjIterate = np.zeros(float, numberOfZones) #Array of zonal optimum objectives
-	//do {//%%
+	#//do {//%%
 	for iterCountOut in range(1):
 		log.info("\n*** ITERATION {} BEGINS ***\n".format(iterCountOut+1))
 		for i in range(numberOfZones): #Each region solves its own MILP optimization problem 
@@ -464,23 +408,11 @@ def HorMILPCentral(): # Main method begins program execution
 	#and (consensus<=0.05)) #while the tolerance is reached//%%
 	log.info("\nZonal Calculations of Beliefs about the Investment decision MILP ends")
 	ofstream UBIteratesOut("UpperBoundIterates.txt", ios::out);
-	// exit program if ifstream could not open file
-	if ( !UBIteratesOut ) {
-		cerr << "\nUpperBoundIterates file could not be opened\n" << endl;
-		exit( 1 );
-	} // end if
+
 	ofstream LBIteratesOut("LowerBoundIterates.txt", ios::out);
-	// exit program if ifstream could not open file
-	if ( !LBIteratesOut ) {
-		cerr << "\nLowerBoundIterates file could not be opened\n" << endl;
-		exit( 1 );
-	} // end if
+
 	ofstream ratioIteratesOut("RatioIterates.txt", ios::out);
-	// exit program if ifstream could not open file
-	if ( !ratioIteratesOut ) {
-		cerr << "\nRatioIterates file could not be opened\n" << endl;
-		exit( 1 );
-	} // end if
+
 	ofstream globalConsensusOut("globalConsensus.txt", ios::out);
 	#exit program if ifstream could not open file
 	if ( !globalConsensusOut ):
@@ -502,5 +434,4 @@ def HorMILPCentral(): # Main method begins program execution
 		globalConsensusOut << countOfIterate << "\t" << globalConsIterator << endl;
 		countOfIterate += 1
 	log.info("\n*** DISTRIBUTED STOCHASTIC OPTIMIZATION ALGORITHMIC MARKET MECHANISM DESIGN FIRST STAGE ENDS ***\n")
-*/
 

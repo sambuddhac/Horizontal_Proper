@@ -1,37 +1,56 @@
-#Definition for Nettran class public Member Methods
-from Python_src.nettran import Nettran
+#Definition for Nettran class
+import julia
+import os
+import subprocess
+import pandas as pd
+import numpy as np
+import json
+import sys
+import traceback
+from Python_src.log import log
+from Python_src.profiler import Profiler
+import gurobipy as gp
+from gurobipy import GRB
 from Python_src.powergenerator import Powergenerator
-from Python_src.transl import Transmission line class
-from Python_src.load import load class
-from Python_src.node import node class
-from Python_src.sharedLine import shared lines between two different zones
-from Python_src.candidateLine import candidate lines shared between two different zones
-from Python_src.intcandidateLine import intra zonal candidate lines
+from Python_src.transl import transmissionLine
+from Python_src.load import Load
+from Python_src.node import Node
+from Python_src.sharedLine import SELine
+from Python_src.candidateLine import candLine
+from Python_src.intcandidateLine import intCandLine
 #define AVERAGE_HEAT 1 // Defines the Average Heat generator cost function mode
 #define PIECEWISE_LINEAR 2 // Defines the Piecewise Linear generator cost function mode
 #define POLYNOMIAL 3 // Defines the Convex Polynomial generator cost function mode
 #define BIGM 1000000000000000000 // Defines the value of the Big M for transforming the bilinear terms to linear constraints
 
+profiler = Profiler()
+
+if sys.platform in ["darwin", "linux"]:
+	log.info("Using Julia executable in {}".format(str(subprocess.check_output(["which", "julia"]), 'utf-8').strip('\n')))
+elif sys.platform in ["win32", "win64", "cygwin"]:
+	log.info("Using Julia executable in {}".format(str(subprocess.check_output(["which", "julia"]), 'utf-8').strip('\n')))
+
+log.info("Loading Julia...")
+profiler.start()
+julSol = julia.Julia()
+julSol.using("Pkg")
+julSol.eval('Pkg.activate(".")')
+julSol.include(os.path.join("JuMP_src", "HorMILPDistMech.jl")) # definition of Gensolver class for base case scenario first interval
+log.info(("Julia took {:..2f} seconds to start and include Horizontal Investment Coordination mechanism design models.".format(profiler.get_interval())))
+
 class Nettran(object):
-	def __init__(self, initSummary, zoneCount, objChoice): # constructor
+	def __init__(self, jSONList, zoneCount, objChoice): # constructor
 		self.simMode = objChoice #Specify the type of the curve
 		self.zonalCount = zoneCount
 		self.nodeNumVector = []
-		self.nodeNumVector.append(0); // Initialize the node number vector to indicate there no nodes in the fictitous 0-th zone
-	for ( int zonalIndex = 1; zonalIndex <= zonalCount; ++zonalIndex ) { // Iterate through the zones 
-		strcpy( netFile, initSummary[(zonalIndex-1)].c_str() ); // String for storing the name of the network file
-		strcpy( genFile, initSummary[(zonalIndex-1)+zoneCount].c_str() ); // String for storing the name of the generator file
-		strcpy( tranFile, initSummary[(zonalIndex-1)+3*zoneCount].c_str() ); // String for storing the name of the transmission line file
-		strcpy( loadFile, initSummary[(zonalIndex-1)+4*zoneCount].c_str() ); // String for storing the name of the load file
-		strcpy( intCandLineFile, initSummary[(zonalIndex-1)+6*zoneCount].c_str() ); // String for storing the name of the candidate lines file
-		do {
-			/* Nodes */
-			ifstream matrixNetFile( netFile, ios::in ); // ifstream constructor opens the file of Network	
-			// exit program if ifstream could not open file
-			if ( !matrixNetFile ) {
-				cerr << "\nFile for Network could not be opened\n" << endl;
-				exit( 1 );
-			} // end if
+		self.nodeNumVector.append(0) #Initialize the node number vector to indicate there no nodes in the fictitous 0-th zone
+		for zonalIndex in jSONList: #Iterate through the zones 
+			self.netFile = zonalIndex['Network File'] #String for storing the name of the network file
+			self.genFile = zonalIndex['Generator File'] #String for storing the name of the generator file
+			self.tranFile = zonalIndex['Transmission Lines File'] #String for storing the name of the transmission line file
+			self.loadFile = zonalIndex['Load File'] #String for storing the name of the load file
+			self.intCandLineFile = zonalIndex['Intra Candidate Lines File'] #String for storing the name of the candidate lines file
+			#/* Nodes */
 			matrixNetFile >> nodeNumber >> sharedELines >> sharedCLines >> genNumber >> loadNumber >> tranNumber >> internalCLines; // get the dimensions of the Network
 			for ( int l = 0; l < nodeNumber; ++l ) {
 				//cout << "\nCreating the " << l + 1 << " -th Node:\n";
@@ -43,9 +62,9 @@ class Nettran(object):
 			} // end initialization for Nodes
 			matrixNetFile.close(); // close the network file
 
-			/* Generators */
+			#/* Generators */
 
-			/* Instantiate Generators */
+			#/* Instantiate Generators */
 			// Open the .txt file to read the Powergenerator parameter values
 			ifstream matrixGenFile( genFile, ios::in ); // ifstream constructor opens the file of Generators
 
@@ -93,7 +112,7 @@ class Nettran(object):
 			}
 			matrixGenFile.close(); // Close the generator file
  			if (tranNumber > 0) {
-				/* Transmission Lines */
+				#/* Transmission Lines */
 				ifstream matrixTranFile( tranFile, ios::in ); // ifstream constructor opens the file of Transmission lines
 
 				// exit program if ifstream could not open file
@@ -110,7 +129,7 @@ class Nettran(object):
 					}
 				}
 
-				/* Instantiate Transmission Lines */
+				#/* Instantiate Transmission Lines */
 				for ( int k = 0; k < tranNumber; ++k ) {
 					int tNodeID1, tNodeID2; // node object IDs to which the particular transmission line object is connected
 					do {
@@ -133,7 +152,7 @@ class Nettran(object):
 				matrixTranFile.close(); // Close the transmission line file 
 			}
 			if (internalCLines>0) {
-				/* Internal Candidate Transmission Lines */
+				#/* Internal Candidate Transmission Lines */
 				ifstream matrixIntCETranFile( intCandLineFile, ios::in ); // ifstream constructor opens the file of internal candidate Transmission lines
 				// exit program if ifstream could not open file
 				if ( !matrixIntCETranFile ) {
@@ -148,7 +167,7 @@ class Nettran(object):
 						matrixIntCETranFile >> matrixIntCETran[ i ][ j ]; // read the internal candidate Transmission line matrix
 					}
 				}
-				/* Instantiate Internal Candidate Transmission Lines */
+				#/* Instantiate Internal Candidate Transmission Lines */
 				for ( int k = 0; k < internalCLines; ++k ) {
 					int serNum, tNodeID1, tNodeID2, presAbsence, lifeTime; // node object IDs to which the particular transmission line object is connected
 					do {
@@ -175,7 +194,7 @@ class Nettran(object):
 				} // end initialization for candidate Transmission Lines
 				matrixIntCETranFile.close(); // Close the candidate lines file
 			}
-			/* Loads */
+			#/* Loads */
 			ifstream matrixLoadFile( loadFile, ios::in ); // ifstream constructor opens the file of Loads
 
 			// exit program if ifstream could not open file
@@ -197,7 +216,7 @@ class Nettran(object):
 				(nodeObject[l])->initLoad( countOfScenarios ); // Initialize the default loads on all nodes to zero
 
 			} // end initialization for Nodes		
-			/* Instantiate Loads */
+			#/* Instantiate Loads */
 			for ( int j = 0; j < loadNumber; ++j ) {
 				int lNodeID; // node object ID to which the particular load object is connected
 				do {
@@ -220,14 +239,12 @@ class Nettran(object):
 
 			} // end initialization for Loads
 			matrixLoadFile.close(); // Closes the load file
-		} while ( (genNumber <= 0 ) || ( nodeNumber <= 0 ) || ( loadNumber <= 0 )); //|| ( tranNumber <= 0 ) 
-		// check the bounds and validity of the parameter values
-		univNodeNum += nodeNumber; // Increment the universal node number
-		nodeNumVector.push_back(nodeNumber);
-		univGenNum += genNumber; // Increment the universal generator number
-		univTranNum += tranNumber; // Increment the universal transmission line number
-		univLoadNum += loadNumber; // Increment the universal load number
-		univIntCandNum += internalCLines; // Increment the universal intra zonal candidate line number
+		univNodeNum += nodeNumber #Increment the universal node number
+		nodeNumVector.append(nodeNumber)
+		univGenNum += genNumber #Increment the universal generator number
+		univTranNum += tranNumber #Increment the universal transmission line number
+		univLoadNum += loadNumber #Increment the universal load number
+		univIntCandNum += internalCLines #Increment the universal intra zonal candidate line number
 	}
 	for ( int zonalIndex = 1; zonalIndex <= zonalCount; ++zonalIndex ) { // Iterate through the zones 
 		strcpy( netFile, initSummary[(zonalIndex-1)].c_str() ); // String for storing the name of the network file

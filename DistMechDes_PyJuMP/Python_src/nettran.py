@@ -1,61 +1,64 @@
-// Definition for Nettran class public Member Methods
-#include <iostream>
-#include <string>
-#include <fstream>
-#include <sstream>
-#include <vector>
-#include <algorithm>
-#include <ctime>
-#include <cstring>
-#include <cstdlib>
-#include <glpk.h> // Includes the GLPK (GNU Linear Programming Kit) header file
-#include "gurobi_c++.h" // Includes the definition of the GUROBI solver 
-#include "nettran.h" // includes definition of Nettran class
-#include "marketOverseer.h" // includes definition of the market overseer class for passing messages
-#include "powergenerator.h" // includes definition of Powergenerator class 
-#include "transl.h" // includes definition of Transmission line class
-#include "load.h" // includes definition of load class
-#include "node.h" // includes definition of node class
-#include "sharedLine.h" // includes definition of existing shared lines between two different zones
-#include "candidateLine.h" // includes definition of candidate lines shared between two different zones
-#include "intcandidateLine.h" // includes the definition of intra zonal candidate lines
-#define AVERAGE_HEAT 1 // Defines the Average Heat generator cost function mode
-#define PIECEWISE_LINEAR 2 // Defines the Piecewise Linear generator cost function mode
-#define POLYNOMIAL 3 // Defines the Convex Polynomial generator cost function mode
-#define BIGM 1000000000000000000 // Defines the value of the Big M for transforming the bilinear terms to linear constraints
+#Definition for Nettran class
+import julia
+import os
+import subprocess
+import pandas as pd
+import numpy as np
+import json
+import sys
+import traceback
+from Python_src.log import log
+from Python_src.profiler import Profiler
+import gurobipy as gp
+from gurobipy import GRB
+from Python_src.powergenerator import Powergenerator
+from Python_src.transl import transmissionLine
+from Python_src.load import Load
+from Python_src.node import Node
+from Python_src.sharedLine import SELine
+from Python_src.candidateLine import candLine
+from Python_src.intcandidateLine import intCandLine
 
-using namespace std;
+profiler = Profiler()
 
-Nettran::Nettran(string initSummary[], int zoneIndex, int zoneCount, int objChoice, int milpAlgoChoice) // constructor
-	: otherNodeCount(0),
-	  realizedCLines(0),
-	  realizedIntCLines(0),
-	  zonalCount(zoneCount)
-{
-	zonalIndex = zoneIndex; // Assigns the ID number of this zone
-	strcpy( netFile, initSummary[(zonalIndex-1)].c_str() ); // String for storing the name of the network file
-	strcpy( genFile, initSummary[(zonalIndex-1)+zoneCount].c_str() ); // String for storing the name of the generator file
-	strcpy( sharedLineFile, initSummary[(zonalIndex-1)+2*zoneCount].c_str() ); // String for storing the name of the shared existing lines file
-	strcpy( tranFile, initSummary[(zonalIndex-1)+3*zoneCount].c_str() ); // String for storing the name of the transmission line file
-	strcpy( loadFile, initSummary[(zonalIndex-1)+4*zoneCount].c_str() ); // String for storing the name of the load file
-	strcpy( candLineFile, initSummary[(zonalIndex-1)+5*zoneCount].c_str() ); // String for storing the name of the candidate lines file
-	strcpy( intCandLineFile, initSummary[(zonalIndex-1)+6*zoneCount].c_str() ); // String for storing the name of the candidate lines file
-	// Specify the type of the curve
-	simMode = objChoice;
-	diffZoneNodeID.push_back(0); // Initialize the list of external-zone connected node ID's so that it's not empty
-	diffZoneID.push_back(0); // Initialize the list of external connected zone ID's so that it's not empty
-	globalRankDiffNode.push_back(0); // Initialize the list of external-zone connected node global rank so that it's not empty
-	diffZoneNodeExistingID.push_back(0); // initialize the list of external-zone existing node ID's so that it's not empty
-	diffZoneExistingID.push_back(0); // Initialize the list of external-zone existing zone ID's so that it's not empty.
-	globalExistingRank.push_back(0); // Initialize the list os external-zone connected node global rank so that it's not empty
-	lpSolveAlgo = milpAlgoChoice; // Simplex for 1 and IPM for 2
-	while ((simMode != PIECEWISE_LINEAR) && (simMode != AVERAGE_HEAT) && (simMode != POLYNOMIAL)) // validity check
-	{
-		cout << "\nPrevious value entered was invalid" << endl;
-		cin >> simMode;
-	}
-	do {
-		/* Nodes */
+if sys.platform in ["darwin", "linux"]:
+	log.info("Using Julia executable in {}".format(str(subprocess.check_output(["which", "julia"]), 'utf-8').strip('\n')))
+elif sys.platform in ["win32", "win64", "cygwin"]:
+	log.info("Using Julia executable in {}".format(str(subprocess.check_output(["which", "julia"]), 'utf-8').strip('\n')))
+
+log.info("Loading Julia...")
+profiler.start()
+julSol = julia.Julia()
+julSol.using("Pkg")
+julSol.eval('Pkg.activate(".")')
+julSol.include(os.path.join("JuMP_src", "HorMILPDistMech.jl")) # definition of Gensolver class for base case scenario first interval
+log.info(("Julia took {:..2f} seconds to start and include Horizontal Investment Coordination mechanism design models.".format(profiler.get_interval())))
+
+class Nettran(object):
+	def __init__(self, jSONIndex, zoneIndex, zoneCount, objChoice, milpAlgoChoice): #constructor
+		self.otherNodeCount = 0
+		self.realizedCLines = 0
+		self.realizedIntCLines = 0
+		self.zonalCount = zoneCount
+		self.zonalIndex = zoneIndex #Assigns the ID number of this zone
+		self.netFile = jSONIndex['Network File'] #String for storing the name of the network file
+		self.genFile = jSONIndex['Generator File'] #String for storing the name of the generator file
+		self.sharedLineFile = jSONIndex['Shared Lines File'] # String for storing the name of the shared existing lines file
+		self.tranFile = jSONIndex['Transmission Lines File'] #String for storing the name of the transmission line file
+		self.loadFile = jSONIndex['Load File'] #String for storing the name of the load file
+		self.candLineFile = jSONIndex['Candidate Lines File'] #String for storing the name of the candidate lines file
+		self.intCandLineFile = jSONIndex['Intra Candidate Lines File'] #String for storing the name of the candidate lines file
+		#Specify the type of the curve
+		self.simMode = objChoice
+		self.diffZoneNodeID = []; self.diffZoneNodeID.append(0) #Initialize the list of external-zone connected node ID's so that it's not empty
+		self.diffZoneID = []; self.diffZoneID.append(0) #Initialize the list of external connected zone ID's so that it's not empty
+		self.globalRankDiffNode = []; self.globalRankDiffNode.append(0) #Initialize the list of external-zone connected node global rank so that it's not empty
+		self.diffZoneNodeExistingID = []; self.diffZoneNodeExistingID.append(0) #initialize the list of external-zone existing node ID's so that it's not empty
+		self.diffZoneExistingID = []; self.diffZoneExistingID.append(0) #Initialize the list of external-zone existing zone ID's so that it's not empty.
+		self.globalExistingRank = []; self.globalExistingRank.append(0) #Initialize the list os external-zone connected node global rank so that it's not empty
+		self.lpSolveAlgo = milpAlgoChoice #Simplex for 1 and IPM for 2
+		do {
+		#/* Nodes */
 		ifstream matrixNetFile( netFile, ios::in ); // ifstream constructor opens the file of Network	
 		// exit program if ifstream could not open file
 		if ( !matrixNetFile ) {

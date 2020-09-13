@@ -17,7 +17,7 @@ from Python_src.nettran import Nettran
 profiler = Profiler()
 
 if sys.platform in ["darwin", "linux"]:
-   log.info("Using Julia executable in {}".format(str(subprocess.check_output(["which", "julia"]), 'utf-8').strip('\n')))
+	log.info("Using Julia executable in {}".format(str(subprocess.check_output(["which", "julia"]), 'utf-8').strip('\n')))
 elif sys.platform in ["win32", "win64", "cygwin"]:
 	log.info("Using Julia executable in {}".format(str(subprocess.check_output(["which", "julia"]), 'utf-8').strip('\n')))
 
@@ -36,73 +36,32 @@ def HorMILPCentral(): # Main method begins program execution
 	systemChoice = int(input("Choose the type of System to be simulated: 1 for Simple two bus/two region, 2 for system combined of IEEE 14, 30, and 5 node systems"))
 	curveChoice = 1 # Number to indicate the type of Objective function among average heat rate, piecewise linear, or polynomial; Assume Average Heat Rate for now
 	# Read the master zones file, for deciding upon which other files to read for building the model
-	int numberOfZones; // Number of zones between which horizontal investment coordination for transmission lines to be built is considered
-	int numberOfFields; // Number of rows or individual file types for each of the zones
 	if systemChoice==1:
-		inputMasterFile = "masterZonesSummary.json"
+		zoneSummaryFile = open(os.path.join("data", "masterZonesSummary.json")) #opens the master zones summary file
 	else:
-		inputMasterFile = "masterZonesSummaryRevised.json"
-	ifstream zoneSummaryFile( inputMasterFile, ios::in ); // ifstream constructor opens the master zones summary file
-	stringstream buffer; // stringstream object to store the read information from the summary file
-	// exit program if ifstream could not open file
-	if ( !zoneSummaryFile ) {
-		cerr << "\nMaster file for Zones Summary could not be opened\n" << endl;
-		exit( 1 );
-	} // end if
+		zoneSummaryFile = open(os.path.join("data", "masterZonesSummaryRevised.json")) #opens the master zones summary file
+	
+	matrixFirstFile = json.load(zoneSummaryFile) #opens the file
 
-	//zoneSummaryFile >> numberOfZones >> numberOfFields; // get the number of zones and the number of fields: Future expansion
-	cout << "\nEnter the number of zones" << endl;
-	cin >> numberOfZones; // User input the number of zones/regions
-	GRBEnv* environmentGUROBI = new GRBEnv("GUROBILogFile.log"); // GUROBI Environment object for storing the different optimization models
-	numberOfFields = 7; // Number of fields
-   	buffer << zoneSummaryFile.rdbuf(); // reads the data in the summary file 
-   	string test = buffer.str(); // Extract the strings from the buffer to "test"
+	numberOfZones = int(input("\nEnter the number of zones")) #Number of zones between which horizontal investment coordination for transmission lines to be built is considered
+	numberOfFields = 7 #Number of rows or individual file types for each of the zones	
+	log.info("\n*** NETWORK INITIALIZATION STAGE BEGINS ***\n")
+	nettranInstance = Nettran(matrixFirstFile, numberOfZones, curveChoice) #create the network instances for the different zones
+	log.info("\n*** NETWORK INITIALIZATION STAGE ENDS: ZONAL SUB-NETWORKS CREATED ***\n")
+	log.info("\n*** SOLUTION OF SINGLE AREA MILP HORIZONTAL COORDINATION BEGINS ***\n")
+	if curveChoice == 1:
+		log.info("\nSOLVING MILP")
+		solution = nettranInstance.MILPAvgHR() #Perform unit commitment for average heat rate objective
+		log.info("\nMILP SOLVED")
+	elif curveChoice == 2:
+		log.info("\nSOLVING MILPPiecewiseLin")
+		nettranInstance.MILPPiecewiseLin() #Perform unit commitment for piecewise linear objective
+		log.info("\nMILPPiecewiseLin SOLVED")
+	elif curveChoice == 2:
+		log.info("\nSOLVING MILPPolynomial")
+		nettranInstance.MILPPolynomial() #Perform unit commitment for polynomial objective
+		log.info("\nMILPPolynomial SOLVED")
+	else:
+		log.info("\nInvalid choice of Objective function")
 
-   	//create variables that will act as "cursors". we'll take everything between them.
-   	size_t pos1 = 0;
-   	size_t pos2;
-   	//create the array to store the strings.
-   	string str[numberOfFields*numberOfZones];
-	//Read the summary input file
-   	for ( int i = 0; i < numberOfFields; ++i ) {
-		for ( int j = 0; j < numberOfZones; ++j ) {
-			if (j==numberOfZones-1){
-				pos2 = test.find("\n", pos1); //search for the bar "\n". pos2 will be where the bar was found.
-        			str[i*numberOfZones+j] = test.substr(pos1, (pos2-pos1)); //make a substring, wich is nothing more 
-                                              //than a copy of a fragment of the big string.
-        			pos1 = pos2+1; // sets pos1 to the next character after pos2. 
-    			}
-			else {
-        			pos2 = test.find(" ", pos1); //search for the bar " ". pos2 will be where the bar was found.
-        			str[i*numberOfZones+j] = test.substr(pos1, (pos2-pos1)); //make a substring, wich is nothing more 
-                                              //than a copy of a fragment of the big string.
-        			pos1 = pos2+1; // sets pos1 to the next character after pos2. 
-    			}
-    		}
- 	}	
-	cout << endl << "\n*** NETWORK INITIALIZATION STAGE BEGINS ***\n" << endl << endl;
-	Nettran *nettranInstance = new Nettran( str, numberOfZones, curveChoice ); // create the network instances for the different zones
-	cout << "\n*** NETWORK INITIALIZATION STAGE ENDS: ZONAL SUB-NETWORKS CREATED ***\n" << endl;
-	cout << endl << "\n*** SOLUTION OF SINGLE AREA MILP HORIZONTAL COORDINATION BEGINS ***\n" << endl << endl;
-	switch (curveChoice) {
-		case 1:
-			{cout << "\nSOLVING MILP" << endl;
-			double solution = nettranInstance->MILPAvgHRGUROBI(environmentGUROBI); // Perform unit commitment for average heat rate objective
-			cout << "\nMILP SOLVED" << endl;
-			break;}
-		case 2:
-			nettranInstance->MILPPiecewiseLin(); // Perform unit commitment for piecewise linear objective
-			break;
-		case 3:
-			nettranInstance->MILPPolynomial(); // Perform unit commitment for polynomial objective
-			break;
-		default:
-			cout << "\nInvalid choice of Objective function" << endl;
-			break;
-	}
-	cout << endl << "\n*** SOLUTION OF SINGLE AREA MILP HORIZONTAL COORDINATION ENDS ***\n" << endl << endl;
-	delete nettranInstance; // Free the memory of the Nettran class object
-	delete environmentGUROBI; // Free the memory of the GUROBI environment object
-	return 0; // Indicates successful Program Completion
-} // End of main method
-
+	log.info("\n*** SOLUTION OF SINGLE AREA MILP HORIZONTAL COORDINATION ENDS ***\n")
