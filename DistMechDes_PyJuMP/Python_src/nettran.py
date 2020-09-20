@@ -105,60 +105,38 @@ class Nettran(object):
 		matrixGenFile.close() #Close the generator file
 		#/* Transmission Lines */
 		matrixTranFile = json.load(open(os.path.join("data", tranFile) #ifstream constructor opens the file of Transmission lines
-		if self.tranNumber > 0:
-			#/* Instantiate Transmission Lines */
-			for matrixTran in matrixTranFile:
-				#node IDs of the node objects to which this transmission line is connected.
-				tNodeID1 = matrixTran['fromNode'] #From end
-				tNodeID2 = matrixTran['toNode'] #To end
-				#Reactance
-				reacT = matrixTran['Reactance']
-				#values of maximum allowable power flow on line in the forward and reverse direction:
-				ptMax = matrixTran['lineLimit']/100
-				#creates transLineInstance object with ID k + 1
-				transLineInstance = transmissionLine(k + 1, nodeObject[ tNodeID1 - 1 ], nodeObject[ tNodeID2 - 1 ], ptMax, reacT) 
-				self.translObject.append( transLineInstance ) #pushes the transLineInstance object into the vector
-			#end initialization for Transmission Lines 
-			matrixTranFile.close() #Close the transmission line file 
-		vector<int>::iterator diffZNIt; // Iterator for diffZoneNodeID
+		#/* Instantiate Transmission Lines */
+		for matrixTran in matrixTranFile:
+			#node IDs of the node objects to which this transmission line is connected.
+			tNodeID1 = matrixTran['fromNode'] #From end
+			tNodeID2 = matrixTran['toNode'] #To end
+			#Reactance
+			reacT = matrixTran['Reactance']
+			#values of maximum allowable power flow on line in the forward and reverse direction:
+			ptMax = matrixTran['lineLimit']/100
+			#creates transLineInstance object with ID k + 1
+			transLineInstance = transmissionLine(k + 1, nodeObject[ tNodeID1 - 1 ], nodeObject[ tNodeID2 - 1 ], ptMax, reacT) 
+			self.translObject.append( transLineInstance ) #pushes the transLineInstance object into the vector
+		#end initialization for Transmission Lines 
+		matrixTranFile.close() #Close the transmission line file 
 
-		/* Shared Existing Transmission Lines */
-		ifstream matrixSETranFile( sharedLineFile, ios::in ); // ifstream constructor opens the file of Transmission lines
-
-		// exit program if ifstream could not open file
-		if ( !matrixSETranFile ) {
-			cerr << "\nFile for Shared Existing Transmission lines could not be opened\n" << endl;
-			exit( 1 );
-		} // end if
-		int tranSEFields; // Number of columns in the transmission lines file
-		matrixSETranFile >> tranSEFields; // get the dimensions of the Transmission line matrix
-		double matrixSETran[ sharedELines ][ tranSEFields ]; // Transmission line matrix
-		for ( int i = 0; i < sharedELines; ++i ) {
-			for ( int j = 0; j < tranSEFields; ++j ) {
-				matrixSETranFile >> matrixSETran[ i ][ j ]; // read the Transmission line matrix
-			}
-		}
-
-		/* Instantiate Shared Existing Transmission Lines */
-		for ( int k = 0; k < sharedELines; ++k ) {
-			int serNum, tNodeID1, tNodeID2, nodeZone1, nodeZone2; // node object IDs to which the particular transmission line object is connected
-			//cout << "Tran File Test Message 1 from line " << k << " before creation1" << endl;  
-			do {
-				//node IDs of the node objects to which this transmission line is connected.
-				serNum = matrixSETran[ k ][ 0 ]; // global serial number of the shared existing transmission line
-				tNodeID1 = matrixSETran[ k ][ 1 ]; // From end node 
-				nodeZone1 = matrixSETran[ k ][ 2 ]; // From end zone number
-				tNodeID2 = matrixSETran[ k ][ 3 ]; // To end node
-				nodeZone2 = matrixSETran[ k ][ 4 ]; // To end zone number 
-			} while ( (( nodeZone1 != zonalIndex ) && ( nodeZone2 != zonalIndex )) || (( nodeZone1 == zonalIndex ) && ( nodeZone2 == zonalIndex )) ); // validity check
-			double reacT, ptMax; // Parameters for Transmission Line
-			do {
-				//Reactance:
-				reacT = matrixSETran[ k ][ 5 ];
-				//values of maximum allowable power flow on line in the forward and reverse direction:
-				ptMax = matrixSETran[ k ][ 6 ]/100;
-			} while ( reacT <= 0 ); // check the bounds and validity of the parameter values
-			// creates SELine object with ID k + 1
+		#/* Shared Existing Transmission Lines */
+		matrixSETranFile = json.load(open(os.path.join("data", sharedLineFile) #ifstream constructor opens the file of Transmission lines
+		
+		#/* Instantiate Shared Existing Transmission Lines */
+		for matrixSETran in matrixSETranFile:
+			#log.info("Tran File Test Message 1 from line {} before creation1".format(k))
+			#node IDs of the node objects to which this transmission line is connected.
+			serNum = matrixSETran['globalSerial'] #global serial number of the shared existing transmission line
+			tNodeID1 = matrixSETran['fromNode'] #From end node 
+			nodeZone1 = matrixSETran['fromZone'] #From end zone number
+			tNodeID2 = matrixSETran['toNode'] #To end node
+			nodeZone2 = matrixSETran['toZone'] #To end zone number
+			#Reactance:
+			reacT = matrixSETran['Reactance']
+			#values of maximum allowable power flow on line in the forward and reverse direction:
+			ptMax = matrixSETran['lineLimit']/100
+			#creates SELine object with ID k + 1
 			if ( nodeZone1 == zonalIndex ) { // If the node 1 belongs to this zone
 				SELine *SELineInstance = new SELine( k + 1, serNum, nodeObject[ tNodeID1 - 1 ], tNodeID1, nodeZone1, tNodeID2, nodeZone2, zonalIndex, ptMax, reacT ); // Create the shared existing transmission line object with node 1 
 				int indCount = 0; // Initialize a counter for tracking the position in the vector of the iterator
