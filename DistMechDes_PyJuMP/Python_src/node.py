@@ -53,14 +53,12 @@ void Node::settConn( int tranID, int dir, double react, int rankOfOther )
 	if ( dir == 1 ) {
 		tranFromSerial.push_back(tranID);
 		fromReact += (1/react);	
-		if (std::find(connNodeList.begin(), connNodeList.end(), rankOfOther) != connNodeList.end()) { // If predecided Gen value is given for this particular Powergenerator
-			auto pos = std::find(connNodeList.begin(), connNodeList.end(), rankOfOther) - connNodeList.begin(); // find the position of the Powergenerator in the chart of predecided values
-			connReactRec[pos] -= 1/react;
-		}
-		else {
-			connNodeList.push_back(rankOfOther);
-			connReactRec.push_back(-1/react);
-		}
+		if rankOfOther in connNodeList: #If predecided Gen value is given for this particular Powergenerator
+			pos = connNodeList.index(rankOfOther) #find the position of the Powergenerator in the chart of predecided values
+			connReactRec[pos] -= 1/react
+		else:
+			connNodeList.append(rankOfOther)
+			connReactRec.append(-1/react)
 	
 	}
 	else {
