@@ -11,7 +11,7 @@ class Powergenerator(object):
  		self.connNodegPtr= nodeConng
  		self.noLoadCost=noLoad
  		self.incrementalCost = incCost # Initialize this data member to zero (unused for piecewise linear objective)
-		self.setGenParamsSimple(max, Min) # call the set function to perform validity check on parameter value ranges and assign the values
+		self.setGenParamsSimple(Max, Min) # call the set function to perform validity check on parameter value ranges and assign the values
 		self.connNodegPtr.setgConn(self.genID) # increments the generation connection variable to node
  	# end of constructor
 
