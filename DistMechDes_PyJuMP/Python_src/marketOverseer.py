@@ -47,8 +47,8 @@ class Marketover(object):
 		"""
 		#end constructor
 
-	def __del__(): #destructor
-		log.info("\nSimulation ended")
+	#def __del__(): #destructor
+		#log.info("\nSimulation ended")
 		#destructor ends
 
 	def MILPMarketover(self, LagMultXi, LagMultPi, totalCandLineNum, totalSharedNodeNum): #Function MILPMarketover() implements the Mixed Integer Linear Programming Solver routine by calling GLPK routines for average heat rate objective

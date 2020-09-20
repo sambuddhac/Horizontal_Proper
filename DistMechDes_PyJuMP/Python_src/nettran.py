@@ -49,6 +49,8 @@ class Nettran(object):
 		self.candLineFile = jSONIndex['Candidate Lines File'] #String for storing the name of the candidate lines file
 		self.intCandLineFile = jSONIndex['Intra Candidate Lines File'] #String for storing the name of the candidate lines file
 		#Specify the type of the curve
+		self.nodeObject = []
+		self.genObject = []
 		self.simMode = objChoice
 		self.diffZoneNodeID = []; self.diffZoneNodeID.append(0) #Initialize the list of external-zone connected node ID's so that it's not empty
 		self.diffZoneID = []; self.diffZoneID.append(0) #Initialize the list of external connected zone ID's so that it's not empty
@@ -57,112 +59,67 @@ class Nettran(object):
 		self.diffZoneExistingID = []; self.diffZoneExistingID.append(0) #Initialize the list of external-zone existing zone ID's so that it's not empty.
 		self.globalExistingRank = []; self.globalExistingRank.append(0) #Initialize the list os external-zone connected node global rank so that it's not empty
 		self.lpSolveAlgo = milpAlgoChoice #Simplex for 1 and IPM for 2
-		do {
 		#/* Nodes */
-		ifstream matrixNetFile( netFile, ios::in ); // ifstream constructor opens the file of Network	
-		// exit program if ifstream could not open file
-		if ( !matrixNetFile ) {
-			cerr << "\nFile for Network could not be opened\n" << endl;
-			exit( 1 );
-		} // end if
-		matrixNetFile >> nodeNumber >> sharedELines >> sharedCLines >> genNumber >> loadNumber >> tranNumber >> internalCLines; // get the dimensions of the Network
-		for ( int l = 0; l < nodeNumber; ++l ) {
-			//cout << "\nCreating the " << l + 1 << " -th Node:\n";
+		matrixNetFile = json.load(open(os.path.join("data", netFile)))
+		self.nodeNumber = matrixNetFile['nodeNumber'] 
+		self.sharedELines = matrixNetFile['sharedELines'] 
+		self.sharedCLines = matrixNetFile['sharedCLines'] 
+		self.genNumber = matrixNetFile['genNumber'] 
+		self.loadNumber = matrixNetFile['loadNumber'] 
+		self.tranNumber = matrixNetFile['tranNumber'] 
+		self.internalCLines = matrixNetFile['internalCLines'] #get the dimensions of the Network
+		for l in range(self.nodeNumber):
+			#log.info("\nCreating the {} -th Node:".format(l + 1))
 		
-			Node *nodeInstance = new Node( l + 1, zonalIndex ); // creates nodeInstance object with ID l + 1
+			nodeInstance = Node(l + 1, self.zonalIndex) #creates nodeInstance object with ID l + 1
 
-			nodeObject.push_back( nodeInstance ); // pushes the nodeInstance object into the vector
-
-		} // end initialization for Nodes
-		matrixNetFile.close(); // close the network file
-		//cout << "\nFile for Networks completed.\n" << endl;
-		/* Generators */
-
-		/* Instantiate Generators */
-		// Open the .txt file to read the Powergenerator parameter values
-		ifstream matrixGenFile( genFile, ios::in ); // ifstream constructor opens the file of Generators
-
-		// exit program if ifstream could not open file
-		if ( !matrixGenFile ) {
-			cerr << "\nFile for Generators could not be opened\n" << endl;
-			exit( 1 );
-		} // end if
-		int genFields; // Number of columns in the generator database
-		matrixGenFile >> genFields; // get the dimensions of the Generator matrix
-		double matrixGen[ genNumber ][ genFields ]; // Generator matrix
-		for ( int i = 0; i < genNumber; ++i ) {
-			for ( int j = 0; j < genFields; ++j ) {
-				matrixGenFile >> matrixGen[ i ][ j ]; // read the Generator matrix
-			}
-		}
-		for (int j = 0; j < genNumber; ++j) {
-			int gNodeID; // node object ID to which the particular generator object is connected
-			do {
-				gNodeID = matrixGen[ j ][ 0 ];
-			} while ( ( gNodeID <= 0 ) || ( gNodeID > nodeNumber ) ); // validity check
-			//cout << "\nConnection Node defined.\n" << endl;
-			double c2, c1, c0, PgMax, PgMin, tanTheta, minCost; // Parameters for Generator
-			do {
-				//Quadratic Coefficient: 
-				c2 = matrixGen[ j ][ 1 ] * (pow(100, 2.0));
-				//Linear coefficient: 
-				c1 = matrixGen[ j ][ 2 ] * 100;
-				//Constant term: 
-				c0 = matrixGen[ j ][ 3 ];
-				//Maximum Limit: 
-				PgMax = matrixGen[ j ][ 4 ] / 100;
-				//Minimum Limit: 
-				PgMin = matrixGen[ j ][ 5 ] / 100;
-				/* Secant Approximation of the Quadratic Cost curve */
-				//Tangent Ratio of the secant approximation of the intercepted cost curve
-				tanTheta = (c2*(pow(PgMax, 2.0))+c1*PgMax-c2*(pow(PgMin, 2.0))-c1*PgMin)/(PgMax-PgMin);
-				minCost = c2*(pow(PgMin, 2.0))+c1*PgMin+c0-tanTheta*PgMin;
-				//Intercept value or cost at minimum power level
-			} while ( (c2 < 0 ) || ( c1 < 0 ) || ( PgMax <= 0 ) || ( PgMin < 0 ) || ( PgMax <= PgMin ) ); 
-			// check the bounds and validity of the parameter values
-			Powergenerator *genInstance = new Powergenerator( j+1, nodeObject[ gNodeID - 1 ],  tanTheta, minCost, PgMax, PgMin );
-			genObject.push_back(genInstance); // push the generator object into the array
-		}
-		matrixGenFile.close(); // Close the generator file
-		/* Transmission Lines */
-		ifstream matrixTranFile( tranFile, ios::in ); // ifstream constructor opens the file of Transmission lines
-
-		// exit program if ifstream could not open file
-		if ( !matrixTranFile ) {
-			cerr << "\nFile for Transmission lines could not be opened\n" << endl;
-			exit( 1 );
-		} // end if
-		int translFields; // Number of columns in the transmission lines file
-		matrixTranFile >> translFields; // get the dimensions of the Transmission line matrix
-		double matrixTran[ tranNumber ][ translFields ]; // Transmission line matrix
-		for ( int i = 0; i < tranNumber; ++i ) {
-			for ( int j = 0; j < translFields; ++j ) {
-				matrixTranFile >> matrixTran[ i ][ j ]; // read the Transmission line matrix
-			}
-		}
-		if (tranNumber > 0) {
-		/* Instantiate Transmission Lines */
-		for ( int k = 0; k < tranNumber; ++k ) {
-			int tNodeID1, tNodeID2; // node object IDs to which the particular transmission line object is connected
-			do {
-				//node IDs of the node objects to which this transmission line is connected.
-				tNodeID1 = matrixTran[ k ][ 0 ]; //From end
-				tNodeID2 = matrixTran[ k ][ 1 ]; //To end
-			} while ( ( tNodeID1 <= 0 ) || ( tNodeID1 > nodeNumber ) || ( tNodeID2 <= 0 ) || ( tNodeID2 > nodeNumber ) || ( tNodeID1 == tNodeID2) ); // validity check
-			double reacT, ptMax; // Parameters for Transmission Line
-			do {
-				//Reactance:
-				reacT = matrixTran[ k ][ 2 ];
-				//values of maximum allowable power flow on line in the forward and reverse direction:
-				ptMax = matrixTran[ k ][ 3 ]/100;
-			} while ( reacT <= 0 ); // check the bounds and validity of the parameter values
-			// creates transLineInstance object with ID k + 1
-			transmissionLine *transLineInstance = new transmissionLine( k + 1, nodeObject[ tNodeID1 - 1 ], nodeObject[ tNodeID2 - 1 ], ptMax, reacT ); 
-			translObject.push_back( transLineInstance ); // pushes the transLineInstance object into the vector
-
-		} // end initialization for Transmission Lines 
-		matrixTranFile.close(); // Close the transmission line file 
-		}
+			self.nodeObject.append( nodeInstance ) #pushes the nodeInstance object into the vector
+		#end initialization for Nodes
+		matrixNetFile.close() #close the network file
+		#/* Generators */
+		#/* Instantiate Generators */
+		# Open the .json file to read the Powergenerator parameter values
+		matrixGen = json.load(open(os.path.join("data", genFile))) #ifstream constructor opens the file of Generators
+		for matrixGenFile in matrixGen:
+			gNodeID = matrixGenFile['genNodeID'] #node object ID to which the particular generator object is connected
+			#log.info("\nConnection Node defined.\n")
+			#Parameters for Generator
+			#Quadratic Coefficient: 
+			c2 = matrixGenFile['quadCostCoeff'] * (100**2)
+			#Linear coefficient: 
+			c1 = matrixGenFile['linCostCoeff'] * 100
+			#Constant term: 
+			c0 = matrixGenFile['noLoadCost']
+			#Maximum Limit: 
+			PgMax = matrixGenFile['PgMax'] / 100
+			#Minimum Limit: 
+			PgMin = matrixGenFile['PgMin'] / 100
+			#/* Secant Approximation of the Quadratic Cost curve */
+			#Tangent Ratio of the secant approximation of the intercepted cost curve
+			tanTheta = (c2*(PgMax**2)+c1*PgMax-c2*(PgMin**2)-c1*PgMin)/(PgMax-PgMin)
+			minCost = c2*(PgMin**2)+c1*PgMin+c0-tanTheta*PgMin
+			#Intercept value or cost at minimum power level
+			#check the bounds and validity of the parameter values
+			genInstance = Powergenerator(j+1, nodeObject[ gNodeID - 1 ],  tanTheta, minCost, PgMax, PgMin)
+			self.genObject.append(genInstance) #push the generator object into the array
+		matrixGenFile.close() #Close the generator file
+		#/* Transmission Lines */
+		matrixTranFile = json.load(open(os.path.join("data", tranFile) #ifstream constructor opens the file of Transmission lines
+		if self.tranNumber > 0:
+			#/* Instantiate Transmission Lines */
+			for matrixTran in matrixTranFile:
+				#node IDs of the node objects to which this transmission line is connected.
+				tNodeID1 = matrixTran['fromNode'] #From end
+				tNodeID2 = matrixTran['toNode'] #To end
+				#Reactance
+				reacT = matrixTran['Reactance']
+				#values of maximum allowable power flow on line in the forward and reverse direction:
+				ptMax = matrixTran['lineLimit']/100
+				#creates transLineInstance object with ID k + 1
+				transLineInstance = transmissionLine(k + 1, nodeObject[ tNodeID1 - 1 ], nodeObject[ tNodeID2 - 1 ], ptMax, reacT) 
+				self.translObject.append( transLineInstance ) #pushes the transLineInstance object into the vector
+			#end initialization for Transmission Lines 
+			matrixTranFile.close() #Close the transmission line file 
 		vector<int>::iterator diffZNIt; // Iterator for diffZoneNodeID
 
 		/* Shared Existing Transmission Lines */
@@ -445,31 +402,17 @@ class Nettran(object):
 	sharedCandLineCapIt = candLineObject.begin(); // Initialize the sharedCandLineCapIt iterator to point to the beginning of the candLineObject vector
 } // end constructor
 
-Nettran::~Nettran() // destructor
-{
-	cout << "\nSimulation ended" << endl;
-} // destructor ends
+	def getNumberOfScenarios(self): #Returns the number of scenarios
+		return self.countOfScenarios
 
-int Nettran::getNumberOfScenarios() // Returns the number of scenarios
-{
-	return countOfScenarios;
-}
+	def MILPPiecewiseLin(): #Function MILPPiecewiseLin() implements the Mixed Integer Linear Programming Unit Commitment Solver routine by calling GLPK routines for piecewise linear objective
+		log.info("\nUnder Construction")
 
-void Nettran::MILPPiecewiseLin(void) // Function MILPPiecewiseLin() implements the Mixed Integer Linear Programming Unit Commitment Solver routine by calling GLPK routines for piecewise linear objective
-{
-	cout << "\nUnder Construction" << endl;
+	def MILPPolynomial(): #Function MILPPolynomial() implements the Mixed Integer Linear Programming Unit Commitment Solver routine by calling GLPK routines for polynomial convex objective
+		log.info("\nUnder Construction")
 
-}
-
-void Nettran::MILPPolynomial() // Function MILPPolynomial() implements the Mixed Integer Linear Programming Unit Commitment Solver routine by calling GLPK routines for polynomial convex objective
-{
-	cout << "\nUnder Construction" << endl;
-
-}
-
-double Nettran::MILPAvgHR(Marketover &coordInstanceRef, double LagMultXi[], double LagMultPi[], int totalCandLineNum, int totalSharedNodeNum) // Function MILPAvgHR() implements the Mixed Integer Linear Programming Unit Commitment Solver routine by calling GLPK routines for average heat rate objective for Horizontal Coordination Investment decision making
-{
-	/* CREATION OF THE MIP SOLVER INSTANCE */
+	def MILPAvgHR(self, coordInstanceRef, LagMultXi, LagMultPi, totalCandLineNum, totalSharedNodeNum): #Function MILPAvgHR() implements the Mixed Integer Linear Programming Unit Commitment Solver routine by calling GLPK routines for average heat rate objective for Horizontal Coordination Investment decision making
+	#/* CREATION OF THE MIP SOLVER INSTANCE */
 	clock_t begin = clock(); // start the timer
 	vector<int>::iterator diffZNIt; // Iterator for diffZoneNodeID
 	vector<Powergenerator*>::iterator genIterator; // Iterator for Powergenerator objects
