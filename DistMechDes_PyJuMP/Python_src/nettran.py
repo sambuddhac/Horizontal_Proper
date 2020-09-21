@@ -48,6 +48,7 @@ class Nettran(object):
 		self.loadFile = jSONIndex['Load File'] #String for storing the name of the load file
 		self.candLineFile = jSONIndex['Candidate Lines File'] #String for storing the name of the candidate lines file
 		self.intCandLineFile = jSONIndex['Intra Candidate Lines File'] #String for storing the name of the candidate lines file
+		self.containsFlag = 0 #Indicates whether a particular node in a particular connected zone has been accounted for or not; 0 for no, 1 for yes
 		#Specify the type of the curve
 		self.nodeObject = []
 		self.genObject = []
@@ -104,7 +105,7 @@ class Nettran(object):
 			self.genObject.append(genInstance) #push the generator object into the array
 		matrixGenFile.close() #Close the generator file
 		#/* Transmission Lines */
-		matrixTranFile = json.load(open(os.path.join("data", tranFile) #ifstream constructor opens the file of Transmission lines
+		matrixTranFile = json.load(open(os.path.join("data", tranFile))) #ifstream constructor opens the file of Transmission lines
 		#/* Instantiate Transmission Lines */
 		for matrixTran in matrixTranFile:
 			#node IDs of the node objects to which this transmission line is connected.
@@ -121,7 +122,7 @@ class Nettran(object):
 		matrixTranFile.close() #Close the transmission line file 
 
 		#/* Shared Existing Transmission Lines */
-		matrixSETranFile = json.load(open(os.path.join("data", sharedLineFile) #ifstream constructor opens the file of Transmission lines
+		matrixSETranFile = json.load(open(os.path.join("data", sharedLineFile))) #ifstream constructor opens the file of Transmission lines
 		
 		#/* Instantiate Shared Existing Transmission Lines */
 		for matrixSETran in matrixSETranFile:
@@ -137,52 +138,44 @@ class Nettran(object):
 			#values of maximum allowable power flow on line in the forward and reverse direction:
 			ptMax = matrixSETran['lineLimit']/100
 			#creates SELine object with ID k + 1
-			if ( nodeZone1 == zonalIndex ) { // If the node 1 belongs to this zone
-				SELine *SELineInstance = new SELine( k + 1, serNum, nodeObject[ tNodeID1 - 1 ], tNodeID1, nodeZone1, tNodeID2, nodeZone2, zonalIndex, ptMax, reacT ); // Create the shared existing transmission line object with node 1 
-				int indCount = 0; // Initialize a counter for tracking the position in the vector of the iterator
-				int toFromFlag = 1; // Indicates that the from node is the intra-zonal node 
-				for (diffZNIt = diffZoneNodeID.begin(); diffZNIt != diffZoneNodeID.end(); ++diffZNIt) {
-					if ((*diffZNIt == tNodeID2) && (diffZoneID[indCount] == nodeZone2)) { // Check whether the other-zone node is already present in the list
-						containsFlag = 1;  // Loop through the diffZoneNodeID and diffZoneID vectors, to see if the other zone-node is already present or not, if yes, set the containsFlag to 1
-						SELineInstance->outerNodeIndex(indCount, toFromFlag); // Calling the SELine method, which in turn calls the intra-zonal node method, to create a list of rankings of all the outer-zone nodes that are connected to this node, if the intra-zonal node is already present
-					}
-					++indCount; // Increment the counter
-				}
-				if (containsFlag == 0) { // If the diffZoneNodeID and diffZoneID vectors do not contain the other zone-node, then push the node and the other zone index in the respective vectors
-					diffZoneNodeID.push_back(tNodeID2);
-					diffZoneID.push_back(nodeZone2);
-					diffZoneNodeExistingID.push_back(tNodeID2); // initialize the list of external-zone existing node ID's so that it's not empty
-					diffZoneExistingID.push_back(nodeZone2); // Initialize the list of external-zone existing zone ID's so that it's not empty.
-					++otherNodeCount; // Increment the counter to account for the total number of other-zone nodes
-					SELineInstance->outerNodeIndex(otherNodeCount, toFromFlag); // Calling the SELine method, which in turn calls the intra-zonal node method, to create a list of rankings of all the outer-zone nodes that are connected to this node, if the intra-zonal node is newly added
-				}
-				SELineObject.push_back( SELineInstance ); // pushes the transLineInstance object into the vector
-			}
-			else { // Otherwise, if the node 2 belongs to this zone
-				SELine *SELineInstance = new SELine( k + 1, serNum, nodeObject[ tNodeID2 - 1 ], tNodeID1, nodeZone1, tNodeID2, nodeZone2, zonalIndex, ptMax, reacT ); // Create the shared existing transmission line object with node 2
-				int indCount = 0; // Initialize a counter for tracking the position in the vector of the iterator
-				int toFromFlag = -1; // Indicates that the To node is the intra-zonal node
-				for (diffZNIt = diffZoneNodeID.begin(); diffZNIt != diffZoneNodeID.end(); ++diffZNIt) {
-					if ((*diffZNIt == tNodeID1) && (diffZoneID[indCount] == nodeZone1)) { // Check whether the other-zone node is already present in the list
-						containsFlag = 1;   // Loop through the diffZoneNodeID and diffZoneID vectors, to see if the other zone-node is already present or not, if yes, set the containsFlag to 1
-						SELineInstance->outerNodeIndex(indCount, toFromFlag); // Calling the SELine method, which in turn calls the intra-zonal node method, to create a list of rankings of all the outer-zone nodes that are connected to this node, if the intra-zonal node is already present
-					}
-					++indCount; // Increment the counter
-				}
-				if (containsFlag == 0) { // If the diffZoneNodeID and diffZoneID vectors do not contain the other zone-node, then push the node and the other zone index in the respective vectors
-					diffZoneNodeID.push_back(tNodeID1);
-					diffZoneID.push_back(nodeZone1);
-					diffZoneNodeExistingID.push_back(tNodeID1); // initialize the list of external-zone existing node ID's so that it's not empty
-					diffZoneExistingID.push_back(nodeZone1); // Initialize the list of external-zone existing zone ID's so that it's not empty.
-					++otherNodeCount; // Increment the counter to account for the total number of other-zone nodes
-					SELineInstance->outerNodeIndex(otherNodeCount, toFromFlag); // Calling the SELine method, which in turn calls the intra-zonal node method, to create a list of rankings of all the outer-zone nodes that are connected to this node, if the intra-zonal node is newly added
-				}
-				SELineObject.push_back( SELineInstance ); // pushes the transLineInstance object into the vector
-			}			
-			containsFlag = 0; // Reset the containsFlag for matching the next item
-		} // end initialization for Shared Existing Transmission Lines
-		matrixSETranFile.close(); // Close the shared existing file
-		/* Shared Candidate Transmission Lines */
+			if nodeZone1 == self.zonalIndex: #If the node 1 belongs to this zone
+				SELineInstance = SELine(k + 1, serNum, nodeObject[ tNodeID1 - 1 ], tNodeID1, nodeZone1, tNodeID2, nodeZone2, zonalIndex, ptMax, reacT) #Create the shared existing transmission line object with node 1 
+				indCount = 0 #Initialize a counter for tracking the position in the vector of the iterator
+				toFromFlag = 1 #Indicates that the from node is the intra-zonal node 
+				for diffZNIt in self.diffZoneNodeID:
+					if diffZNIt == tNodeID2 and self.diffZoneID[indCount] == nodeZone2: #Check whether the other-zone node is already present in the list
+						self.containsFlag = 1 #Loop through the diffZoneNodeID and diffZoneID vectors, to see if the other zone-node is already present or not, if yes, set the containsFlag to 1
+						SELineInstance.outerNodeIndex(indCount, toFromFlag) #Calling the SELine method, which in turn calls the intra-zonal node method, to create a list of rankings of all the outer-zone nodes that are connected to this node, if the intra-zonal node is already present
+					indCount += 1 #Increment the counter
+				if self.containsFlag == 0: #If the diffZoneNodeID and diffZoneID vectors do not contain the other zone-node, then push the node and the other zone index in the respective vectors
+					self.diffZoneNodeID.append(tNodeID2)
+					self.diffZoneID.append(nodeZone2)
+					self.diffZoneNodeExistingID.append(tNodeID2) #initialize the list of external-zone existing node ID's so that it's not empty
+					self.diffZoneExistingID.append(nodeZone2) #Initialize the list of external-zone existing zone ID's so that it's not empty.
+					otherNodeCount += 1 #Increment the counter to account for the total number of other-zone nodes
+					SELineInstance.outerNodeIndex(otherNodeCount, toFromFlag) #Calling the SELine method, which in turn calls the intra-zonal node method, to create a list of rankings of all the outer-zone nodes that are connected to this node, if the intra-zonal node is newly added
+				self.SELineObject.append(SELineInstance) #pushes the transLineInstance object into the vector
+			else: #Otherwise, if the node 2 belongs to this zone
+				SELineInstance = SELine(k + 1, serNum, nodeObject[ tNodeID2 - 1 ], tNodeID1, nodeZone1, tNodeID2, nodeZone2, zonalIndex, ptMax, reacT) #Create the shared existing transmission line object with node 2
+				indCount = 0 #Initialize a counter for tracking the position in the vector of the iterator
+				toFromFlag = -1 #Indicates that the To node is the intra-zonal node
+				for diffZNIt in diffZoneNodeID:
+					if diffZNIt == tNodeID1 and self.diffZoneID[indCount] == nodeZone1: #Check whether the other-zone node is already present in the list
+						self.containsFlag = 1 #Loop through the diffZoneNodeID and diffZoneID vectors, to see if the other zone-node is already present or not, if yes, set the containsFlag to 1
+						SELineInstance.outerNodeIndex(indCount, toFromFlag) #Calling the SELine method, which in turn calls the intra-zonal node method, to create a list of rankings of all the outer-zone nodes that are connected to this node, if the intra-zonal node is already present
+					indCount += 1 #Increment the counter
+				if self.containsFlag == 0: #If the diffZoneNodeID and diffZoneID vectors do not contain the other zone-node, then push the node and the other zone index in the respective vectors
+					self.diffZoneNodeID.append(tNodeID1)
+					self.diffZoneID.append(nodeZone1)
+					self.diffZoneNodeExistingID.append(tNodeID1) #initialize the list of external-zone existing node ID's so that it's not empty
+					self.diffZoneExistingID.append(nodeZone1) #Initialize the list of external-zone existing zone ID's so that it's not empty.
+					otherNodeCount += 1  #Increment the counter to account for the total number of other-zone nodes
+					SELineInstance.outerNodeIndex(otherNodeCount, toFromFlag) #Calling the SELine method, which in turn calls the intra-zonal node method, to create a list of rankings of all the outer-zone nodes that are connected to this node, if the intra-zonal node is newly added
+				self.SELineObject.append( SELineInstance ) # pushes the transLineInstance object into the vector	
+			self.containsFlag = 0 #Reset the containsFlag for matching the next item
+		#end initialization for Shared Existing Transmission Lines
+		matrixSETranFile.close() #Close the shared existing file
+		#/* Shared Candidate Transmission Lines */
 		ifstream matrixCETranFile( candLineFile, ios::in ); // ifstream constructor opens the file of candidate Transmission lines
 
 		// exit program if ifstream could not open file
