@@ -176,22 +176,9 @@ class Nettran(object):
 		#end initialization for Shared Existing Transmission Lines
 		matrixSETranFile.close() #Close the shared existing file
 		#/* Shared Candidate Transmission Lines */
-		ifstream matrixCETranFile( candLineFile, ios::in ); // ifstream constructor opens the file of candidate Transmission lines
+		matrixCETranFile = json.load(open(os.path.join("data", candLineFile))) #ifstream constructor opens the file of candidate Transmission lines
 
-		// exit program if ifstream could not open file
-		if ( !matrixCETranFile ) {
-			cerr << "\nFile for Shared Candidate Transmission lines could not be opened\n" << endl;
-			exit( 1 );
-		} // end if
-		int tranCFields; // Number of columns in the candidate transmission lines file
-		matrixCETranFile >> tranCFields; // get the dimensions of the Transmission line matrix
-		double matrixCETran[ sharedCLines ][ tranCFields ]; // candidate Transmission line matrix
-		for ( int i = 0; i < sharedCLines; ++i ) {
-			for ( int j = 0; j < tranCFields; ++j ) {
-				matrixCETranFile >> matrixCETran[ i ][ j ]; // read the candidate Transmission line matrix
-			}
-		}
-		/* Instantiate Shared Candidate Transmission Lines */
+		#/* Instantiate Shared Candidate Transmission Lines */
 		for ( int k = 0; k < sharedCLines; ++k ) {
 			int serNum, tNodeID1, tNodeID2, nodeZone1, nodeZone2, presAbsence, lifeTime, ownership; // node object IDs to which the particular transmission line object is connected
 			do {
