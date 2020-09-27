@@ -19,11 +19,12 @@ class intCandLine(object):
 	  	self.reacT=Reactance
 	  	self.resFromStageI=absPres
 	  	self.statusOfConstruction=absPres
-		self.fromNode= self.connNodetPtr1.getNodeID(self) ### I am not sure about this definition
-		self.toNode= self.connNodetPtr2.getNodeID(self)    ### same
-		self.connNodetPtr1.setIntCandConn(self, idOfTransl, 1, reacT, toNode, statusOfConstruction) # increments the txr line connection variable to node 1
-		self.connNodetPtr2.setIntCandConn(self,idOfTransl, -1, reacT, fromNode, statusOfConstruction) # increments the txr line connection variable to node 2
-		self.setTranData(self, cap, life, ROI) # calls setTranData member function to set the parameter values
+		fromNode= self.connNodetPtr1.getNodeID() 
+		toNode=self.connNodetPtr2.getNodeID()    
+		self.connNodetPtr1.setIntCandConn(idOfTransl, 1, self.reacT, toNode, self.statusOfConstruction) # increments the txr line connection variable to node 1
+		self.connNodetPtr2.setIntCandConn(idOfTransl, -1, self.reacT, fromNode, self.statusOfConstruction) # increments the txr line connection variable to node 2
+		self.setTranData(cap, life, ROI) ##Not sure
+		# calls setTranData member function to set the parameter values
 
 # constructor ends
 """
@@ -34,10 +35,10 @@ intCandLine::~intCandLine() // destructor
 } // end of destructor
 """
 	def modifyNodeReact(self): # function to modify the nodal connected reactance, if the candidate line is actually built
-		self.fromNode=self.connNodetPtr1.getNodeID(self)
-		self.toNode=self.connNodetPtr2.getNodeID(self)
-		self.connNodetPtr1.modifyReactAPP(self, translID, 1, reacT, toNode, 0) #increments the txr line connection variable to node 1
-		self.connNodetPtr2.modifyReactAPP(self, translID, -1, reacT, fromNode, 0)  #increments the txr line connection variable to node 1
+		fromNode=self.connNodetPtr1.getNodeID()
+		toNode=self.connNodetPtr2.getNodeID()
+		self.connNodetPtr1.modifyReactAPP(self.translID, 1, self.reacT, toNode, 0) #increments the txr line connection variable to node 1
+		self.connNodetPtr2.modifyReactAPP(self.translID, -1, self.reacT, fromNode, 0)  #increments the txr line connection variable to node 1
 #	function ends
 
 	def getTranslID(self): # function gettranslID begins
@@ -46,11 +47,11 @@ intCandLine::~intCandLine() // destructor
 
 
 	def getTranslNodeID1(self): # function getGenNodeID begins
-		return self.connNodetPtr1.getNodeID(self) # returns the ID number of the node to which the generator object is connected
+		return self.connNodetPtr1.getNodeID() # returns the ID number of the node to which the generator object is connected
 # end of getGenNodeID function
 
 	def getTranslNodeID2(self): # function getGenNodeID begins
-		return self.connNodetPtr2.getNodeID(self) # returns the ID number of the node to which the generator object is connected
+		return self.connNodetPtr2.getNodeID() # returns the ID number of the node to which the generator object is connected
 # end of getGenNodeID function
 
 	def getFlowLimit(self): # Function getFlowLimit gets the value of power flow line limit	
