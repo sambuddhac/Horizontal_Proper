@@ -1,245 +1,195 @@
-// Member functions for class Node.
+#Member functions for class Node.
+from math import *
+import numpy as np
 #include <iostream>
-// include Node class definition from node.h
+# include Node class definition from node.h
 #include <vector>
 #include <algorithm>
 #include "node.h"
+#using namespace std;
 
-using namespace std;
+class Node(object):
+	def _init_(self, idOfNode, zoneIndex): # constructor begins
+		self.nodeID=idOfNode
+		self.zoneID=zoneIndex
+#cout << "\nInitializing the parameters of the node with ID: " << nodeID << endl;
+#initialize the connected devices to zero for node
+		self.gConnNumber = 0 # number of generators connected to a particular node
+		self.tConnNumber = 0 # number of transmission lines connected to a particular node
+		self.lConnNumber = 0 # number of loads connected to a particular node
+		self.sharedExConnNumber = 0 # number of shared existing transmission lines connected to this node
+		self.builtCandConnNumber = 0 # number of constructed candidate line connected to this node
+		self.builtIntCandConnNumber = 0 # number of constructed candidate line connected to this node
+		self.candConnNumber = 0 # number of shared candidate transmission lines connected to this node
+		self.intCandConnNumber = 0 # number of internal candidate transmission lines connected to this node 
+		self.sharedFlag = 0 # node flag to indicate whether a shared existing or candidate line has been connected to a node
+		self.PDevCount = 0 # initialize number of devices connectedto a node to zero
+		self.fromReact = 0.0 # Initialize the from reactance
+		self.toReact = 0.0  # Initialize the to reactance
+		self.globalRank = 0 # sets the globalRank to default value of 0 
 
-Node::Node( int idOfNode, int zoneIndex ) // constructor begins
-	: nodeID( idOfNode ),
-	  zoneID( zoneIndex )
-{
-	//cout << "\nInitializing the parameters of the node with ID: " << nodeID << endl;
-
-	// initialize the connected devices to zero for node
-	gConnNumber = 0; // number of generators connected to a particular node
-	tConnNumber = 0; // number of transmission lines connected to a particular node
-	lConnNumber = 0; // number of loads connected to a particular node
-	sharedExConnNumber = 0; // number of shared existing transmission lines connected to this node
-	builtCandConnNumber = 0; // number of constructed candidate line connected to this node
-	builtIntCandConnNumber = 0; // number of constructed candidate line connected to this node
-	candConnNumber = 0; // number of shared candidate transmission lines connected to this node
-	intCandConnNumber = 0; // number of internal candidate transmission lines connected to this node 
-	sharedFlag = 0; // node flag to indicate whether a shared existing or candidate line has been connected to a node
-	PDevCount = 0; // initialize number of devices connectedto a node to zero
-	fromReact = 0.0; // Initialize the from reactance
-	toReact = 0.0; // Initialize the to reactance
-	globalRank = 0; // sets the globalRank to default value of 0 
-
-} // constructor ends
-
+# constructor ends
+"""
 Node::~Node() // destructor
 {
 	//cout << "\nThe node object having ID " << nodeID << " have been destroyed.\n";
 
 } // end of destructor
+"""
+	def getNodeID(self): # function getNodeID begins
+		return self.nodeID #returns node ID to the caller
+ # end of function getNodeID
 
-int Node::getNodeID() // function getNodeID begins
-{
-	return nodeID; // returns node ID to the caller
-} // end of function getNodeID
+	def setgConn(self, serialOfGen):
+		self.gConnNumber+=1 # increment the number of generators connected by one whenever a generator is connected to the node
+		self.genSerialNum.append(serialOfGen) # records the serial number of the generator connected to the node 
+### I am not sure about the above codes especially the append command 
 
-void Node::setgConn( int serialOfGen )
-{
-	++gConnNumber; // increment the number of generators connected by one whenever a generator is connected to the node
-	genSerialNum.push_back( serialOfGen ); // records the serial number of the generator connected to the node 
-}
-
-void Node::settConn( int tranID, int dir, double react, int rankOfOther )
-{
-	++tConnNumber; // increment the number of txr lines connected by one whenever a txr line is connected to the node
-	if ( dir == 1 ) {
-		tranFromSerial.push_back(tranID);
-		fromReact += (1/react);	
-		if (std::find(connNodeList.begin(), connNodeList.end(), rankOfOther) != connNodeList.end()) { // If predecided Gen value is given for this particular Powergenerator
-			auto pos = std::find(connNodeList.begin(), connNodeList.end(), rankOfOther) - connNodeList.begin(); // find the position of the Powergenerator in the chart of predecided values
-			connReactRec[pos] -= 1/react;
-		}
-		else {
-			connNodeList.push_back(rankOfOther);
-			connReactRec.push_back(-1/react);
-		}
+	def settConn(self, tranID, dir, react, rankOfOther):
+		self.tConnNumber+=1 # increment the number of txr lines connected by one whenever a txr line is connected to the node
+		if dir == 1:
+			self.tranFromSerial.append(tranID)
+			self.fromReact += 1/react
+			### I am not sure about the following line	
+			if  rankOfOther in self.connNodeList:  # If predecided Gen value is given for this particular Powergenerator
+				self.pos= self.connNodeList.index(rankOfOther) # find the position of the Powergenerator in the chart of predecided values
+				self.connReactRec[self.pos] -= 1/react
+			else: 
+				self.connNodeList.append(rankOfOther)
+				self.connReactRec.append(-1/react)
 	
-	}
-	else {
-		tranToSerial.push_back(tranID);
-		toReact -= (1/react);
-		if (std::find(connNodeList.begin(), connNodeList.end(), rankOfOther) != connNodeList.end()) { // If predecided Gen value is given for this particular Powergenerator
-			auto pos = std::find(connNodeList.begin(), connNodeList.end(), rankOfOther) - connNodeList.begin(); // find the position of the Powergenerator in the chart of predecided values
-			connReactRec[pos] += 1/react;
-		}
-		else {
-			connNodeList.push_back(rankOfOther);
-			connReactRec.push_back(1/react);
-		}
-	}
-}
+		else:
+			self.tranToSerial.append(tranID)
+			self.toReact -= (1/react)
+			if rankOfOther in self.connNodeList: # If predecided Gen value is given for this particular Powergenerator
+				self.pos= self.connNodeList.index(rankOfOther) # find the position of the Powergenerator in the chart of predecided values
+				self.connReactRec[self.pos] += 1/react
+			else:
+				self.connNodeList.append(rankOfOther)
+				self.connReactRec.append(1/react)
 
-void Node::setSEConn( int tranID, int dir, double react, int connectZone )
-{
-	++sharedExConnNumber; // increment the number of shared existing txr lines connected by one whenever a txr line is connected to the node
-	if ( dir == 1 ) {
-		SEFromSerial.push_back(tranID);
-		fromReact += (1/react);		
-	}
-	else {
-		SEToSerial.push_back(tranID);
-		toReact -= (1/react);
-	}
-	connSharedPoint=1; // Flag set to indicate that this node is connected to an SE line
-	if (std::find(connectedZoneList.begin(), connectedZoneList.end(), connectZone) == connectedZoneList.end()) { // If the connected zone isn't in the list
-		connectedZoneList.push_back(connectZone); // Put it on the list
-		++multiplicity; // increase the multiplicity by 1
-	}
-}
+	def self.setSEConn(self, tranID, dir, react, connectZone):
+		self.sharedExConnNumber += 1  # increment the number of shared existing txr lines connected by one whenever a txr line is connected to the node
+		if  dir == 1:
+			self.SEFromSerial.append(tranID)
+			self.fromReact += (1/react)		
+		else:
+			self.SEToSerial.append(tranID)
+			self.toReact -= (1/react)
+		self.connSharedPoint=1 #Flag set to indicate that this node is connected to an SE line
+		if connectZone not in self.connectedZoneList: # If the connected zone isn't in the list
+			connectedZoneList.append(connectZone) # Put it on the list
+			multiplicity +=1 # increase the multiplicity by 1
 
-void Node::modifyReactAPP( int tranID, int dir, double react, int rankOfOther, int deviceType) // Modifies the to and from reactances of lines connected to this node, to account for the newly constructed lines
-{
-	if (deviceType== 1) { // If shared candidate line
-		++builtCandConnNumber; // increment the number of shared constructed candidate lines connected by one whenever the line is connected to the node
-		if ( dir == 1 ) {
-			builtCandFromSerial.push_back(tranID);
-			fromReact += (1/react);		
+	def self.modifyReactAPP(self, tranID, dir, react, rankOfOther, deviceType): # Modifies the to and from reactances of lines connected to this node, to account for the newly constructed lines
+		if deviceType== 1:  # If shared candidate line
+			builtCandConnNumber+=1 # increment the number of shared constructed candidate lines connected by one whenever the line is connected to the node
+			if  dir == 1:  
+				self.builtCandFromSerial.append(tranID)
+				self.fromReact += (1/react)		
+			else:
+				self.builtCandToSerial.append(tranID)
+				self.toReact -= (1/react)
+	
+		else: # If internal candidate line
+			builtIntCandConnNumber+=1 # increment the number of shared constructed candidate lines connected by one whenever the line is connected to the node
+			if  dir == 1:
+				self.builtIntCandFromSerial.append(tranID)
+				self.fromReact += (1/react)	
+				if  rankOfOther in  self.connNodeList: # If predecided Gen value is given for this particular Powergenerator
+					self.pos = self.connNodeList.index(rankOfOther)  # find the position of the Powergenerator in the chart of predecided values
+					self.connReactRec[self.pos] -= (1/react)
+				else:
+					self.connNodeList.append(rankOfOther)
+					self.connReactRec.append((-1/react))
+			else:
+				self.builtIntCandToSerial.append(tranID)
+				self.toReact -= (1/react)
+				if  rankOfOther in self.connNodeList: # If predecided Gen value is given for this particular Powergenerator
+					self.pos = self.connNodeList.index(rankOfOther) # find the position of the Powergenerator in the chart of predecided values
+					self.connReactRec[self.pos] += (1/react)
+				else:
+					self.connNodeList.append(rankOfOther)
+					self.connReactRec.append((1/react))
+		connBuiltCandPoint=1
+
+	def setCandConn(self, tranID, dir, react, connectZone):
+		self.candConnNumber+=1 # increment the number of shared cand txr lines connected by one whenever a txr line is connected to the node
+		if dir == 1:
+			self.CandFromSerial.append(tranID)
+		else:
+			self.CandToSerial.append(tranID)
+		self.connCandPoint=1 # Flag set to indicate that this node is connected to a cand line
+		if  connectZone not in self.connectedZoneList # If the connected zone isn't in the list
+			self.connectedZoneList.append(connectZone) # Put it on the list
+			multiplicity+=1 # increase the multiplicity by 1
+
+	def getNodeMultiplicity(self): # get the multiplicity of the node i.e: the number of different zones (other than the one where it belongs) to which it is connected
+		return self.multiplicity
+
+	def setIntCandConn(self, tranID, dir, react, rankOfOther, constStat):
+		self.intCandConnNumber+=1 # increment the number of shared cand txr lines connected by one whenever a txr line is connected to the node
+		if dir == 1:
+			self.IntCandFromSerial.append(tranID)
+			self.fromReact += constStat*(1/react)	
+			if  rankOfOther in self.connNodeList: # If predecided Gen value is given for this particular Powergenerator
+				self.pos = self.connNodeList.index(rankOfOther) # find the position of the Powergenerator in the chart of predecided values
+				self.connReactRec[self.pos] -= constStat*(1/react)
+			else:
+				self.connNodeList.append(rankOfOther)
+				self.connReactRec.append(constStat*(-1/react))
+		else:
+			self.IntCandToSerial.append(tranID)
+			self.toReact -= constStat*(1/react)
+			if rankOfOther in self.connNodeList: # If predecided Gen value is given for this particular Powergenerator
+				self.pos = self.connNodeList.index(rankOfOther)  # find the position of the Powergenerator in the chart of predecided values
+				self.connReactRec[self.pos] += constStat*(1/react)
+			else:
+				self.connNodeList.append(rankOfOther)
+				self.connReactRec.append(constStat*(1/react))
+		self.connIntCandPoint=1; # Flag set to indicate that this node is connected to an internal cand line
+
+	def setlConn(self, lID, loadVal):
+		self.lConnNumber+=1 # increment the number of loads connected by one whenever a load is connected to the node
+		self.loadSerialNum.append(lID)
+		self.connLoadVal.clear(self) ### I am not sure
+		self.connLoadVal = *loadVal # total connected load
+
+	def getGenLength(self): # function getNodeID begins
+		return self.genSerialNum.len(self) # returns node ID to the caller ### Not sure
+
+	def getGenSer(self, colCount):
+		return self.genSerialNum.index(colCount-1) ###not sure
+
+# function redContNodeCount begins
+
+	def initLoad(self,scenNum): # Initialize the default loads on all nodes to zero
+		i = 0
+		for i in range (scenNum):
+			self.connLoadVal.append(0) ###Not sure
+
+	def devpinitMessage(self,scenC): # function devpinitMessage begins
+		return self.connLoadVal.index(scenC) # return the total connected load ###Not sure
+# function devpinitMessage ends
+
+	def sendExtNodeInfo(self, rankOfOuter, direction,reactance, indicatorSECand): # Function to populate the connected outer-node list
+		if rankOfOuter in self.shareNodeList: # If outer node rank is present in the list
+			auto pos = std::find(shareNodeList.begin(), shareNodeList.end(), rankOfOuter) - shareNodeList.begin(); // find the position of the outer node
+			if (direction == 1) {
+				shareReactRec[pos] -= (1-indicatorSECand)*(1/reactance);
 		}
-		else {
-			builtCandToSerial.push_back(tranID);
-			toReact -= (1/react);
-		}
-	}
-	else { // If internal candidate line
-		++builtIntCandConnNumber; // increment the number of shared constructed candidate lines connected by one whenever the line is connected to the node
-		if ( dir == 1 ) {
-			builtIntCandFromSerial.push_back(tranID);
-			fromReact += (1/react);	
-			if (std::find(connNodeList.begin(), connNodeList.end(), rankOfOther) != connNodeList.end()) { // If predecided Gen value is given for this particular Powergenerator
-				auto pos = std::find(connNodeList.begin(), connNodeList.end(), rankOfOther) - connNodeList.begin(); // find the position of the Powergenerator in the chart of predecided values
-				connReactRec[pos] -= (1/react);
-			}
 			else {
-				connNodeList.push_back(rankOfOther);
-				connReactRec.push_back((-1/react));
-			}	
+				shareReactRec[pos] += (1-indicatorSECand)*(1/reactance);
 		}
+	}
 		else {
-			builtIntCandToSerial.push_back(tranID);
-			toReact -= (1/react);
-			if (std::find(connNodeList.begin(), connNodeList.end(), rankOfOther) != connNodeList.end()) { // If predecided Gen value is given for this particular Powergenerator
-				auto pos = std::find(connNodeList.begin(), connNodeList.end(), rankOfOther) - connNodeList.begin(); // find the position of the Powergenerator in the chart of predecided values
-				connReactRec[pos] += (1/react);
-			}
+			if (direction == 1) {
+				shareNodeList.push_back(rankOfOuter);
+				shareReactRec.push_back((1-indicatorSECand)*(-1/reactance));
+		}
 			else {
-				connNodeList.push_back(rankOfOther);
-				connReactRec.push_back((1/react));
-			}
-		}
-	}
-	connBuiltCandPoint=1;
-}
-
-void Node::setCandConn( int tranID, int dir, double react, int connectZone )
-{
-	++candConnNumber; // increment the number of shared cand txr lines connected by one whenever a txr line is connected to the node
-	if ( dir == 1 ) {
-		CandFromSerial.push_back(tranID);	
-	}
-	else {
-		CandToSerial.push_back(tranID);
-	}
-	connCandPoint=1; // Flag set to indicate that this node is connected to a cand line
-	if (std::find(connectedZoneList.begin(), connectedZoneList.end(), connectZone) == connectedZoneList.end()) { // If the connected zone isn't in the list
-		connectedZoneList.push_back(connectZone); // Put it on the list
-		++multiplicity; // increase the multiplicity by 1
-	}
-}
-
-int Node::getNodeMultiplicity()// get the multiplicity of the node i.e: the number of different zones (other than the one where it belongs) to which it is connected
-{
-	return multiplicity;
-}
-
-void Node::setIntCandConn( int tranID, int dir, double react, int rankOfOther, int constStat )
-{
-	++intCandConnNumber; // increment the number of shared cand txr lines connected by one whenever a txr line is connected to the node
-	if ( dir == 1 ) {
-		IntCandFromSerial.push_back(tranID);
-		fromReact += constStat*(1/react);	
-		if (std::find(connNodeList.begin(), connNodeList.end(), rankOfOther) != connNodeList.end()) { // If predecided Gen value is given for this particular Powergenerator
-			auto pos = std::find(connNodeList.begin(), connNodeList.end(), rankOfOther) - connNodeList.begin(); // find the position of the Powergenerator in the chart of predecided values
-			connReactRec[pos] -= constStat*(1/react);
-		}
-		else {
-			connNodeList.push_back(rankOfOther);
-			connReactRec.push_back(constStat*(-1/react));
-		}	
-	}
-	else {
-		IntCandToSerial.push_back(tranID);
-		toReact -= constStat*(1/react);
-		if (std::find(connNodeList.begin(), connNodeList.end(), rankOfOther) != connNodeList.end()) { // If predecided Gen value is given for this particular Powergenerator
-			auto pos = std::find(connNodeList.begin(), connNodeList.end(), rankOfOther) - connNodeList.begin(); // find the position of the Powergenerator in the chart of predecided values
-			connReactRec[pos] += constStat*(1/react);
-		}
-		else {
-			connNodeList.push_back(rankOfOther);
-			connReactRec.push_back(constStat*(1/react));
-		}
-	}
-	connIntCandPoint=1; // Flag set to indicate that this node is connected to an internal cand line
-}
-
-void Node::setlConn( int lID, vector<double>* loadVal )
-{
-	++lConnNumber; // increment the number of loads connected by one whenever a load is connected to the node
-	loadSerialNum.push_back(lID);
-	connLoadVal.clear();
-	connLoadVal = *loadVal; // total connected load
-
-}
-
-int Node::getGenLength() // function getNodeID begins
-{
-	return genSerialNum.size(); // returns node ID to the caller
-} // end of function getNodeID
-
-int Node::getGenSer(int colCount)
-{
-	return genSerialNum.at(colCount-1);
-}
-
-// function redContNodeCount begins
-
-void Node::initLoad( int scenNum ) // Initialize the default loads on all nodes to zero
-{
-	for (int i = 0; i < scenNum; ++i)
-		connLoadVal.push_back(0);
-}
-
-double Node::devpinitMessage(int scenC) const// function devpinitMessage begins
-{
-	return connLoadVal.at(scenC); // return the total connected load
-} // function devpinitMessage ends
-
-void Node::sendExtNodeInfo( int rankOfOuter, int direction, double reactance, int indicatorSECand ) // Function to populate the connected outer-node list
-{
-	if (std::find(shareNodeList.begin(), shareNodeList.end(), rankOfOuter) != shareNodeList.end()) { // If outer node rank is present in the list
-		auto pos = std::find(shareNodeList.begin(), shareNodeList.end(), rankOfOuter) - shareNodeList.begin(); // find the position of the outer node
-		if (direction == 1) {
-			shareReactRec[pos] -= (1-indicatorSECand)*(1/reactance);
-		}
-		else {
-			shareReactRec[pos] += (1-indicatorSECand)*(1/reactance);
-		}
-	}
-	else {
-		if (direction == 1) {
-			shareNodeList.push_back(rankOfOuter);
-			shareReactRec.push_back((1-indicatorSECand)*(-1/reactance));
-		}
-		else {
-			shareNodeList.push_back(rankOfOuter);
-			shareReactRec.push_back((1-indicatorSECand)*(1/reactance));
+				shareNodeList.push_back(rankOfOuter);
+				shareReactRec.push_back((1-indicatorSECand)*(1/reactance));
 		}
 
 	}	
