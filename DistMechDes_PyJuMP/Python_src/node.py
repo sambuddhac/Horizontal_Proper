@@ -35,6 +35,7 @@ Node::~Node() // destructor
 	//cout << "\nThe node object having ID " << nodeID << " have been destroyed.\n";
 
 } // end of destructor
+<<<<<<< HEAD
 """
 	def getNodeID(self): # function getNodeID begins
 		return self.nodeID #returns node ID to the caller
@@ -57,6 +58,32 @@ Node::~Node() // destructor
 			else: 
 				self.connNodeList.append(rankOfOther)
 				self.connReactRec.append(-1/react)
+=======
+
+int Node::getNodeID() // function getNodeID begins
+{
+	return nodeID; // returns node ID to the caller
+} // end of function getNodeID
+
+void Node::setgConn( int serialOfGen )
+{
+	++gConnNumber; // increment the number of generators connected by one whenever a generator is connected to the node
+	genSerialNum.push_back( serialOfGen ); // records the serial number of the generator connected to the node 
+}
+
+void Node::settConn( int tranID, int dir, double react, int rankOfOther )
+{
+	++tConnNumber; // increment the number of txr lines connected by one whenever a txr line is connected to the node
+	if ( dir == 1 ) {
+		tranFromSerial.push_back(tranID);
+		fromReact += (1/react);	
+		if rankOfOther in connNodeList: #If predecided Gen value is given for this particular Powergenerator
+			pos = connNodeList.index(rankOfOther) #find the position of the Powergenerator in the chart of predecided values
+			connReactRec[pos] -= 1/react
+		else:
+			connNodeList.append(rankOfOther)
+			connReactRec.append(-1/react)
+>>>>>>> 1d7a250c68a90d5e29760edfe0a3419d98bd5aff
 	
 		else:
 			self.tranToSerial.append(tranID)
