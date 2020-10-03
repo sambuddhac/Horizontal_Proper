@@ -44,7 +44,7 @@ Node::~Node() // destructor
 	def setgConn(self, serialOfGen):
 		self.gConnNumber+=1 # increment the number of generators connected by one whenever a generator is connected to the node
 		self.genSerialNum.append(serialOfGen) # records the serial number of the generator connected to the node 
-### I am not sure about the above codes especially the append command 
+### 
 
 	def settConn(self, tranID, dir, react, rankOfOther):
 		self.tConnNumber+=1 # increment the number of txr lines connected by one whenever a txr line is connected to the node
@@ -152,14 +152,14 @@ Node::~Node() // destructor
 	def setlConn(self, lID, loadVal):
 		self.lConnNumber +=1 # increment the number of loads connected by one whenever a load is connected to the node
 		self.loadSerialNum.append(lID)
-		self.connLoadVal.clear() 
-		self.connLoadVal = *loadVal #### I am not sure about =* # total connected load
+		self.connLoadVal = []
+		self.connLoadVal = loadVal ####
 
 	def getGenLength(self): # function getNodeID begins
-		return self.genSerialNum.len() # returns node ID to the caller ### Not sure
+		return self.genSerialNum.len() # returns node ID to the caller 
 
 	def getGenSer(self, colCount):
-		return self.genSerialNum.index(colCount-1) ###not sure at is
+		return self.genSerialNum[colCount-1] ###not sure at is
 
 # function redContNodeCount begins
 
@@ -169,7 +169,7 @@ Node::~Node() // destructor
 			self.connLoadVal.append(0) ###Not sure
 
 	def devpinitMessage(self,scenC): # function devpinitMessage begins
-		return self.connLoadVal.index(scenC) # return the total connected load ###Not sure
+		return self.connLoadVal[scenC] # return the total connected load ###Not sure
 # function devpinitMessage ends
 
 	def sendExtNodeInfo(self, rankOfOuter, direction,reactance, indicatorSECand): # Function to populate the connected outer-node list
@@ -206,19 +206,19 @@ Node::~Node() // destructor
 		return self.connNodeList.len() # returns the length of the vector containing the connected intra-zonal nodes
 
 	def getConnSer(self,colCount):
-		return self.connNodeList.index(colCount-1) # returns the serial number of the connected internal node at this position
+		return self.connNodeList[colCount-1] # returns the serial number of the connected internal node at this position
 
 	def getConnReact(self,colCount):
-		return self.connReactRec.index(colCount-1) # returns the serial number of the connected internal node at this position
+		return self.connReactRec[colCount-1] # returns the serial number of the connected internal node at this position
 
 	def getExtraNodeLength(self):
 		return self.shareNodeList.len() # returns the length of the vector containing the connected outer-zonal nodes
 
 	def getExtConnSer(self,colCount):
-		return self.shareNodeList.index(colCount-1) # returns the serial number of the connected external node at this position
+		return self.shareNodeList[colCount-1] # returns the serial number of the connected external node at this position
 
 	def getExtConnReact(self,colCount):
-		return self.shareReactRec.index(colCount-1) # returns the serial number of the connected internal node at this position
+		return self.shareReactRec[colCount-1] # returns the serial number of the connected internal node at this position
 
 	def getCandLineLengthF(self):
 		return self.CandFromSerial.len() # returns the number of cand lines connected to this from node
@@ -227,10 +227,10 @@ Node::~Node() // destructor
 		return self.CandToSerial.len() # returns the number of cand lines connected to this to node
 
 	def getCandSerF(self,colCount):
-		return self.CandFromSerial.index(colCount-1) #returns the serial number of the cand line at this position
+		return self.CandFromSerial[colCount-1] #returns the serial number of the cand line at this position
 
 	def getCandSerT(self,colCount):
-		return self.CandToSerial.index(colCount-1)  # returns the serial number of the cand line at this position
+		return self.CandToSerial[colCount-1]  # returns the serial number of the cand line at this position
 
 	def getIntCandLineLengthF(self):
 		return self.IntCandFromSerial.len() # returns the number of cand lines connected to this from node
@@ -239,10 +239,10 @@ Node::~Node() // destructor
 		return self.IntCandToSerial.len()	# returns the number of cand lines connected to this to node
 
 	def getIntCandSerF(self,colCount):
-		return self.IntCandFromSerial.index(colCount-1) # returns the serial number of the cand line at this position
+		return self.IntCandFromSerial[colCount-1] # returns the serial number of the cand line at this position
 
 	def getIntCandSerT(self,colCount):
-		return self.IntCandToSerial.index(colCount-1)	# returns the serial number of the cand line at this position
+		return self.IntCandToSerial[colCount-1]	# returns the serial number of the cand line at this position
 
 	def assignGlobalRank(self,rank): # Assigns the global rank to the nodes that are ends of shared lines
 		self.globalRank = rank # sets the rank 

@@ -4,7 +4,7 @@ import numpy as np
 #include <iostream>
 #include <iomanip>
 #include <cmath>
-// include candLine class definition from intcandidateLine.h, Node class definition from node.h
+# include candLine class definition from intcandidateLine.h, Node class definition from node.h
 #include "intcandidateLine.h"
 from Python_src.node import node
 #include "node.h"
@@ -23,7 +23,8 @@ class intCandLine(object):
 		toNode=self.connNodetPtr2.getNodeID()    
 		self.connNodetPtr1.setIntCandConn(idOfTransl, 1, self.reacT, toNode, self.statusOfConstruction) # increments the txr line connection variable to node 1
 		self.connNodetPtr2.setIntCandConn(idOfTransl, -1, self.reacT, fromNode, self.statusOfConstruction) # increments the txr line connection variable to node 2
-		self.setTranData(cap, life, ROI) ##Not sure
+		
+	###setTranData(self,cap, life, ROI)
 		# calls setTranData member function to set the parameter values
 
 # constructor ends
