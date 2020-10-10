@@ -1,58 +1,43 @@
-#include <vector>
-#include "powergenerator.h" // Include the definition of powergenerator class
-// Include definition of Node class 
-#include "node.h"
-#include <iostream>
-using namespace std;
+import numpy as np # typically this is what you want, and then instantiate numpy arrays wherever needed as np.array(). However, not sure, in this particular class, if we will need one
+#import powergenerator #I am not sure abot this line #You don't need this line, since in Python (unlike C++), we don't create a separate header file for the class declaration
+# Include definition of Node class
+from Python_src.node import node
+from math import *
 
-// constructor definition for the piecewise linear objective function
-Powergenerator::Powergenerator(int ID, Node *nodeConng, double incCost, double noLoad, double max, double Min)
-: genID(ID), // Initializer list to initialize data members that don't need validity check
-connNodegPtr( nodeConng ),
-noLoadCost(noLoad)
-{
-	incrementalCost = incCost; // Initialize this data member to zero (unused for piecewise linear objective)
-	//cout << "Incremental cost " << incrementalCost << endl;
-	setGenParamsSimple(max, Min); // call the set function to perform validity check on parameter value ranges and assign the values 
-	//cout << "Limits defined" << endl;
-	connNodegPtr->setgConn( genID ); // increments the generation connection variable to node
-	//cout << "Node connected" << endl;
-} // end of constructor
+# constructor definition for the linear objective function
+class Powergenerator(object):
+	def __init__(self, ID, nodeConng, incCost, noLoad, Max, Min): #Since Python does dynamic type checking, we don't typically need to specify the type of the variables
+ 		self.genID=ID # Initializer list to initialize data members that don't need validity check
+ 		self.connNodegPtr= nodeConng
+ 		self.noLoadCost=noLoad
+ 		self.incrementalCost = incCost # Initialize this data member to zero (unused for piecewise linear objective)
+		self.setGenParamsSimple(Max, Min) # call the set function to perform validity check on parameter value ranges and assign the values
+		self.connNodegPtr.setgConn(self.genID) # increments the generation connection variable to node
+ 	# end of constructor
 
+	####### Make sure you take care of proper indentation. I have taken care of indentation here, if functions belong in the same module or class, you need to indent all those properlyarly
+ 	def setGenParamsSimple(self, Max, Min): # set function to set the Powergenerator class data members min max limits
+		self.pMax = Max
+		self.pMin = Min
+ 	# end of setGenParams function
+	
+	def getGenID(self): # returns the Powergenerator ID number
+		return self.genID
+ 	# end of getGenID function
 
-void Powergenerator::setGenParamsSimple(double max, double Min) // set function to set the Powergenerator class data members min max limits
-{
-		pMax = max;
-		pMin = Min;
-} // end of setGenParams function
+	def getPMax(self): # function getPMax begins ####### change this function name to "getPMax" instead of "PowerggetPMax"
+		return self.pMax 
+	# getPMax ends
 
-Powergenerator::~Powergenerator() // destructor definition
-{
-	//cout << "\nGenerator object " << genNum << "  destroyed" << endl;
-} // end of destructor
+	def getPMin(self): # function getPMin begins
+		return self.pMin
+	# getPMax ends
 
-int Powergenerator::getGenID() // returns the Powergenerator ID number
-{
-	return genID;
-} // end of getGenID function
+	def getLinCoeff(self): # Gets the linear coefficient (Incremental production cost
+		return self.incrementalCost
+	# function getLinCoeff ends
 
-double Powergenerator::getPMax() // function getPMax begins
-{
-	return pMax; 
-} // getPMax ends
-
-double Powergenerator::getPMin() // function getPMin begins
-{
-	return pMin;
-} // getPMax ends
-
-double Powergenerator::getLinCoeff() // Gets the linear coefficient (Incremental production cost
-{
-	return incrementalCost;
-} // function getLinCoeff ends
-
-double Powergenerator::getNLCost() // Gets the no load cost 
-{
-	return noLoadCost;
-} // function getNLCost ends 
+	def getNLCost(self): # Gets the no load cost 
+		return self.noLoadCost
+	# function getNLCost ends 
 
