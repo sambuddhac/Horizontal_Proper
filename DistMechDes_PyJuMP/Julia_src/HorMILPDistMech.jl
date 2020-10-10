@@ -1,8 +1,8 @@
 #=
-    #gelsolverFirstBase() for Dummy zero interval OPF solver for generator
+    #HorMILPDistMech() for zonal decision making for building cross-border and internal transmission lines and optimal operation
 
     #Author: Sambuddha Chakrabarti
-    #This is the dummy zero Generator Optimization Model for the base case
+    #This is the zonal decision making for building cross-border and internal transmission lines and optimal operation
 =#
 
 import Pkg
@@ -41,34 +41,93 @@ function HorMILPDistMech(coordInstanceRef, LagMultXi, LagMultPi, totalCandLineNu
                 0 <= Pgen[1:countOfScenarios, 1:genNumber] #power generation MW outputs
                 voltTheta[1:countOfScenarios, 1:nodeNumber] #voltage phase angles for internal zonal nodes
                 sharedCandFlow[1:countOfScenarios, 1:sharedCLines] #power flow values for shared candidate lines
-                sharedCandBinDec[1:sharedCLines] #binary integer decision variable values for shared candidate lines
+                sharedCandBinDec[1:sharedCLines], Bin #binary integer decision variable values for shared candidate lines
                 otherTheta[1:countOfScenarios, 1:otherNodeCount] #voltage phase angles of other-zone nodes connected through shared existing and candidate lines
                 internalCandFlow[1:countOfScenarios, 1:internalCLines] #power flow values for internal candidate lines
-                internalCandBinDec[1:internalCLines] #binary integer decision variable values for internal candidate lines
+                internalCandBinDec[1:internalCLines], Bin #binary integer decision variable values for internal candidate lines
         end
 
+        @constraints model begin
+                #Constraints corresponding to supply-demand balance
+                rCount = 1 #Initialize the row count
+	        for scenCounter in 1:countOfScenarios
+		for (nodeIterator = nodeObject.begin(); nodeIterator != nodeObject.end(); ++nodeIterator){
+			outPutFile << "\nGeneration\t" << rCount << "\n";
+			int genListLength = (*nodeIterator)->getGenLength(); // get the number
+			cout << "\nScenario Count: " << scenCounter << " node count: " << (*nodeIterator)->getNodeID() << " Conn Gen: " << genListLength << endl;
+			for (int cCount = 1; cCount <= genListLength; ++cCount){
+				cout << "\nSerial: " << cCount << " Generator Serial: " << (*nodeIterator)->getGenSer(cCount) << endl;
+				ia.push_back(rCount), ja.push_back(scenCounter*genNumber+(*nodeIterator)->getGenSer(cCount)), ar.push_back(1.0);
+				outPutFile << "\n" << rCount << "\t" << scenCounter*genNumber+(*nodeIterator)->getGenSer(cCount) << "\t" << 1.0 << endl;
+				++index;
+			}
+			outPutFile << "\nIntrazonal Node Angles\t" << rCount << "\n";
+			ia.push_back(rCount), ja.push_back(countOfScenarios*genNumber+rCount), ar.push_back(((*nodeIterator)->getToReact())-((*nodeIterator)->getFromReact()));
+			outPutFile << "\n" << rCount << "\t" << countOfScenarios*genNumber+rCount << "\t" << ((*nodeIterator)->getToReact())-((*nodeIterator)->getFromReact()) << "\t" << ((*nodeIterator)->getFromReact()) << ((*nodeIterator)->getToReact()) << endl;
+			++index;
+			outPutFile << "\nConnected Intrazonal Node Angles\t" << rCount << "\n";
+			int connNodeListLength = (*nodeIterator)->getConNodeLength(); // get the number of intra-zonal nodes connected to this node
+			for (int cCount = 1; cCount <= connNodeListLength; ++cCount){
+				if (((*nodeIterator)->getConnReact(cCount))<=0) {
+					ia.push_back(rCount), ja.push_back(countOfScenarios*genNumber+scenCounter*nodeNumber+((*nodeIterator)->getConnSer(cCount))), ar.push_back(-((*nodeIterator)->getConnReact(cCount)));
+					outPutFile << "\n" << rCount << "\t" << countOfScenarios*genNumber+scenCounter*nodeNumber+((*nodeIterator)->getConnSer(cCount)) << "\t" <<  (((*nodeIterator)->getConnReact(cCount))) << "\n";
+                                }
+				else {
+					ia.push_back(rCount), ja.push_back(countOfScenarios*genNumber+scenCounter*nodeNumber+((*nodeIterator)->getConnSer(cCount))), ar.push_back(((*nodeIterator)->getConnReact(cCount)));
+					outPutFile << "\n" << rCount << "\t" << countOfScenarios*genNumber+scenCounter*nodeNumber+((*nodeIterator)->getConnSer(cCount)) << "\t" <<  (((*nodeIterator)->getConnReact(cCount))) << "\n";
+                                }
+				++index;
+
+			}
+			outPutFile << "\nConnected Outer zonal Node Angles\t" << rCount << "\n";
+			int connOutNodeLength = (*nodeIterator)->getExtraNodeLength(); // get the number of outer-zonal nodes connected to this node
+			for (int cCount = 1; cCount <= connOutNodeLength; ++cCount){
+                                if (((*nodeIterator)->getExtConnReact(cCount))<=0) {
+					ia.push_back(rCount), ja.push_back(countOfScenarios*(genNumber+nodeNumber+sharedCLines)+sharedCLines+scenCounter*otherNodeCount+(*nodeIterator)->getExtConnSer(cCount)), ar.push_back(-((*nodeIterator)->getExtConnReact(cCount)));
+					outPutFile << "\n" << rCount << "\t" << countOfScenarios*(genNumber+nodeNumber+sharedCLines)+sharedCLines+scenCounter*otherNodeCount+(*nodeIterator)->getExtConnSer(cCount) << "\t" <<  (-((*nodeIterator)->getExtConnReact(cCount))) << "\n";
+				}
+                                else {
+					ia.push_back(rCount), ja.push_back(countOfScenarios*(genNumber+nodeNumber+sharedCLines)+sharedCLines+scenCounter*otherNodeCount+(*nodeIterator)->getExtConnSer(cCount)), ar.push_back(((*nodeIterator)->getExtConnReact(cCount)));
+					outPutFile << "\n" << rCount << "\t" << countOfScenarios*(genNumber+nodeNumber+sharedCLines)+sharedCLines+scenCounter*otherNodeCount+(*nodeIterator)->getExtConnSer(cCount) << "\t" <<  (((*nodeIterator)->getExtConnReact(cCount))) << "\n";
+				}
+				++index;
+			}
+			outPutFile << "\nConnected Candidate Lines for which this is the From node\t" << rCount << "\n";
+			int connCandListLengthF = (*nodeIterator)->getCandLineLengthF(); // get the number of candidate lines connected to this from node 
+			for (int cCount = 1; cCount <= connCandListLengthF; ++cCount){
+				ia.push_back(rCount), ja.push_back(countOfScenarios*(genNumber+nodeNumber)+scenCounter*sharedCLines+(*nodeIterator)->getCandSerF(cCount)), ar.push_back(-1);
+				outPutFile << "\n" << rCount << "\t" << countOfScenarios*(genNumber+nodeNumber)+scenCounter*sharedCLines+(*nodeIterator)->getCandSerF(cCount) << "\t" << -1.0 << "\n";
+				++index;
+			}
+			outPutFile << "\nConnected Candidate Lines for which this is the To node\t" << rCount << "\n";
+			int connCandListLengthT = (*nodeIterator)->getCandLineLengthT(); // get the number of candidate lines connected to this to node 
+			for (int cCount = 1; cCount <= connCandListLengthT; ++cCount){
+				ia.push_back(rCount), ja.push_back(countOfScenarios*(genNumber+nodeNumber)+scenCounter*sharedCLines+(*nodeIterator)->getCandSerT(cCount)), ar.push_back(1);
+				outPutFile << "\n" << rCount << "\t" << genNumber+nodeNumber+(*nodeIterator)->getCandSerT(cCount) << "\t" << 1.0 << "\n";
+				++index;
+			}
+                	outPutFile << "\nConnected Internal Candidate Lines for which this is the From node\t" << rCount << "\n";
+                	int connintCandListLengthF = (*nodeIterator)->getIntCandLineLengthF(); // get the number of internal candidate lines connected to this from node 
+                	for (int cCount = 1; cCount <= connintCandListLengthF; ++cCount){
+				ia.push_back(rCount), ja.push_back(countOfScenarios*(genNumber+nodeNumber+sharedCLines+otherNodeCount)+sharedCLines+scenCounter*internalCLines+(*nodeIterator)->getIntCandSerF(cCount)), ar.push_back(-1);			
+                        	outPutFile << "\n" << rCount << "\t" << countOfScenarios*(genNumber+nodeNumber+sharedCLines+otherNodeCount)+sharedCLines+scenCounter*internalCLines+(*nodeIterator)->getIntCandSerF(cCount) << "\t" << -1.0 << "\n";
+				++index;
+               		}
+               		outPutFile << "\nConnected Internal Candidate Lines for which this is the To node\t" << rCount << "\n";
+                	int connintCandListLengthT = (*nodeIterator)->getIntCandLineLengthT(); // get the number of internal candidate lines connected to this to node 
+                	for (int cCount = 1; cCount <= connintCandListLengthT; ++cCount){
+				ia.push_back(rCount), ja.push_back(countOfScenarios*(genNumber+nodeNumber+sharedCLines+otherNodeCount)+sharedCLines+scenCounter*internalCLines+(*nodeIterator)->getIntCandSerT(cCount)), ar.push_back(1);
+                        	outPutFile << "\n" << rCount << "\t" << countOfScenarios*(genNumber+nodeNumber+sharedCLines+otherNodeCount)+sharedCLines+scenCounter*internalCLines+(*nodeIterator)->getIntCandSerT(cCount) << "\t" << 1.0 << "\n";
+				++index;
+                	}
+			++rCount; // Increment the row count to point to the next node object
+		}
+	}
+
+        end
         int dimRow = countOfScenarios*(2 * genNumber + 4 * sharedCLines + 2 * sharedELines + 2 * tranNumber + nodeNumber + 4*internalCLines); // Total number of rows of the A matrix (number of structural constraints of the LP) first term to account for lower and upper generating limits, second term for lower and upper line limits & lower and upper definition limits of candidate shared lines, third term for lower and upper line limits for shared existing lines, fourth term for lower and upper line limits for internal zonal lines, the fifth term to account for nodal power balance constraints, and sixth term to account for the internal candidate lines
-        int dimCol = countOfScenarios*(genNumber+nodeNumber+sharedCLines+otherNodeCount+internalCLines)+sharedCLines+internalCLines; // Total number of columns of the LP (number of Decision Variables) first term to account for , second term for , third term for , fourth term for the , and fifth term for the decision variables for internal candidate lines
+        int dimCol = countOfScenarios*(genNumber+nodeNumber+sharedCLines+otherNodeCount+internalCLines)+sharedCLines+internalCLines
 
-	glp_prob *milp; // Instantiate GLPK Problem Object pointer
-	glp_iocp *ipControlParam = new glp_iocp; // Instantiate the Control parameters for the Integer Programming Problem
-	glp_init_iocp(ipControlParam); // Initialize the Control Parameters for the Integer Programming Problem with default values
-	ipControlParam->mip_gap = 1e-1; // Set the tolerance for the Integer Programming Problem
-
-	// arrays to store the row and column index combinations for the coefficient matrix
-	vector<int> ia; // array to store the non zero element row indices of A matrix
-	vector<int> ja; // array to store the non-zero element column indices of A matrix
-	vector<double> ar; // array to store the coefficients of the A matrix
-	double z; // variable to store the objective value
-	vector<double> x; // Coefficient matrix entires, objective function, and decision variables
-
-	milp = glp_create_prob(); // Creates the GLPK MILP Problem
-	glp_set_prob_name(milp, "zonalTransDec"); // Names the particular problem instance 
-	glp_set_obj_dir(milp, GLP_MIN); // Set direction (Declares the MILP Problem as a Minimization Problem)
-
-	/* SPECIFICATION OF PROBLEM PARAMETERS */
-	/*Row Definitions: Specification of RHS or b vector of b<=Ax<=b*/
-	glp_add_rows(milp, dimRow);
 	//Row Definitions and Bounds Corresponding to Constraints/
 
 	/*******************************************************************************************/
@@ -1008,4 +1067,115 @@ function HorMILPDistMech(coordInstanceRef, LagMultXi, LagMultPi, totalCandLineNu
         SEFlowOut1.close();
 	cout << "\nSimulation Completed.\nResults written on the different output files" << endl;
 	return z;
+end
+
+
+#=
+Function to solve DC OPF problem using IEEE test cases
+Inputs:
+    gen_info -- dataframe with generator info
+    line_info -- dataframe with transmission lines info
+    loads  -- dataframe with load info
+=#
+function dcopf_ieee(gens, lines, loads)
+    DCOPF = Model(GLPK.Optimizer) # You could use Clp as well, with Clp.Optimizer
+    
+    # Define sets based on data
+      # Set of generator buses
+    G = gens.connnode
+    
+      # Set of all nodes
+    N = sort(union(unique(lines.fromnode), 
+            unique(lines.tonode)))
+    
+      # sets J_i and G_i will be described using dataframe indexing below
+
+    # Define per unit base units for the system 
+    # used to convert from per unit values to standard unit
+    # values (e.g. p.u. power flows to MW/MVA)
+    baseMVA = 100 # base MVA is 100 MVA for this system
+    
+    # Decision variables   
+    @variables(DCOPF, begin
+        GEN[N]  >= 0     # generation        
+        # Note: we assume Pmin = 0 for all resources for simplicty here
+        THETA[N]         # voltage phase angle of bus
+        FLOW[N,N]        # flows between all pairs of nodes
+    end)
+    
+    # Create slack bus with reference angle = 0; use bus 1 with generator
+    fix(THETA[1],0)
+                
+    # Objective function
+    @objective(DCOPF, Min, 
+        sum( gens[g,:c1] * GEN[g] for g in G)
+    )
+    
+    # Supply demand balances
+    @constraint(DCOPF, cBalance[i in N], 
+        sum(GEN[g] for g in gens[gens.connnode .== i,:connnode]) 
+            + sum(load for load in loads[loads.connnode .== i,:demand]) 
+        == sum(FLOW[i,j] for j in lines[lines.fromnode .== i,:tonode])
+    )
+
+    # Max generation constraint
+    @constraint(DCOPF, cMaxGen[g in G],
+                    GEN[g] <= gens[g,:pgmax])
+
+    # Flow constraints on each branch; 
+    # In DCOPF, line flow is a function of voltage angles
+       # Create an array of references to the line constraints, 
+       # which we "fill" below in loop
+    cLineFlows = JuMP.Containers.DenseAxisArray{Any}(undef, 1:nrow(lines)) 
+    for l in 1:nrow(lines)
+        cLineFlows[l] = @constraint(DCOPF, 
+            FLOW[lines[l,:fromnode],lines[l,:tonode]] == 
+            baseMVA * lines[l,:b] * 
+            (THETA[lines[l,:fromnode]] - THETA[lines[l,:tonode]])
+        )
+    end
+    
+    # Max line flow limits
+       # Create an array of references to the line constraints, 
+       # which we "fill" below in loop
+    cLineLimits = JuMP.Containers.DenseAxisArray{Any}(undef, 1:nrow(lines)) 
+    for l in 1:nrow(lines)
+        cLineLimits[l] = @constraint(DCOPF,
+            FLOW[lines[l,:fromnode],lines[l,:tonode]] <=
+            lines[l,:capacity]
+        ) 
+    end
+
+    # Solve statement (! indicates runs in place)
+    optimize!(DCOPF)
+
+    # Output variables
+    generation = DataFrame(
+        node = gens.connnode,
+        gen = value.(GEN).data[gens.connnode]
+        )
+    
+    angles = value.(THETA).data
+    
+    flows = DataFrame(
+        fbus = lines.fromnode,
+        tbus = lines.tonode,
+        flow = baseMVA * lines.b .* (angles[lines.fromnode] .- 
+                        angles[lines.tonode]))
+    
+    # We output the marginal values of the demand constraints, 
+    # which will in fact be the prices to deliver power at a given bus.
+    prices = DataFrame(
+        node = N,
+        value = dual.(cBalance).data)
+    
+    # Return the solution and objective as named tuple
+    return (
+        generation = generation, 
+        angles,
+        flows,
+        prices,
+        cost = objective_value(DCOPF),
+        status = termination_status(DCOPF)
+    )
 end
