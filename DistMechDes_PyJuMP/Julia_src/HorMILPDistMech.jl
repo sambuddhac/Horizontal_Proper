@@ -21,6 +21,7 @@ using Ipopt
 using MathOptInterface
 
 function HorMILPDistMech(coordInstanceRef, LagMultXi, LagMultPi, totalCandLineNum, totalSharedNodeNum)
+	#C++ starts
         start_t = now()
 	vector<int>::iterator diffZNIt; // Iterator for diffZoneNodeID
 	vector<Powergenerator*>::iterator genIterator; // Iterator for Powergenerator objects
@@ -37,6 +38,7 @@ function HorMILPDistMech(coordInstanceRef, LagMultXi, LagMultPi, totalCandLineNu
 		cerr << "\nCouldn't open the file" << endl;
 		exit(1);
 	}
+	# C++ ends
         @variables model begin
                 0 <= Pgen[1:countOfScenarios, 1:genNumber] #power generation MW outputs
                 voltTheta[1:countOfScenarios, 1:nodeNumber] #voltage phase angles for internal zonal nodes
@@ -54,6 +56,7 @@ function HorMILPDistMech(coordInstanceRef, LagMultXi, LagMultPi, totalCandLineNu
     	)
         @constraints model begin
                 #Constraints corresponding to supply-demand balance
+		#C++ starts
                 rCount = 1 #Initialize the row count
 	        for scenCounter in 1:countOfScenarios
 		for (nodeIterator = nodeObject.begin(); nodeIterator != nodeObject.end(); ++nodeIterator){
@@ -1070,10 +1073,11 @@ function HorMILPDistMech(coordInstanceRef, LagMultXi, LagMultPi, totalCandLineNu
         intCandLineDecisionOut.close();
         tranFlowOut.close();
         SEFlowOut1.close();
-	cout << "\nSimulation Completed.\nResults written on the different output files" << endl;
+	cout << "\nSimulation Completed.\nResults written on the different output files" << endl; 
+	#C++ ends
 	return z;
 end
-
+#Sample Julia/JuMP code starts
 datadir = joinpath("ieee_test_cases") 
 gens = CSV.read(joinpath(datadir,"Gen14.csv"), DataFrame);
 lines = CSV.read(joinpath(datadir,"Tran14_b.csv"), DataFrame);
@@ -1214,3 +1218,4 @@ function dcopf_ieee(gens, lines, loads)
         status = termination_status(DCOPF)
     )
 end
+#Sample Julia/JuMP code ends
