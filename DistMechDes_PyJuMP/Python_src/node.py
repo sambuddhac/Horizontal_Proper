@@ -28,15 +28,8 @@ class Node(object):
 		self.toReact = 0.0  # Initialize the to reactance
 		self.globalRank = 0 # sets the globalRank to default value of 0 
 
-# constructor ends
-"""
-Node::~Node() // destructor
-{
-	//cout << "\nThe node object having ID " << nodeID << " have been destroyed.\n";
+	# constructor ends
 
-} // end of destructor
-<<<<<<< HEAD
-"""
 	def getNodeID(self): # function getNodeID begins
 		return self.nodeID #returns node ID to the caller
  # end of function getNodeID

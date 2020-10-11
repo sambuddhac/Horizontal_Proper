@@ -46,7 +46,12 @@ function HorMILPDistMech(coordInstanceRef, LagMultXi, LagMultPi, totalCandLineNu
                 internalCandFlow[1:countOfScenarios, 1:internalCLines] #power flow values for internal candidate lines
                 internalCandBinDec[1:internalCLines], Bin #binary integer decision variable values for internal candidate lines
         end
-
+	# Supply demand balances
+    	@constraint(DCOPF, cBalance[i in N], 
+        sum(GEN[g] for g in gens[gens.connnode .== i,:connnode]) 
+            + sum(load for load in loads[loads.connnode .== i,:demand]) 
+        == sum(FLOW[i,j] for j in lines[lines.fromnode .== i,:tonode])
+    	)
         @constraints model begin
                 #Constraints corresponding to supply-demand balance
                 rCount = 1 #Initialize the row count
@@ -1069,7 +1074,37 @@ function HorMILPDistMech(coordInstanceRef, LagMultXi, LagMultPi, totalCandLineNu
 	return z;
 end
 
+datadir = joinpath("ieee_test_cases") 
+gens = CSV.read(joinpath(datadir,"Gen14.csv"), DataFrame);
+lines = CSV.read(joinpath(datadir,"Tran14_b.csv"), DataFrame);
+loads = CSV.read(joinpath(datadir,"Load14.csv"), DataFrame);
 
+# Rename all columns to lowercase (by convention)
+for f in [gens, lines, loads]
+    rename!(f,lowercase.(names(f)))
+end
+
+# create generator ids 
+gens.id = 1:nrow(gens);
+
+# create line ids 
+lines.id = 1:nrow(lines);
+# add set of rows for reverse direction with same parameters
+lines2 = copy(lines)
+lines2.f = lines2.fromnode
+lines2.fromnode = lines.tonode
+lines2.tonode = lines2.f
+lines2 = lines2[:,names(lines)]
+append!(lines,lines2)
+
+# calculate simple susceptance, ignoring resistance as earlier 
+lines.b = 1 ./ lines.reactance
+
+# keep only a single time period
+loads = loads[:,["connnode","interval-1_load"]]
+rename!(loads,"interval-1_load" => "demand");
+
+lines
 #=
 Function to solve DC OPF problem using IEEE test cases
 Inputs:

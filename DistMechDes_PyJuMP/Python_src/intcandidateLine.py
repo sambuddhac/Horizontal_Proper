@@ -27,14 +27,8 @@ class intCandLine(object):
 	###setTranData(self,cap, life, ROI)
 		# calls setTranData member function to set the parameter values
 
-# constructor ends
-"""
-intCandLine::~intCandLine() // destructor
-{
-	//cout << "\nThe transmission line object having ID " << translID << " have been destroyed.\n";
+		# constructor ends
 
-} // end of destructor
-"""
 	def modifyNodeReact(self): # function to modify the nodal connected reactance, if the candidate line is actually built
 		fromNode=self.connNodetPtr1.getNodeID()
 		toNode=self.connNodetPtr2.getNodeID()

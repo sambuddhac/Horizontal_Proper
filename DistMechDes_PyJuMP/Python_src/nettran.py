@@ -60,7 +60,7 @@ class Nettran(object):
 		self.diffZoneExistingID = []; self.diffZoneExistingID.append(0) #Initialize the list of external-zone existing zone ID's so that it's not empty.
 		self.globalExistingRank = []; self.globalExistingRank.append(0) #Initialize the list os external-zone connected node global rank so that it's not empty
 		self.lpSolveAlgo = milpAlgoChoice #Simplex for 1 and IPM for 2
-		#/* Nodes */
+		#/* Nodes */################################################################################################################################################################################
 		matrixNetFile = json.load(open(os.path.join("data", netFile)))
 		self.nodeNumber = matrixNetFile['nodeNumber'] 
 		self.sharedELines = matrixNetFile['sharedELines'] 
@@ -77,7 +77,7 @@ class Nettran(object):
 			self.nodeObject.append( nodeInstance ) #pushes the nodeInstance object into the vector
 		#end initialization for Nodes
 		matrixNetFile.close() #close the network file
-		#/* Generators */
+		#/* Generators */##########################################################################################################################################################################
 		#/* Instantiate Generators */
 		# Open the .json file to read the Powergenerator parameter values
 		matrixGen = json.load(open(os.path.join("data", genFile))) #ifstream constructor opens the file of Generators
@@ -103,8 +103,9 @@ class Nettran(object):
 			#check the bounds and validity of the parameter values
 			genInstance = Powergenerator(j+1, nodeObject[ gNodeID - 1 ],  tanTheta, minCost, PgMax, PgMin)
 			self.genObject.append(genInstance) #push the generator object into the array
-		matrixGenFile.close() #Close the generator file
-		#/* Transmission Lines */
+		matrixGen.close() #Close the generator file
+		self.genDF = pd.DataFrame([g.__dict__ for g in self.genObject])
+		#/* Transmission Lines */###################################################################################################################################################################
 		matrixTranFile = json.load(open(os.path.join("data", tranFile))) #ifstream constructor opens the file of Transmission lines
 		#/* Instantiate Transmission Lines */
 		for matrixTran in matrixTranFile:
@@ -120,8 +121,8 @@ class Nettran(object):
 			self.translObject.append( transLineInstance ) #pushes the transLineInstance object into the vector
 		#end initialization for Transmission Lines 
 		matrixTranFile.close() #Close the transmission line file 
-
-		#/* Shared Existing Transmission Lines */
+		self.tranDF = pd.DataFrame([t.__dict__ for t in self.translObject])
+		#/* Shared Existing Transmission Lines */####################################################################################################################################################
 		matrixSETranFile = json.load(open(os.path.join("data", sharedLineFile))) #ifstream constructor opens the file of Transmission lines
 		
 		#/* Instantiate Shared Existing Transmission Lines */
@@ -175,7 +176,8 @@ class Nettran(object):
 			self.containsFlag = 0 #Reset the containsFlag for matching the next item
 		#end initialization for Shared Existing Transmission Lines
 		matrixSETranFile.close() #Close the shared existing file
-		#/* Shared Candidate Transmission Lines */
+		self.sharedExistingDF = pd.DataFrame([seDF.__dict__ for seDF in self.SELineObject])
+		#/* Shared Candidate Transmission Lines */######################################################################################################################################################
 		matrixCETranFile = json.load(open(os.path.join("data", candLineFile))) #ifstream constructor opens the file of candidate Transmission lines
 
 		#/* Instantiate Shared Candidate Transmission Lines */
@@ -246,7 +248,7 @@ class Nettran(object):
 		} // end initialization for candidate Transmission Lines
 		matrixCETranFile.close(); // Close the candidate lines file
 		if(internalCLines>0) {
-		/* Internal Candidate Transmission Lines */
+		#/* Internal Candidate Transmission Lines */################################################################################################################################################
 		ifstream matrixIntCETranFile( intCandLineFile, ios::in ); // ifstream constructor opens the file of internal candidate Transmission lines
 		// exit program if ifstream could not open file
 		if ( !matrixIntCETranFile ) {
@@ -289,7 +291,7 @@ class Nettran(object):
 		} // end initialization for candidate Transmission Lines
 		matrixIntCETranFile.close(); // Close the candidate lines file
 		}
-		/* Loads */
+		#/* Loads */################################################################################################################################################################################
 		ifstream matrixLoadFile( loadFile, ios::in ); // ifstream constructor opens the file of Loads
 
 		// exit program if ifstream could not open file
@@ -358,7 +360,7 @@ class Nettran(object):
 	sharedCandLineTZoneIt = candLineObject.begin(); // Initialize the sharedCandLineTZoneIt iterator to point to the beginning of the candLineObject vector
 	sharedCandLineReactIt = candLineObject.begin(); // Initialize the sharedCandLineReactIt iterator to point to the beginning of the candLineObject vector
 	sharedCandLineCapIt = candLineObject.begin(); // Initialize the sharedCandLineCapIt iterator to point to the beginning of the candLineObject vector
-} // end constructor
+	#end constructor
 
 	def getNumberOfScenarios(self): #Returns the number of scenarios
 		return self.countOfScenarios
@@ -373,7 +375,7 @@ class Nettran(object):
 		zonal_dec_stageI = julSol.HorMILPDistMech(coordInstanceRef, LagMultXi, LagMultPi, totalCandLineNum, totalSharedNodeNum)
 	#/* CREATION OF THE MIP SOLVER INSTANCE */
 	
-} // Function MILP() ends
+	#Function MILP() ends
 
 double Nettran::calcMILPBounds(double LagMultXi[], double LagMultPi[], int totalCandLineNum, int totalSharedNodeNum) // Function MILPAvgHR() implements the Mixed Integer Linear Programming Unit Commitment Solver routine by calling GLPK routines for average heat rate objective for Horizontal Coordination Investment decision making
 {
