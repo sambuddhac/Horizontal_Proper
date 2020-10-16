@@ -56,7 +56,7 @@ function HorMILPDistMech(coordInstanceRef, LagMultXi, LagMultPi, totalCandLineNu
     	)
         @constraints model begin
                 #Constraints corresponding to supply-demand balance
-		#C++ starts
+		#C++ starts #### Dear Sam, I copied the following lines for marketoverseer optimization
                 rCount = 1 #Initialize the row count
 	        for scenCounter in 1:countOfScenarios
 		for (nodeIterator = nodeObject.begin(); nodeIterator != nodeObject.end(); ++nodeIterator){
