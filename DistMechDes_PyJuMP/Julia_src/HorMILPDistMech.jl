@@ -21,6 +21,20 @@ using Ipopt
 using MathOptInterface
 
 function HorMILPDistMech(coordInstanceRef, LagMultXi, LagMultPi, totalCandLineNum, totalSharedNodeNum)
+	start_t = now()
+    	if solChoice == 1
+        	model = Model(with_optimizer(Gurobi.Optimizer, OUTPUTLOG=OUTPUTLOG, MAXTIME=-MAXTIME))
+    	elseif solChoice == 2
+        	model = Model(with_optimizer(GLPK.Optimizer, OUTPUTLOG=OUTPUTLOG, MAXTIME=-MAXTIME))
+    	elseif solChoice == 3
+        	model = Model(with_optimizer(MathOptInterfaceMosek.Optimizer, OUTPUTLOG=OUTPUTLOG, MAXTIME=-MAXTIME))
+    	elseif solChoice == 4
+        	model = Model(with_optimizer(Cbc.Optimizer, OUTPUTLOG=OUTPUTLOG, MAXTIME=-MAXTIME))
+    	elseif solChoice == 5
+        	model = Model(with_optimizer(Ipopt.Optimizer, OUTPUTLOG=OUTPUTLOG, MAXTIME=-MAXTIME))
+    	else
+        	error("Invalid Solver Choice:", solChoice)
+    	end
 	#C++ starts
         start_t = now()
 	vector<int>::iterator diffZNIt; // Iterator for diffZoneNodeID
