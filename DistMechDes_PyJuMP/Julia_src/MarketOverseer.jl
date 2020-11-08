@@ -13,7 +13,7 @@ HN1=size(SEFromRank)[1] #Shared existing line "from nodes"
 HN2=size(SEToRank)[1]  #Shared existing line "to nodes"
 N=KN1+KN2+HN1+HN2   #nodes
 
-flag[k]=1         #Please define a flag (0 for finding lower bound and 1 for finding optimal value)
+flag[1:K]=1         #Please define a flag (0 for finding lower bound and 1 for finding optimal value)
 #These parameters should be obtained 
 lagrangeMultPi[1:Z, 1:K] #Binary decision variable lagrange multiplier
 K1lagrangeMultXi[1:Z, 1:KN1, 1:S] #Lagrange multiplier associated with "From node" candidate lines
@@ -46,7 +46,7 @@ end
     [s=1:S, h=1:H], SEFlowMW[s,h] == SEPhaseAngleFrom[s,h]/SEReactance[h] - SEPhaseAngleTo[s,h]/SEReactance[h] #Constraint regarding the power flowing on shared existing lines
     [s=1:S, k=1:K], -10000 * (1-candLineDecision[k]) <= candlowMW[s,k] - [candPhaseAngleFrom[s,k]/candReactance[k] - candPhaseAngleTo[s,k]/candReactance[k]]<=10000 * (1-candLineDecision[k]) #Constraint regarding the power flowing on shared existing lines
     
-    [h = 1:H], SEFlowMW[:, h]<= SECapacity[h]  # Capacity constraints
+    [h = 1:H], SEFlowMW[:,h]<= SECapacity[h]  # Capacity constraints
     [k= 1:K], candFlowMW[:,k]<= candCapacity[k]
 end
 
