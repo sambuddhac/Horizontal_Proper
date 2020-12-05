@@ -26,8 +26,8 @@ candCapacity=[k]
     @variable(model, 0 <= SEPhaseAngleTo[1:S, 1:H]) #Phase angle decision for existing shared lines "To node"
     @variable(model, 0 <= SEPhaseAngleFrom[1:S, 1:H]) #Phase angle decision for existing shared lines "From node"
     @variable(model, F[1:S,1:Z])
-    for z in 1:Z
-        for s in 1:S
+    for z in 1:S
+        for s in 1:Z
             @constraint(model, F[s,z] .==-[sum(lagrangeMultPi[z,:].*candLineDecision[:]) .+ sum(K2lagrangeMultXi[z,:,s].*candPhaseAngleTo[s,:]) .+ sum(K1lagrangeMultXi[z,:,s].*candPhaseAngleFrom[s,:]) .+ sum(H2lagrangeMultXi[z,:,s].*SEPhaseAngleTo[s,:]) .+ sum(H1lagrangeMultXi[z,:,s].*SEPhaseAngleFrom[s,:])])  #Objective Function
             for h in 1:H
                 @constraint(model, SEFlowMW[s,h] .== SEPhaseAngleFrom[s,h]./SEReactance[h] .- SEPhaseAngleTo[s,h]./SEReactance[h]) #Constraint regarding the power flowing on shared existing lines
