@@ -49,4 +49,14 @@ State-of-Charge, Inverter rating (charging/discharging), Inverter Efficiency, Ba
 
 # Loads
 
+# Policies
+
+## RPS Constraints
+Renewable Portfolio Standard: Mentioning a certain minimum amount of renewable capacity as a percentage of the total installed capacity
+
+## CES Constraints
+Clean Energy Standard
+
+## Carbon Tax
+
 
