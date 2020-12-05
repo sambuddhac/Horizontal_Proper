@@ -18,7 +18,7 @@ NG price (for each zone), Heat rate, max/min up-time, max/min down-time, PgMax, 
 Solar forecast (hourly/seasonal/5-minutes/15-minutes), Tracking/Fixed-axis, Boiler efficiency, max/min up-time, max/min down-time, PgMax, PgMin, Disp/Must-run, Ramp-Up, Ramp-Down, VOM, FOM, MW rating, Capital Investment Cost, Time of repayment, Interest rate
 
 ### Solar PV
-Solar forecast (hourly/seasonal/5-minutes/15-minutes), Tracking/Fixed-axis, Inverter efficiency and conversion ratio,
+Solar forecast (hourly/seasonal/5-minutes/15-minutes), Tracking/Fixed-axis, Inverter efficiency and conversion ratio, VOM, FOM, MW rating, Capital Investment Cost, Time of repayment, Interest rate
  
 ### Conventional Hydroelectric
 Seasonal water variation pattern, max/min up-time, max/min down-time, PgMax, PgMin, Disp/Must-run, Ramp-Up, Ramp-Down, VOM, FOM, MW rating, Capital Investment Cost, Time of repayment, Interest rate
@@ -41,13 +41,35 @@ Heat rate, max/min up-time, max/min down-time, PgMax, PgMin, Disp/Must-run, Ramp
 ### Storage Batteries
 State-of-Charge, Inverter rating (charging/discharging), Inverter Efficiency, Battery capacity, Battery efficiency, Capital Investment Cost, Time of repayment, Interest rate, Battery state of life
 
+### Nuclear
+
+### Combined Heat and Power (CHP)
+
 # Transmission Lines
 
 ## FACTS Devices
 
+## Transformers
+
+## HVDC
+
+## Dynamic Lines
+
+## Line Switching/Network Topology Control 
+
 ## Conventional Transmission Lines
 
 # Loads
+
+## Time series
+
+## Future Development
+
+### PEV/PHEV
+
+### Deferrable Smart Load
+
+### 
 
 # Policies
 
@@ -58,5 +80,11 @@ Renewable Portfolio Standard: Mentioning a certain minimum amount of renewable c
 Clean Energy Standard
 
 ## Carbon Tax
+
+## Nuclear Tax Credit
+
+## Production Tax Credit (PTC) for Renewables
+
+
 
 
