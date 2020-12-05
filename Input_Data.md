@@ -43,4 +43,10 @@ State-of-Charge, Inverter rating (charging/discharging), Inverter Efficiency, Ba
 
 # Transmission Lines
 
+## FACTS Devices
+
+## Conventional Transmission Lines
+
+# Loads
+
 
