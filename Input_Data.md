@@ -3,45 +3,46 @@
 ## Types of Fuels
 
 ### Conventional coal-steam
-Coal price (for each zone), Heat rate, max/min up-time, max/min down-time, PgMax, PgMin, Disp/Must-run, Ramp-Up, Ramp-Down, VOM, FOM, MW rating, Capital Investment Cost, Time of repayment, Interest rate
+Coal price (for each zone), Heat rate, max/min up-time, max/min down-time, PgMax, PgMin, Disp/Must-run, Ramp-Up, Ramp-Down, VOM, FOM, MW rating, Capital Investment Cost, Time of repayment, Interest rate, Existing/Retired/Mothballed/New-Built, Year of Installation, Lifetime
 
 ### Oil fired steam turbine
-Oil price (for each zone), Heat rate, max/min up-time, max/min down-time, PgMax, PgMin, Disp/Must-run, Ramp-Up, Ramp-Down, VOM, FOM, MW rating, Capital Investment Cost, Time of repayment, Interest rate
+Oil price (for each zone), Heat rate, max/min up-time, max/min down-time, PgMax, PgMin, Disp/Must-run, Ramp-Up, Ramp-Down, VOM, FOM, MW rating, Capital Investment Cost, Time of repayment, Interest rate, Existing/Retired/Mothballed/New-Built, Year of Installation, Lifetime
 
 ### Natural Gas Combustion Turbine
-NG price (for each zone), Heat rate, max/min up-time, max/min down-time, PgMax, PgMin, Disp/Must-run, Ramp-Up, Ramp-Down, VOM, FOM, MW rating, Capital Investment Cost, Time of repayment, Interest rate
+NG price (for each zone), Heat rate, max/min up-time, max/min down-time, PgMax, PgMin, Disp/Must-run, Ramp-Up, Ramp-Down, VOM, FOM, MW rating, Capital Investment Cost, Time of repayment, Interest rate, Existing/Retired/Mothballed/New-Built, Year of Installation, Lifetime
 
 ### Natural Gas Combined Cycle
-NG price (for each zone), Heat rate, max/min up-time, max/min down-time, PgMax, PgMin, Disp/Must-run, Ramp-Up, Ramp-Down, VOM, FOM, MW rating, Capital Investment Cost, Time of repayment, Interest rate
+NG price (for each zone), Heat rate, max/min up-time, max/min down-time, PgMax, PgMin, Disp/Must-run, Ramp-Up, Ramp-Down, VOM, FOM, MW rating, Capital Investment Cost, Time of repayment, Interest rate, Existing/Retired/Mothballed/New-Built, Year of Installation, Lifetime
 
 ### Solar Concentrated
-Solar forecast (hourly/seasonal/5-minutes/15-minutes), Tracking/Fixed-axis, Boiler efficiency, max/min up-time, max/min down-time, PgMax, PgMin, Disp/Must-run, Ramp-Up, Ramp-Down, VOM, FOM, MW rating, Capital Investment Cost, Time of repayment, Interest rate
+Solar forecast (hourly/seasonal/5-minutes/15-minutes), Tracking/Fixed-axis, Boiler efficiency, max/min up-time, max/min down-time, PgMax, PgMin, Disp/Must-run, Ramp-Up, Ramp-Down, VOM, FOM, MW rating, Capital Investment Cost, Time of repayment, Interest rate, Existing/Retired/Mothballed/New-Built, Year of Installation, Lifetime
 
 ### Solar PV
-Solar forecast (hourly/seasonal/5-minutes/15-minutes), Tracking/Fixed-axis, Inverter efficiency and conversion ratio, VOM, FOM, MW rating, Capital Investment Cost, Time of repayment, Interest rate
+Solar forecast (hourly/seasonal/5-minutes/15-minutes), Tracking/Fixed-axis, Inverter efficiency and conversion ratio, VOM, FOM, MW rating, Capital Investment Cost, Time of repayment, Interest rate, Existing/Retired/Mothballed/New-Built, Year of Installation, Lifetime
  
 ### Conventional Hydroelectric
-Seasonal water variation pattern, max/min up-time, max/min down-time, PgMax, PgMin, Disp/Must-run, Ramp-Up, Ramp-Down, VOM, FOM, MW rating, Capital Investment Cost, Time of repayment, Interest rate
+Seasonal water variation pattern, max/min up-time, max/min down-time, PgMax, PgMin, Disp/Must-run, Ramp-Up, Ramp-Down, VOM, FOM, MW rating, Capital Investment Cost, Time of repayment, Interest rate, Existing/Retired/Mothballed/New-Built, Year of Installation, Lifetime
 
 ### Hydroelectric Pumped Storage
-Seasonal water variation pattern, max/min up-time, max/min down-time, PgMax, PgMin, Disp/Must-run, Ramp-Up, Ramp-Down, VOM, FOM, MW rating, Capital Investment Cost, Time of repayment, Interest rate
+Seasonal water variation pattern, max/min up-time, max/min down-time, PgMax, PgMin, Disp/Must-run, Ramp-Up, Ramp-Down, VOM, FOM, MW rating, Capital Investment Cost, Time of repayment, Interest rate, Existing/Retired/Mothballed/New-Built, Year of Installation, Lifetime
 
 ### Onshore Wind
 Wind forecast (hourly/seasonal/5-minutes/15-minutes), max/min up-time, max/min down-time, PgMax, PgMin, Disp/Must-run, Ramp-Up, Ramp-Down, VOM, FOM, MW rating, Capital Investment Cost, Time of repayment, Interest rate
 
 ### Off-shore Wind
-Wind forecast (hourly/seasonal/5-minutes/15-minutes), max/min up-time, max/min down-time, PgMax, PgMin, Disp/Must-run, Ramp-Up, Ramp-Down, VOM, FOM, MW rating, Capital Investment Cost, Time of repayment, Interest rate
+Wind forecast (hourly/seasonal/5-minutes/15-minutes), max/min up-time, max/min down-time, PgMax, PgMin, Disp/Must-run, Ramp-Up, Ramp-Down, VOM, FOM, MW rating, Capital Investment Cost, Time of repayment, Interest rate, Existing/Retired/Mothballed/New-Built, Year of Installation, Lifetime
 
 ### Biomass
-Heat rate, max/min up-time, max/min down-time, PgMax, PgMin, Disp/Must-run, Ramp-Up, Ramp-Down, VOM, FOM, MW rating, Capital Investment Cost, Time of repayment, Interest rate
+Heat rate, max/min up-time, max/min down-time, PgMax, PgMin, Disp/Must-run, Ramp-Up, Ramp-Down, VOM, FOM, MW rating, Capital Investment Cost, Time of repayment, Interest rate, Existing/Retired/Mothballed/New-Built, Year of Installation, Lifetime
 
 ### Geothermal
-Heat rate, max/min up-time, max/min down-time, PgMax, PgMin, Disp/Must-run, Ramp-Up, Ramp-Down, VOM, FOM, MW rating, Capital Investment Cost, Time of repayment, Interest rate
+Heat rate, max/min up-time, max/min down-time, PgMax, PgMin, Disp/Must-run, Ramp-Up, Ramp-Down, VOM, FOM, MW rating, Capital Investment Cost, Time of repayment, Interest rate, Existing/Retired/Mothballed/New-Built, Year of Installation, Lifetime
 
 ### Storage Batteries
-State-of-Charge, Inverter rating (charging/discharging), Inverter Efficiency, Battery capacity, Battery efficiency, Capital Investment Cost, Time of repayment, Interest rate, Battery state of life
+State-of-Charge, Inverter rating (charging/discharging), Inverter Efficiency, Battery capacity, Battery efficiency, Capital Investment Cost, Time of repayment, Interest rate, Battery state of life, Existing/Retired/Mothballed/New-Built, Year of Installation, Lifetime
 
 ### Nuclear
+Uranium?Thorium/Plutonium price (for each zone), Heat rate, max/min up-time, max/min down-time, PgMax, PgMin, Disp/Must-run, Ramp-Up, Ramp-Down, VOM, FOM, MW rating, Capital Investment Cost, Time of repayment, Interest rate, Existing/Retired/Mothballed/New-Built, Year of Installation, Lifetime
 
 ### Combined Heat and Power (CHP)
 
@@ -50,6 +51,15 @@ State-of-Charge, Inverter rating (charging/discharging), Inverter Efficiency, Ba
 ## FACTS Devices
 
 ## Transformers
+
+### Turns-Ratio
+### MVA Rating
+### OLTC Positions
+### Phase-Shifting/Tap-Changer Specifications
+### Per Unit Series Impedance and Shunt Reactance
+### Existing/Retired/Year_Of_Retirement/New-Built Specs
+### Costs
+Capital Investment Cost, Time of repayment, Interest rate, FOM, VOM
 
 ## HVDC
 
