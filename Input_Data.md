@@ -49,6 +49,11 @@ Uranium?Thorium/Plutonium price (for each zone), Heat rate, max/min up-time, max
 # Transmission Lines
 
 ## FACTS Devices
+### M-SSSC
+Vmax (Maximum Voltage per module) reactance, Vmin reactance, Vmax capacitive, Vmin capative, Inject/Monitor, Number of modules (per phase), Location line (assume installed at from-bus), Availability, Year of Installation, Lifetime, Cost per module, FOM
+
+### Mobile M-SSSC
+Vmax reactance (per phase), Vmin reactance, Vmax capacitive, Vmin capacitive, Inject/Monitor, Location line (assume installed at from-bus), install time (hrs), de-install time (hrs), average miles per hour, installation history, purchase year, lifetime, cost per 3-phase trailer, 
 
 ## Transformers
 
