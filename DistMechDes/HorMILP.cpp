@@ -61,7 +61,7 @@ int main() // Main method begins program execution
 	cin >> solverChoice;
 	if (solverChoice==1) {
 		cout << "\nChoose either the Simplex LP Rlaxation (1) or Interior Point Method LP Relaxation (2) as the method to provide the initial basis to the Mixed Integer Unit Commitment Problem. " << endl;
-	cin >> lpMethodChoice;
+		cin >> lpMethodChoice;
 	}
 	GRBEnv* environmentGUROBI = new GRBEnv("GUROBILogFile.log"); // GUROBI Environment object for storing the different optimization models
 	numberOfFields = 7; // Number of fields

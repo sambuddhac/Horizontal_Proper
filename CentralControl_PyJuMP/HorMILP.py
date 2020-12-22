@@ -1,5 +1,6 @@
-# HorMILP.cpp : Defines the entry point for the centralized/merged regions/Single control area Horizontal Investment Coordination MILP Simulation application.
+# HorMILP.py : Defines the entry point for the centralized/merged regions/Single control area Horizontal Investment Coordination MILP Simulation application.
 # Main Method for running the Horizontal Investment Coordination MILP Simulation; Parts of the code follows the code design philosophy of Nick Laws of NREL
+# Authors of the code: Sambuddha Chakrabarti & Hosna Khajeh under the guidance and supervision of Dr. Mohammad Reza Hesamzadeh & Tom Nudell, Ph.D.
 import julia
 import os
 import subprocess
@@ -44,7 +45,6 @@ def HorMILPCentral(): # Main method begins program execution
 	matrixFirstFile = json.load(zoneSummaryFile) #opens the file
 
 	numberOfZones = int(input("\nEnter the number of zones")) #Number of zones between which horizontal investment coordination for transmission lines to be built is considered
-	numberOfFields = 7 #Number of rows or individual file types for each of the zones	
 	log.info("\n*** NETWORK INITIALIZATION STAGE BEGINS ***\n")
 	nettranInstance = Nettran(matrixFirstFile, numberOfZones, curveChoice) #create the network instances for the different zones
 	log.info("\n*** NETWORK INITIALIZATION STAGE ENDS: ZONAL SUB-NETWORKS CREATED ***\n")
@@ -65,3 +65,10 @@ def HorMILPCentral(): # Main method begins program execution
 		log.info("\nInvalid choice of Objective function")
 
 	log.info("\n*** SOLUTION OF SINGLE AREA MILP HORIZONTAL COORDINATION ENDS ***\n")
+
+print("\nThis is the simulation program for the centralized/merged regions/Single control area Horizontal Investment Coordination MILP Simulation application.\n")
+
+try:
+    if __name__ == '__main__': HorMILPCentral()
+except:
+    log.warning("Simulation FAILED !!!!")

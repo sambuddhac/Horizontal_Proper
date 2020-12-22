@@ -1,6 +1,6 @@
-# HorMILP.cpp : Defines the entry point for Stage-I and Stage-II of the Horizontal Investment Coordination MILP Market Mechanism Design Simulation application.
+# HorMILP.py : Defines the entry point for Stage-I and Stage-II of the Horizontal Investment Coordination MILP Market Mechanism Design Simulation application.
 # Main Method for running the Horizontal Investment Coordination Stage-I and Stage-II MILP Market Mechanism Design Simulation based on Distributed Stochastic UC and APP; Parts of the code follows the code design philosophy of Nick Laws of NREL
-# Added Hosna Khajeh and Dr. Mohammad Reza Hesamzadeh as collaborators on 30th August, 2020
+# Authors of the code: Sambuddha Chakrabarti & Hosna Khajeh under the guidance and supervision of Dr. Mohammad Reza Hesamzadeh & Tom Nudell, Ph.D.
 import julia
 import os
 import subprocess
@@ -32,17 +32,9 @@ julSol.include(os.path.join("JuMP_src", "HorMILPDistMech.jl")) # definition of G
 log.info(("Julia took {:..2f} seconds to start and include Horizontal Investment Coordination mechanism design models.".format(profiler.get_interval())))
 
 def HorMILPCentral(): # Main method begins program execution
-    	'''Future Work
-	#Choose the type of objective function
-    	'''
 	systemChoice = int(input("Choose the type of System to be simulated: 1 for Simple two bus/two region, 2 for system combined of IEEE 14, 30, and 5 node systems"))
 	basisForComparison = int(input("Choose, for updating the Lagrange multipliers, 0 when the current zonal updates are compared to previous iteration MO update;else, 1"))
 	curveChoice = 1 # Number to indicate the type of Objective function among average heat rate, piecewise linear, or polynomial; Assume Average Heat Rate for now
-	# Read the master zones file, for deciding upon which other files to read for building the model
-	#Read the master zones file, for deciding upon which other files to read for building the model
-	systemChoice = int(input("Choose the type of System to be simulated: 1 for Simple two bus/two region, 2 for system combined of IEEE 14, 30, and 5 node systems"))
-	curveChoice = 1 # Number to indicate the type of Objective function among average heat rate, piecewise linear, or polynomial; Assume Average Heat Rate for now
-	# Read the master zones file, for deciding upon which other files to read for building the model
 	if systemChoice==1:
 		zoneSummaryFile = open(os.path.join("data", "masterZonesSummary.json")) #opens the master zones summary file
 	else:
@@ -51,7 +43,6 @@ def HorMILPCentral(): # Main method begins program execution
 	matrixFirstFile = json.load(zoneSummaryFile) #opens the file
 
 	numberOfZones = int(input("\nEnter the number of zones")) #Number of zones between which horizontal investment coordination for transmission lines to be built is considered
-	numberOfFields = 7 #Number of rows or individual file types for each of the zones
 	solverChoice = int(input("\nChoose either the GLPK (1) or GUROBI (2) as the Solver. ")) #Choice of the solver
 	if solverChoice==1:
 		lpMethodChoice = int(input("\nChoose either the Simplex LP Rlaxation (1) or Interior Point Method LP Relaxation (2) as the method to provide the initial basis to the Mixed Integer Unit Commitment Problem. ")) #Simplex or interior method algorithm for MILP
@@ -265,6 +256,10 @@ def HorMILPCentral(): # Main method begins program execution
 
 	log.info("\n*** DISTRIBUTED STOCHASTIC OPTIMIZATION ALGORITHMIC MARKET MECHANISM DESIGN FIRST STAGE BEGINS ***\n")
 	#do {//%%
+	UBItVec = [] #Vector for storing the values of the global upper bound iterates for every iteration
+	LBItVec = [] #Vector for storing the values of the global lower bound iterates for every iteration
+	ratioIterate = [] #Vector for storing the values of UB/LB iterates for every iteration
+	globalCons = [] #Vector for storing the values of global consensus for every iteration
 	for iterCountOut in range(100):
 		if iterCountOut != 0:
 			marketoverInstance.clearDelayedVectors() #clear the different interim delayed vectors for making them ready for next iteration 
@@ -326,35 +321,39 @@ def HorMILPCentral(): # Main method begins program execution
 	#} while ((((1-abs(lowerBound/upperBound))<=0.05) or ((1-abs(lowerBound/upperBound))>=-0.05)))
 	#and (consensus<=0.05)) # while the tolerance is reached//%%
 	log.info("\nZonal Calculations of Beliefs about the Investment decision MILP ends")
-	ofstream UBIteratesOut("/home/samie/code/Horizontal_Coordination_MILP_Dist_Mechanism_Design/Horizontal_Proper/output/outputMetrics/UpperBoundIterates.txt", ios::out);
-
-	ofstream LBIteratesOut("/home/samie/code/Horizontal_Coordination_MILP_Dist_Mechanism_Design/Horizontal_Proper/output/outputMetrics/LowerBoundIterates.txt", ios::out);
-
-	ofstream ratioIteratesOut("/home/samie/code/Horizontal_Coordination_MILP_Dist_Mechanism_Design/Horizontal_Proper/output/outputMetrics/RatioIterates.txt", ios::out);
-
-	ofstream globalConsensusOut("/home/samie/code/Horizontal_Coordination_MILP_Dist_Mechanism_Design/Horizontal_Proper/output/outputMetrics/globalConsensus.txt", ios::out);
-
-	int countOfIterate = 1; 
-	for (UBItIterator = UBItVec.begin(); UBItIterator != UBItVec.end(); ++UBItIterator){
-		UBIteratesOut << countOfIterate << "\t" << *UBItIterator << endl;
-		++countOfIterate;
-	}
-	countOfIterate = 1;
-	for (LBItIterator = LBItVec.begin(); LBItIterator != LBItVec.end(); ++LBItIterator){
-		LBIteratesOut << countOfIterate << "\t" << *LBItIterator << endl;
-		++countOfIterate;
-	}
-	countOfIterate = 1;
-	for (ratioIterator = ratioIterate.begin(); ratioIterator != ratioIterate.end(); ++ratioIterator){
-		ratioIteratesOut << countOfIterate << "\t" << *ratioIterator << endl;
-		++countOfIterate;
-	}
-	countOfIterate = 1;
-	for (globalConsIterator = globalCons.begin(); globalConsIterator != globalCons.end(); ++globalConsIterator){
-		globalConsensusOut << countOfIterate << "\t" << *globalConsIterator << endl;
-		++countOfIterate;
-	}
+	UBIteratesOut = []
+	LBIteratesOut = []
+	ratioIteratesOut = []
+	globalConsensusOut = []
+	countOfIterate = 0 
+	for UBItIterator in UBItVec:
+		UBIteratesOut[countOfIterate] = {'Iteration Count':countOfIterate+1,
+						 'Upper Bound':UBItIterator}
+		countOfIterate +=1
+	countOfIterate = 0
+	for LBItIterator in LBItVec:
+		LBIteratesOut[countOfIterate] = {'Iteration Count':countOfIterate+1,
+						 'Upper Bound':LBItIterator}
+		countOfIterate +=1
+	countOfIterate = 0
+	for ratioIterator in ratioIterate:
+		ratioIteratesOut[countOfIterate] = {'Iteration Count':countOfIterate+1,
+						 'Upper Bound':ratioIterator}
+		countOfIterate +=1
+	countOfIterate = 0
+	for globalConsIterator in globalCons:
+		globalConsensusOut[countOfIterate] = {'Iteration Count':countOfIterate+1,
+						 'Upper Bound':globalConsIterator}
+		countOfIterate +=1
 	log.info("\n*** DISTRIBUTED STOCHASTIC OPTIMIZATION ALGORITHMIC MARKET MECHANISM DESIGN FIRST STAGE ENDS ***\n")
+	with open(os.path.join('results', 'UpperBoundIterates' + '.json'), 'w') as f:
+                json.dump(UBIteratesOut, f, indent=4)
+	with open(os.path.join('results', 'LowerBoundIterates' + '.json'), 'w') as f:
+                json.dump(LBIteratesOut, f, indent=4)
+	with open(os.path.join('results', 'RatioUBLB' + '.json'), 'w') as f:
+                json.dump(ratioIteratesOut, f, indent=4)
+	with open(os.path.join('results', 'ConsensusGlobal' + '.json'), 'w') as f:
+                json.dump(globalConsensusOut, f, indent=4)
 	marketoverInstance.finDecLineConstr() #Populate the list of constructed shared candidate lines, according to Stage-I
 	dimAPPLagArray = 0 #Initialize the Dimension of the Lagrange multipliers for APP
 	for i  in range(numberOfZones): #Each region solves its own MILP optimization problem
@@ -375,9 +374,9 @@ def HorMILPCentral(): # Main method begins program execution
 			log.info("\n*** APP QUADRATIC PROGRAMMING FOR ZONE {} BEGINS ***\n".format(i+1))
 			log.info("\nZonal Calculations of Beliefs about the generation and flow decision APP-QP begins")
 			log.info("\nSOLVING THE OPTIMIZATION SUB-PROBLEM")
-			ObjIterate[i]=zonalNetVector[i].APPQPAvgHR(marketoverInstance, APPLagMultipliers, candLineCount, otherNodeCount, environmentGUROBI, iterCountOut) #Perform unit commitment for average heat rate objective
-			interAngleMessage[i] = zonalNetVector[i].getZonalDecision();
-			zonalGlobRank[i] = zonalNetVector[i].getZonalRanks();
+			ObjIterate[i]=zonalNetVector[i].APPQPAvgHR(marketoverInstance, APPLagMultipliers, candLineCount, otherNodeCount, iterCountOut) #Perform unit commitment for average heat rate objective
+			interAngleMessage[i] = zonalNetVector[i].getZonalDecision()
+			zonalGlobRank[i] = zonalNetVector[i].getZonalRanks()
 			log.info("\nOPTIMIZATION SUB-PROBLEM SOLVED")
 		for i in range(otherNodeCount+1): #Initialize the Lagrange Multipliers/Dual Variables/Rewards/Penalties to zero for the MO
 			tempXi = 0.0
@@ -407,6 +406,7 @@ def HorMILPCentral(): # Main method begins program execution
 	#while ((((1-abs(lowerBound/upperBound))<=0.05) or ((1-abs(lowerBound/upperBound))>=-0.05)))
 	#and (consensus<=0.05)) #while the tolerance is reached//%%
 	log.info("\nZonal Calculations of Beliefs about the Investment decision MILP ends")
+	"""
 	ofstream UBIteratesOut("UpperBoundIterates.txt", ios::out);
 
 	ofstream LBIteratesOut("LowerBoundIterates.txt", ios::out);
@@ -434,4 +434,11 @@ def HorMILPCentral(): # Main method begins program execution
 		globalConsensusOut << countOfIterate << "\t" << globalConsIterator << endl;
 		countOfIterate += 1
 	log.info("\n*** DISTRIBUTED STOCHASTIC OPTIMIZATION ALGORITHMIC MARKET MECHANISM DESIGN FIRST STAGE ENDS ***\n")
+	"""
+print("\nThis is the simulation program for Stage-I and Stage-II of the Horizontal Investment Coordination MILP Market Mechanism Design Simulation application.\n")
+
+try:
+    if __name__ == '__main__': HorMILPCentral()
+except:
+    log.warning("Simulation FAILED !!!!")
 
