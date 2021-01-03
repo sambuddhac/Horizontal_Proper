@@ -294,24 +294,24 @@ class Nettran(object):
 			self.probability.append(1/(self.countOfScenarios))
 
 		#check the bounds and validity of the parameter values
-		otherZoneNodeIter = diffZoneNodeID.begin(); // Initialize the otherZoneNodeIter iterator to point to the beginning of the diffZoneNodeID vector
-		otherZoneNodeIter++; // Increment the pointer to point to the actual non-zero entry
-		otherZoneIter = diffZoneID.begin(); // Initialize the otherZoneIter iterator to point to the beginning of the diffZoneID vector
-		otherZoneIter++; // Increment the pointer to point to the actual non-zero entry	
-		sharedELineIt = SELineObject.begin(); // Initialize the sharedELineIt iterator to point to the beginning of the SELineObject vector 
-		sharedELineFromIt = SELineObject.begin(); // Initialize the sharedELineFromIt iterator to point to the beginning of the SELineObject vector
-		sharedELineFZoneIt = SELineObject.begin(); // Initialize the sharedELineFZoneIt iterator to point to the beginning of the SELineObject vector
-		sharedELineToIt = SELineObject.begin(); // Initialize the sharedELineToIt iterator to point to the beginning of the SELineObject vector
-		sharedELineTZoneIt = SELineObject.begin(); // Initialize the sharedELineTZoneIt iterator to point to the beginning of the SELineObject vector
-		sharedELineReactIt = SELineObject.begin(); // Initialize the sharedELineReactIt iterator to point to the beginning of the SELineObject vector
-		sharedELineCapIt = SELineObject.begin(); // Initialize the sharedELineCapIt iterator to point to the beginning of the SELineObject vector
-		sharedCandLineIt = candLineObject.begin(); // Initialize the sharedCandLineIt iterator to point to the beginning of the candLineObject vector 
-		sharedCandLineFromIt = candLineObject.begin(); // Initialize the sharedCandLineFromIt iterator to point to the beginning of the candLineObject vector
-		sharedCandLineFZoneIt = candLineObject.begin(); // Initialize the sharedCandLineFZoneIt iterator to point to the beginning of the candLineObject vector
-		sharedCandLineToIt = candLineObject.begin(); // Initialize the sharedCandLineToIt iterator to point to the beginning of the candLineObject vector
-		sharedCandLineTZoneIt = candLineObject.begin(); // Initialize the sharedCandLineTZoneIt iterator to point to the beginning of the candLineObject vector
-		sharedCandLineReactIt = candLineObject.begin(); // Initialize the sharedCandLineReactIt iterator to point to the beginning of the candLineObject vector
-		sharedCandLineCapIt = candLineObject.begin(); // Initialize the sharedCandLineCapIt iterator to point to the beginning of the candLineObject vector
+		otherZoneNodeIter = self.diffZoneNodeID.begin() #Initialize the otherZoneNodeIter iterator to point to the beginning of the diffZoneNodeID vector
+		otherZoneNodeIter+=1 #Increment the pointer to point to the actual non-zero entry
+		otherZoneIter = self.diffZoneID.begin() #Initialize the otherZoneIter iterator to point to the beginning of the diffZoneID vector
+		otherZoneIter+=1 #Increment the pointer to point to the actual non-zero entry	
+		sharedELineIt = self.SELineObject.begin() #Initialize the sharedELineIt iterator to point to the beginning of the SELineObject vector 
+		sharedELineFromIt = self.SELineObject.begin() #Initialize the sharedELineFromIt iterator to point to the beginning of the SELineObject vector
+		sharedELineFZoneIt = self.SELineObject.begin() #Initialize the sharedELineFZoneIt iterator to point to the beginning of the SELineObject vector
+		sharedELineToIt = self.SELineObject.begin() #Initialize the sharedELineToIt iterator to point to the beginning of the SELineObject vector
+		sharedELineTZoneIt = self.SELineObject.begin() #Initialize the sharedELineTZoneIt iterator to point to the beginning of the SELineObject vector
+		sharedELineReactIt = self.SELineObject.begin() #Initialize the sharedELineReactIt iterator to point to the beginning of the SELineObject vector
+		sharedELineCapIt = self.SELineObject.begin() #Initialize the sharedELineCapIt iterator to point to the beginning of the SELineObject vector
+		sharedCandLineIt = self.candLineObject.begin() #Initialize the sharedCandLineIt iterator to point to the beginning of the candLineObject vector 
+		sharedCandLineFromIt = self.candLineObject.begin() #Initialize the sharedCandLineFromIt iterator to point to the beginning of the candLineObject vector
+		sharedCandLineFZoneIt = self.candLineObject.begin() #Initialize the sharedCandLineFZoneIt iterator to point to the beginning of the candLineObject vector
+		sharedCandLineToIt = self.candLineObject.begin() #Initialize the sharedCandLineToIt iterator to point to the beginning of the candLineObject vector
+		sharedCandLineTZoneIt = self.candLineObject.begin() #Initialize the sharedCandLineTZoneIt iterator to point to the beginning of the candLineObject vector
+		sharedCandLineReactIt = self.candLineObject.begin() #Initialize the sharedCandLineReactIt iterator to point to the beginning of the candLineObject vector
+		sharedCandLineCapIt = self.candLineObject.begin() #Initialize the sharedCandLineCapIt iterator to point to the beginning of the candLineObject vector
 	#end constructor
 
 	def getNumberOfScenarios(self): #Returns the number of scenarios
@@ -329,135 +329,115 @@ class Nettran(object):
 	
 	#Function MILP() ends
 
-	def calcMILPBounds(double LagMultXi[], double LagMultPi[], int totalCandLineNum, int totalSharedNodeNum) // Function MILPAvgHR() implements the Mixed Integer Linear Programming Unit Commitment Solver routine by calling GLPK routines for average heat rate objective for Horizontal Coordination Investment decision making
+	def calcMILPBounds(self, LagMultXi, LagMultPi, totalCandLineNum, totalSharedNodeNum): #Function MILPAvgHR() implements the Mixed Integer Linear Programming Unit Commitment Solver routine by calling GLPK routines for average heat rate objective for Horizontal Coordination Investment decision making
+		zonal_dec_stageI = julSol.HorMILPDistMech(LagMultXi, LagMultPi, totalCandLineNum, totalSharedNodeNum)
 
 
-	def getConnZone(int i) // returns the pointer to the base of the vector, diffZoneID
-{
-	if (otherZoneIter != diffZoneID.end()) { // check to see if the end of the diffZoneID vector has been reached
-		otherZoneIter++; // if not, increment otherZoneIter iterator for the next call
-		return diffZoneID.at(i); // return the zone ID present at the position i
-	}
-	else
-		return -1; // if end is reached, return -1
-} // Function getConnZone() ends
+	def getConnZone(self, i): #returns the pointer to the base of the vector, diffZoneID
+		if self.otherZoneIter != self.diffZoneID.end(): #check to see if the end of the diffZoneID vector has been reached
+			self.otherZoneIter += 1 #if not, increment otherZoneIter iterator for the next call
+			return self.diffZoneID[i] #return the zone ID present at the position i
+		else:
+			return -1 #if end is reached, return -1
+	#Function getConnZone() ends
 
-	def getConnNode(int i) // returns the pointer to the base of the vector, diffZoneNodeID
-{
-	if (otherZoneNodeIter != diffZoneNodeID.end()) { // check to see if the end of the diffZoneNodeID vector has been reached
-		otherZoneNodeIter++; // if not, increment otherZoneNodeIter iterator for the next call
-		return diffZoneNodeID.at(i); // return the node ID present at the position i
-	}
-	else
-		return -1; // if end is reached, return -1
-} // Function getConnNode() ends
+	def getConnNode(self, i): #returns the pointer to the base of the vector, diffZoneNodeID
+		if self.otherZoneNodeIter != self.diffZoneNodeID.end(): #check to see if the end of the diffZoneNodeID vector has been reached
+			self.otherZoneNodeIter+=1 #if not, increment otherZoneNodeIter iterator for the next call
+			return self.diffZoneNodeID[i] #return the node ID present at the position i
+		else:
+			return -1 #if end is reached, return -1
+	#Function getConnNode() ends
 
-	def getSESerial(int i) // returns the pointer to the base of the vector, SELineObject
-{
-	if (sharedELineIt != SELineObject.end()) { // check to see if the end of the SELineObject vector has been reached
-		sharedELineIt++; // if not, increment sharedELineIt iterator for the next call
-		return (SELineObject.at(i))->getTranslID(); // return the global serial number of the present SE line at the position i
-	}
-	else
-		return -1; // if end is reached, return -1
-} // Function getSESerial() ends
+	def getSESerial(self, i): #returns the pointer to the base of the vector, SELineObject
+		if self.sharedELineIt != self.SELineObject.end(): #check to see if the end of the SELineObject vector has been reached
+			self.sharedELineIt+=1 #if not, increment sharedELineIt iterator for the next call
+			return (self.SELineObject[i]).getTranslID() #return the global serial number of the present SE line at the position i
+		else:
+			return -1 #if end is reached, return -1
+	#Function getSESerial() ends
 
-	def getSEFromNode(int i) // returns the ID number of the from node of the shared existing line
-{
-	if (sharedELineFromIt != SELineObject.end()) { // check to see if the end of the SELineObject vector has been reached
-		sharedELineFromIt++; // if not, increment iterator for the next call
-		if ((SELineObject.at(i))->getFlowDir()==1) // If the intrazonal node is the from node
-			return (SELineObject.at(i))->getIntlNodeID(); // return the ID of the internal node of the SE line at the position i
+	def getSEFromNode(self, i): #returns the ID number of the from node of the shared existing line
+		if self.sharedELineFromIt != self.SELineObject.end(): #check to see if the end of the SELineObject vector has been reached
+			self.sharedELineFromIt+=1 #if not, increment iterator for the next call
+			if (self.SELineObject[i]).getFlowDir()==1: #If the intrazonal node is the from node
+				return (self.SELineObject[i]).getIntlNodeID() #return the ID of the internal node of the SE line at the position i
+			else:
+				return (self.SELineObject[i]).getExtNodeID() #else, return the ID of the external node of the SE line at the position i
+		else:
+			return -1 #if end is reached, return -1 
+	#Function getSEFromNode() ends
+
+	def getSEFromZone(self, i): #returns the ID number of the from zone of the shared existing line
+		if self.sharedELineFZoneIt != self.SELineObject.end(): #check to see if the end of the SELineObject vector has been reached
+			self.sharedELineFZoneIt+=1 #if not, increment iterator for the next call
+			if (self.SELineObject[i]).getFlowDir()==1: #If the intrazonal node is the from node
+				return (self.SELineObject[i]).getIntlZoneID() #return the ID of current zone of the SE line at the position i
+			else:
+				return (self.SELineObject[i]).getExtZoneID() #else, return the ID of the external zone of the SE line at the position i
+		else:
+			return -1 #if end is reached, return -1 
+	#Function getSEFromZone() ends
+
+	def getSEToNode(self, i): #returns the ID number of the to node of the shared existing line
+		if self.sharedELineToIt != self.SELineObject.end(): #check to see if the end of the SELineObject vector has been reached
+			self.sharedELineToIt+=1 #if not, increment iterator for the next call
+			if (self.SELineObject[i]).getFlowDir()==1: #If the intrazonal node is the from node
+				return (self.SELineObject[i]).getExtNodeID() #return the ID of the external node of the SE line at the position i
+			else:
+				return (self.SELineObject[i]).getIntlNodeID() #else, return the ID of the internal node of the SE line at the position i
+		else:
+			return -1 #if end is reached, return -1 
+	#Function getSEToNode() ends
+
+	def getSEToZone(self, i): #returns the ID number of the to zone of the shared existing line
+		if self.sharedELineTZoneIt != self.SELineObject.end(): #check to see if the end of the SELineObject vector has been reached
+			self.sharedELineTZoneIt+=1 #if not, increment iterator for the next call
+			if (self.SELineObject[i]).getFlowDir()==1: #If the intrazonal node is the from node
+				return (self.SELineObject[i]).getExtZoneID() #return the ID of external zone of the SE line at the position i
+			else:
+				return (self.SELineObject[i]).getIntlZoneID() #else, return the ID of the current zone of the SE line at the position i
+		else:
+			return -1 #if end is reached, return -1 
+	#Function getSEToZone() ends
+
+	def getSEReactance(self, i): #returns the reactance of the shared existing line
+		if self.sharedELineReactIt != self.SELineObject.end(): #check to see if the end of the SELineObject vector has been reached
+			self.sharedELineReactIt+=1 #if not, increment iterator for the next call
+			return (self.SELineObject[i]).getReactance() #return the reactance of the SE line at the position i
+		else:
+			return -1 #if end is reached, return -1 
+	#Function getConnNode() ends
+
+	def getSECapacity(self, i): #returns the capacity of the shared existing line
+		if self.sharedELineCapIt != self.SELineObject.end(): #check to see if the end of the SELineObject vector has been reached
+			self.sharedELineCapIt+=1 #if not, increment iterator for the next call
+			return (self.SELineObject[i]).getFlowLimit() #return the capacity of the SE line at the position i
+		else:
+			return -1 #if end is reached, return -1 
+	 #Function getConnNode() ends
+
+	def getCandSerial(self, i): #returns the pointer to the base of the vector, SELineObject
+		if self.sharedCandLineIt != self.candLineObject.end(): #check to see if the end of the SELineObject vector has been reached
+			self.sharedCandLineIt+=1 #if not, increment sharedELineIt iterator for the next call
+			return (self.candLineObject[i]).getTranslID() #return the global serial number of the present SE line at the position i
+		else:
+			return -1 #if end is reached, return -1
+	#Function getSESerial() ends
+
+	def getCandFromNode(self, i): #returns the ID number of the from node of the shared existing line
+		if (sharedCandLineFromIt != candLineObject.end()) { // check to see if the end of the SELineObject vector has been reached
+			sharedCandLineFromIt++; // if not, increment iterator for the next call
+			if ((candLineObject.at(i))->getFlowDir()==1) // If the intrazonal node is the from node
+				return (candLineObject.at(i))->getIntlNodeID(); // return the ID of the internal node of the SE line at the position i
+			else
+				return (candLineObject.at(i))->getExtNodeID(); // else, return the ID of the external node of the SE line at the position i
+		}
 		else
-			return (SELineObject.at(i))->getExtNodeID(); // else, return the ID of the external node of the SE line at the position i
-	}
-	else
-		return -1; // if end is reached, return -1 
-} // Function getSEFromNode() ends
+			return -1; // if end is reached, return -1 
+	#Function getSEFromNode() ends
 
-	def getSEFromZone(int i) // returns the ID number of the from zone of the shared existing line
-{
-	if (sharedELineFZoneIt != SELineObject.end()) { // check to see if the end of the SELineObject vector has been reached
-		sharedELineFZoneIt++; // if not, increment iterator for the next call
-		if ((SELineObject.at(i))->getFlowDir()==1) // If the intrazonal node is the from node
-			return (SELineObject.at(i))->getIntlZoneID(); // return the ID of current zone of the SE line at the position i
-		else
-			return (SELineObject.at(i))->getExtZoneID(); // else, return the ID of the external zone of the SE line at the position i
-	}
-	else
-		return -1; // if end is reached, return -1 
-} // Function getSEFromZone() ends
-
-	def getSEToNode(int i) // returns the ID number of the to node of the shared existing line
-{
-	if (sharedELineToIt != SELineObject.end()) { // check to see if the end of the SELineObject vector has been reached
-		sharedELineToIt++; // if not, increment iterator for the next call
-		if ((SELineObject.at(i))->getFlowDir()==1) // If the intrazonal node is the from node
-			return (SELineObject.at(i))->getExtNodeID(); // return the ID of the external node of the SE line at the position i
-		else
-			return (SELineObject.at(i))->getIntlNodeID(); // else, return the ID of the internal node of the SE line at the position i
-	}
-	else
-		return -1; // if end is reached, return -1 
-} // Function getSEToNode() ends
-
-	def getSEToZone(int i) // returns the ID number of the to zone of the shared existing line
-{
-	if (sharedELineTZoneIt != SELineObject.end()) { // check to see if the end of the SELineObject vector has been reached
-		sharedELineTZoneIt++; // if not, increment iterator for the next call
-		if ((SELineObject.at(i))->getFlowDir()==1) // If the intrazonal node is the from node
-			return (SELineObject.at(i))->getExtZoneID(); // return the ID of external zone of the SE line at the position i
-		else
-			return (SELineObject.at(i))->getIntlZoneID(); // else, return the ID of the current zone of the SE line at the position i
-	}
-	else
-		return -1; // if end is reached, return -1 
-} // Function getSEToZone() ends
-
-	def getSEReactance(int i) // returns the reactance of the shared existing line
-{
-	if (sharedELineReactIt != SELineObject.end()) { // check to see if the end of the SELineObject vector has been reached
-		sharedELineReactIt++; // if not, increment iterator for the next call
-		return (SELineObject.at(i))->getReactance(); // return the reactance of the SE line at the position i
-	}
-	else
-		return -1; // if end is reached, return -1 
-} // Function getConnNode() ends
-
-	def getSECapacity(int i) // returns the capacity of the shared existing line
-{
-	if (sharedELineCapIt != SELineObject.end()) { // check to see if the end of the SELineObject vector has been reached
-		sharedELineCapIt++; // if not, increment iterator for the next call
-		return (SELineObject.at(i))->getFlowLimit(); // return the capacity of the SE line at the position i
-	}
-	else
-		return -1; // if end is reached, return -1 
-} // Function getConnNode() ends
-
-	def getCandSerial(int i) // returns the pointer to the base of the vector, SELineObject
-{
-	if (sharedCandLineIt != candLineObject.end()) { // check to see if the end of the SELineObject vector has been reached
-		sharedCandLineIt++; // if not, increment sharedELineIt iterator for the next call
-		return (candLineObject.at(i))->getTranslID(); // return the global serial number of the present SE line at the position i
-	}
-	else
-		return -1; // if end is reached, return -1
-} // Function getSESerial() ends
-
-	def getCandFromNode(int i) // returns the ID number of the from node of the shared existing line
-{
-	if (sharedCandLineFromIt != candLineObject.end()) { // check to see if the end of the SELineObject vector has been reached
-		sharedCandLineFromIt++; // if not, increment iterator for the next call
-		if ((candLineObject.at(i))->getFlowDir()==1) // If the intrazonal node is the from node
-			return (candLineObject.at(i))->getIntlNodeID(); // return the ID of the internal node of the SE line at the position i
-		else
-			return (candLineObject.at(i))->getExtNodeID(); // else, return the ID of the external node of the SE line at the position i
-	}
-	else
-		return -1; // if end is reached, return -1 
-} // Function getSEFromNode() ends
-
-	def getCandFromZone(int i) // returns the ID number of the from zone of the shared existing line
+	def getCandFromZone(self, i) // returns the ID number of the from zone of the shared existing line
 {
 	if (sharedCandLineFZoneIt != candLineObject.end()) { // check to see if the end of the SELineObject vector has been reached
 		sharedCandLineFZoneIt++; // if not, increment iterator for the next call
@@ -470,7 +450,7 @@ class Nettran(object):
 		return -1; // if end is reached, return -1 
 } // Function getSEFromZone() ends
 
-	def getCandToNode(int i) // returns the ID number of the to node of the shared existing line
+	def getCandToNode(self, i) // returns the ID number of the to node of the shared existing line
 {
 	if (sharedCandLineToIt != candLineObject.end()) { // check to see if the end of the SELineObject vector has been reached
 		sharedCandLineToIt++; // if not, increment iterator for the next call
@@ -483,7 +463,7 @@ class Nettran(object):
 		return -1; // if end is reached, return -1 
 } // Function getSEToNode() ends
 
-	def getCandToZone(int i) // returns the ID number of the to zone of the shared existing line
+	def getCandToZone(self, i) // returns the ID number of the to zone of the shared existing line
 {
 	if (sharedCandLineTZoneIt != candLineObject.end()) { // check to see if the end of the SELineObject vector has been reached
 		sharedCandLineTZoneIt++; // if not, increment iterator for the next call
@@ -496,7 +476,7 @@ class Nettran(object):
 		return -1; // if end is reached, return -1 
 } // Function getSEToZone() ends
 
-	def getCandReactance(int i) // returns the reactance of the shared existing line
+	def getCandReactance(self, i) // returns the reactance of the shared existing line
 {
 	if (sharedCandLineReactIt != candLineObject.end()) { // check to see if the end of the SELineObject vector has been reached
 		sharedCandLineReactIt++; // if not, increment iterator for the next call
@@ -506,7 +486,7 @@ class Nettran(object):
 		return -1; // if end is reached, return -1 
 } // Function getConnNode() ends
 
-	def getCandCapacity(int i) // returns the capacity of the shared existing line
+	def getCandCapacity(self, i) // returns the capacity of the shared existing line
 {
 	if (sharedCandLineCapIt != candLineObject.end()) { // check to see if the end of the SELineObject vector has been reached
 		sharedCandLineCapIt++; // if not, increment iterator for the next call
@@ -516,27 +496,27 @@ class Nettran(object):
 		return -1; // if end is reached, return -1 
 } // Function getConnNode() ends
 
-	def setSEFromRank(int existingCounter, int rankFrom) // sets the from rank for the internal zone node end of the shared existing line
+	def setSEFromRank(self, existingCounter, rankFrom) // sets the from rank for the internal zone node end of the shared existing line
 {
 	 (*(SELineObject.at(existingCounter))).assignRank(rankFrom);
 }
 
-	def setSEToRank(int existingCounter, int rankTo) // sets the to rank for the internal zone node end of the shared existing line
+	def setSEToRank(self, existingCounter, rankTo) // sets the to rank for the internal zone node end of the shared existing line
 {
 	(*(SELineObject.at(existingCounter))).assignRank(rankTo);
 }
 
-	def setCandFromRank(int candidateCounter, int rankFrom) // sets the from rank for the internal zone node end of the shared candidate line
+	def setCandFromRank(self, candidateCounter, rankFrom) // sets the from rank for the internal zone node end of the shared candidate line
 {
 	(*(candLineObject.at(candidateCounter))).assignRank(rankFrom);
 }
 
-	def setCandToRank(int candidateCounter, int rankTo) // sets the to rank for the internal zone node end of the shared candidate line
+	def setCandToRank(self, candidateCounter, rankTo) // sets the to rank for the internal zone node end of the shared candidate line
 {
 	(*(candLineObject.at(candidateCounter))).assignRank(rankTo);
 }
 
-	def setSEFromRankConn(int existingCounter, int rankFrom) // populates the vector of the global ranks of all the external from nodes of SE lines
+	def setSEFromRankConn(self, existingCounter, rankFrom) // populates the vector of the global ranks of all the external from nodes of SE lines
 {
 	for (globalIterator = globalRankDiffNode.begin(); globalIterator != globalRankDiffNode.end(); ++globalIterator) {
 		if (*globalIterator == rankFrom) { // Check whether the other-zone node is already present in the list
@@ -552,7 +532,7 @@ class Nettran(object):
 	(*(SELineObject.at(existingCounter))).connectRank(rankFrom);			
 }
 
-	def setSEToRankConn(int existingCounter, int rankTo) // populates the vector of the global ranks of all the external to nodes of SE lines
+	def setSEToRankConn(self, existingCounter, rankTo) // populates the vector of the global ranks of all the external to nodes of SE lines
 {
 	for (globalIterator = globalRankDiffNode.begin(); globalIterator != globalRankDiffNode.end(); ++globalIterator) {
 		if (*globalIterator == rankTo) { // Check whether the other-zone node is already present in the list
@@ -568,131 +548,95 @@ class Nettran(object):
 	(*(SELineObject.at(existingCounter))).connectRank(rankTo);
 }
 
-	def setCandFromRankConn(int candidateCounter, int rankFrom) // populates the vector of the global ranks of all the external from nodes of cand lines
-{
-	for (globalIterator = globalRankDiffNode.begin(); globalIterator != globalRankDiffNode.end(); ++globalIterator) {
-		if (*globalIterator == rankFrom) { // Check whether the other-zone node is already present in the list
-			containsFlag = 1;  // Loop through the diffZoneNodeID and diffZoneID vectors, to see if the other zone-node is already present or not, if yes, set the containsFlag to 1
-		}
-	}
-	if (containsFlag == 0) { // If globalRankDiffNode vector does not contain the other zone-node rank, then push the node rank in the vector
-		globalRankDiffNode.push_back(rankFrom);
-	}
-	containsFlag = 0; // reset
-	(*(candLineObject.at(candidateCounter))).connectRank(rankFrom);
-}
+	def setCandFromRankConn(self, candidateCounter, rankFrom): #populates the vector of the global ranks of all the external from nodes of cand lines
+		for globalIterator in self.globalRankDiffNode:
+			if globalIterator == rankFrom: #Check whether the other-zone node is already present in the list
+				self.containsFlag = 1 #Loop through the diffZoneNodeID and diffZoneID vectors, to see if the other zone-node is already present or not, if yes, set the containsFlag to 1
+		if self.containsFlag == 0: #If globalRankDiffNode vector does not contain the other zone-node rank, then push the node rank in the vector
+			self.globalRankDiffNode.append(rankFrom)
+		self.containsFlag = 0 #reset
+		(self.candLineObject[candidateCounter]).connectRank(rankFrom)
 
-	def setCandToRankConn(int candidateCounter, int rankTo) // populates the vector of the global ranks of all the external to nodes of cand lines
-{
-	for (globalIterator = globalRankDiffNode.begin(); globalIterator != globalRankDiffNode.end(); ++globalIterator) {
-		if (*globalIterator == rankTo) { // Check whether the other-zone node is already present in the list
-			containsFlag = 1;  // Loop through the diffZoneNodeID and diffZoneID vectors, to see if the other zone-node is already present or not, if yes, set the containsFlag to 1
-		}
-	}
-	if (containsFlag == 0) { // If globalRankDiffNode vector does not contain the other zone-node rank, then push the node rank in the vector
-		globalRankDiffNode.push_back(rankTo);
-	}
-	containsFlag = 0; // reset
-	(*(candLineObject.at(candidateCounter))).connectRank(rankTo);
-}
+	def setCandToRankConn(self, candidateCounter, rankTo): #populates the vector of the global ranks of all the external to nodes of cand lines
+		for globalIterator in self.globalRankDiffNode:
+			if globalIterator == rankTo: #Check whether the other-zone node is already present in the list
+				self.containsFlag = 1 #Loop through the diffZoneNodeID and diffZoneID vectors, to see if the other zone-node is already present or not, if yes, set the containsFlag to 1
+		if self.containsFlag == 0: #If globalRankDiffNode vector does not contain the other zone-node rank, then push the node rank in the vector
+			self.globalRankDiffNode.append(rankTo)
+		self.containsFlag = 0 #reset
+		(self.candLineObject[candidateCounter]).connectRank(rankTo)
 
-	def assignCandGlobalRank(int candidateCounter, int candGlobalRank) // assigns the global rank of the shared candidate line
-{
-	(*(candLineObject.at(candidateCounter))).assignLineRank(candGlobalRank);
-}
+	def assignCandGlobalRank(self, candidateCounter, candGlobalRank): #assigns the global rank of the shared candidate line
+		(self.candLineObject[candidateCounter]).assignLineRank(candGlobalRank)
 
-	def setRealizedCLines(Marketover &coordInstanceRef) // Assigns the realizedCLine variable, the number of candidate lines that are actually built
-{
-	// *** Built shared candidate lines *** //
-	vector<candLine*>::iterator candIterator; // Iterator for candidate lines
-	for (candIterator = candLineObject.begin(); candIterator != candLineObject.end(); ++candIterator) {
-		int candGlobRank=((*candIterator)->getGlobalRank()); // Get the global rank of the candidate line 		
-		int statusPresAbs = coordInstanceRef.scanBuiltLinesList(candGlobRank); // Passing on the shared node angle decision message to the MO
-		if (statusPresAbs==1)
-			(*candIterator)->setPresAbsStatus();
-		if ((*candIterator)->returnPresAbsStatus()==1) {
-			realCandLine.push_back((*candIterator)); // Populate the vector of realized candidate lines
-			//cout << "Constructed shared line ID: " << (*candIterator)->getTranslID() << endl;
-			(*candIterator)->modifyNodeReact(); // Adjust the connected nodal reactances after the lines have been decided to be built
-			int nodeZone2 = (*candIterator)->getExtNodeID();
-			int tNodeID2 = (*candIterator)->getExtZoneID();
-			int indCount = 0; // Initialize a counter for tracking the position in the vector of the iterator
-			int rankBuilt = (*candIterator)->getExtNodeGlobalRank();
-			vector<int>::iterator diffZNIt;
-			for (diffZNIt = diffZoneNodeExistingID.begin(); diffZNIt != diffZoneNodeExistingID.end(); ++diffZNIt) {
-				if ((*diffZNIt == tNodeID2) && (diffZoneExistingID[indCount] == nodeZone2)) { // Check whether the other-zone node is already present in the list
-					containsFlag = 1;  // Loop through the diffZoneNodeID and diffZoneID vectors, to see if the other zone-node is already present or not, if yes, set the containsFlag to 1
-				}
-				++indCount; // Increment the counter
-			}
-			if (containsFlag == 0) { // If the diffZoneNodeID and diffZoneID vectors do not contain the other zone-node, then push the node and the other zone index in the respective vectors
-				diffZoneNodeExistingID.push_back(tNodeID2); // initialize the list of external-zone existing node ID's so that it's not empty
-				//cout << " The node ID of outer zonal node is : " << tNodeID2 << endl;
-				diffZoneExistingID.push_back(nodeZone2); // Initialize the list of external-zone existing zone ID's so that it's not empty.
-				//cout << " The zone ID of outer zonal node is : " << nodeZone2 << endl;
-			}
-			for (globalIterator = globalRankDiffNode.begin(); globalIterator != globalRankDiffNode.end(); ++globalIterator) {
-				if (*globalIterator == rankBuilt) { // Check whether the other-zone node is already present in the list
-					containsFlagGlob = 1;  // Loop through the diffZoneNodeID and diffZoneID vectors, to see if the other zone-node is already present or not, if yes, set the containsFlag to 1
-				}
-			}
-			if (containsFlagGlob == 0) { // If globalRankDiffNode vector does not contain the other zone-node rank, then push the node rank in the vector
-				globalExistingRank.push_back(rankBuilt); // list of global ranking of external zone nodes for only SE lines and shared candidate lines
-				//cout << " The rank of outer zonal node is : " << rankBuilt << endl;
-				++existingOtherZoneNodeNum; // Increment the number of other zone nodes that are ends of SE lines, only when a new one is added
-				//cout << " The number of existing other zone node is : " << existingOtherZoneNodeNum << endl;
-			}
-			containsFlag = 0; // reset
-			containsFlagGlob = 0; // reset
-			//(*(SELineObject.at(existingCounter))).connectRank(rankFrom);	
-			++realizedCLines;
-		}
-	}
-	//cout << "Number of constructed shared lines in network " << zonalIndex << " is " << realizedCLines << endl; 
+	def setRealizedCLines(self, coordInstanceRef): #Assigns the realizedCLine variable, the number of candidate lines that are actually built
+		#Built shared candidate lines
+		for candIterator in self.candLineObject:
+			candGlobRank=candIterator.getGlobalRank() #Get the global rank of the candidate line 		
+			statusPresAbs = coordInstanceRef.scanBuiltLinesList(candGlobRank) #Passing on the shared node angle decision message to the MO
+			if statusPresAbs==1:
+				candIterator.setPresAbsStatus()
+			if candIterator.returnPresAbsStatus()==1:
+				self.realCandLine.append(candIterator) #Populate the vector of realized candidate lines
+				#log.info("Constructed shared line ID: {}".format(candIterator.getTranslID()))
+				candIterator.modifyNodeReact() #Adjust the connected nodal reactances after the lines have been decided to be built
+				nodeZone2 = candIterator.getExtNodeID()
+				tNodeID2 = candIterator.getExtZoneID()
+				indCount = 0 #Initialize a counter for tracking the position in the vector of the iterator
+				rankBuilt = candIterator.getExtNodeGlobalRank()
+				for diffZNIt in self.diffZoneNodeExistingID:
+					if (diffZNIt == tNodeID2) and (self.diffZoneExistingID[indCount] == nodeZone2): #Check whether the other-zone node is already present in the list
+						self.containsFlag = 1 #Loop through the diffZoneNodeID and diffZoneID vectors, to see if the other zone-node is already present or not, if yes, set the containsFlag to 1
+					indCount += 1 #Increment the counter
+				if self.containsFlag == 0: #If the diffZoneNodeID and diffZoneID vectors do not contain the other zone-node, then push the node and the other zone index in the respective vectors
+					self.diffZoneNodeExistingID.append(tNodeID2) #initialize the list of external-zone existing node ID's so that it's not empty
+					#log.info(" The node ID of outer zonal node is : {}".format(tNodeID2))
+					self.diffZoneExistingID.push_back(nodeZone2) #Initialize the list of external-zone existing zone ID's so that it's not empty.
+					#log.info(" The zone ID of outer zonal node is : {}".format(nodeZone2))
+				for globalIterator in self.globalRankDiffNode:
+					if globalIterator == rankBuilt: #Check whether the other-zone node is already present in the list
+						self.containsFlagGlob = 1 #Loop through the diffZoneNodeID and diffZoneID vectors, to see if the other zone-node is already present or not, if yes, set the containsFlag to 1
+				if self.containsFlagGlob == 0: #If globalRankDiffNode vector does not contain the other zone-node rank, then push the node rank in the vector
+					self.globalExistingRank.append(rankBuilt) #list of global ranking of external zone nodes for only SE lines and shared candidate lines
+					#cout << " The rank of outer zonal node is : " << rankBuilt << endl;
+					self.existingOtherZoneNodeNum += 1 #Increment the number of other zone nodes that are ends of SE lines, only when a new one is added
+					#cout << " The number of existing other zone node is : " << existingOtherZoneNodeNum << endl
+				self.containsFlag = 0 #reset
+				self.containsFlagGlob = 0 #reset
+				#(SELineObject[existingCounter]).connectRank(rankFrom)
+				self.realizedCLines += 1
+		#cout << "Number of constructed shared lines in network " << zonalIndex << " is " << realizedCLines << endl; 
 
-	// *** Built internal candidate lines *** //
-	vector<intCandLine*>::iterator intCandIterator; // Iterator for candidate lines
-	for (intCandIterator = realIntCandLineObject.begin(); intCandIterator != realIntCandLineObject.end(); ++intCandIterator) {
-		(*intCandIterator)->setPresAbsStatus();
-		//cout << "Constructed internal line ID: " << (*intCandIterator)->getTranslID() << endl;
-		++realizedIntCLines;
-	}
-	for (intCandIterator = intCandLineObject.begin(); intCandIterator != intCandLineObject.end(); ++intCandIterator) {
-		if (((*intCandIterator)->returnPresAbsStatus()==1) && (find(realIntCandLineObject.begin(), realIntCandLineObject.end(), (*intCandIterator))==realIntCandLineObject.end())) {
-			realIntCandLineObject.push_back((*intCandIterator)); // Populate the vector of realized candidate lines
-			//cout << "Constructed internal line ID: " << (*intCandIterator)->getTranslID() << endl;
-			(*intCandIterator)->modifyNodeReact(); // Adjust the connected nodal reactances after the lines have been decided to be built
-			++realizedIntCLines;
-		}
-	}
-	//cout << "Number of constructed internal lines in network " << zonalIndex << " is " << realizedIntCLines << endl; 
-}
+		#Built internal candidate lines
+		#Iterator for candidate lines
+		for intCandIterator in self.realIntCandLineObject:
+			intCandIterator.setPresAbsStatus()
+			#log.info("Constructed internal line ID: {}".format(intCandIterator.getTranslID()))
+			realizedIntCLines += 1
+		for intCandIterator in self.intCandLineObject:
+			if (intCandIterator.returnPresAbsStatus()==1) and (find(realIntCandLineObject.begin(), realIntCandLineObject.end(), (*intCandIterator))==realIntCandLineObject.end()):
+				realIntCandLineObject.push_back((*intCandIterator)); // Populate the vector of realized candidate lines
+				//cout << "Constructed internal line ID: " << (*intCandIterator)->getTranslID() << endl;
+				(*intCandIterator)->modifyNodeReact(); // Adjust the connected nodal reactances after the lines have been decided to be built
+				realizedIntCLines += 1
+		#cout << "Number of constructed internal lines in network " << zonalIndex << " is " << realizedIntCLines << endl
 
-	def TestBuiltExternalNodes()
-{
-	//cout << " Subnetwork # : " << zonalIndex << endl;
-	int indCount = 0;
-	vector<int>::iterator diffZNIt;
-	int cancelFirstEntry = 0; 
-	for (diffZNIt = diffZoneNodeExistingID.begin(); diffZNIt != diffZoneNodeExistingID.end(); ++diffZNIt) {
-		if (cancelFirstEntry > 0) {
-			//cout << "\nOuter node number : " << *diffZNIt << " Outer node zone : " << diffZoneExistingID[indCount] << " Outer node global rank : " << globalExistingRank[indCount] << endl;
-		}
-		++indCount; // Increment the counter
-		++cancelFirstEntry;
-	}
-	//cout << " Total number of outer zone nodes for this subnetwork to which existing or built lines are connected : " << existingOtherZoneNodeNum << endl;
-}
+	def TestBuiltExternalNodes(self):
+		#cout << " Subnetwork # : " << zonalIndex << endl;
+		indCount = 0
+		cancelFirstEntry = 0
+		for diffZNIt in self.diffZoneNodeExistingID:
+			if cancelFirstEntry > 0:
+				log.info("\nOuter node number : {} Outer node zone : {} Outer node global rank : {}".format(diffZNIt, self.diffZoneExistingID[indCount], self.globalExistingRank[indCount]))
+			indCount += 1 #Increment the counter
+			cancelFirstEntry += 1
+		#log.info(" Total number of outer zone nodes for this subnetwork to which existing or built lines are connected: {}".format(existingOtherZoneNodeNum))
 
-	def returnMultiplicity() // Returns the total multiplicity of the shared nodes
-{
-	vector<Node*>::iterator nodeIterator; // Iterator for node objects
-	int connMult = 0;
-	for (nodeIterator = nodeObject.begin(); nodeIterator != nodeObject.end(); ++nodeIterator){
-		connMult += (*nodeIterator)->getNodeMultiplicity();
-	}
-	return connMult;
-}
+	def returnMultiplicity(self): #Returns the total multiplicity of the shared nodes
+		connMult = 0
+		for nodeIterator in self.nodeObject:
+			connMult += nodeIterator.getNodeMultiplicity()
+		return connMult
 
 	def APPQPAvgHR(Marketover &coordInstanceRef, double LagMultXi[], int totalCandLineNum, int totalSharedNodeNum, GRBEnv* environmentGUROBI, int iterCount): #Calls the GUROBI solver object and solver method to solve the problem of determining the values of the continuous variables
 
