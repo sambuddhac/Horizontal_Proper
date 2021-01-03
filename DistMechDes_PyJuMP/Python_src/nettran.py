@@ -69,6 +69,7 @@ class Nettran(object):
 		self.loadNumber = matrixNetFile['loadNumber'] 
 		self.tranNumber = matrixNetFile['tranNumber']
 		self.internalCLines = matrixNetFile['internalCLines'] #get the dimensions of the Network
+		self.countOfScenarios = matrixNetFile['loadStochScenarios'] #get the number of stochastic scenarios of load
 		for l in range(self.nodeNumber):
 			#log.info("\nCreating the {} -th Node:".format(l + 1))
 		
@@ -235,123 +236,82 @@ class Nettran(object):
 					self.diffZoneID.append(nodeZone1)
 					self.otherNodeCount+=1 #Increment the counter to account for the total number of other-zone nodes
 					candLineInstance.outerNodeIndex(self.otherNodeCount, toFromFlag) #Calling the SELine method, which in turn calls the intra-zonal node method, to create a list of rankings of all the outer-zone nodes that are connected to this node, if the intra-zonal node is newly added
-				self.candLineObject.push_back( candLineInstance ) #pushes the transLineInstance object into the vector
+				self.candLineObject.append( candLineInstance ) #pushes the transLineInstance object into the vector
 			containsFlag = 0 #Reset the containsFlag for matching the next item
 		#end initialization for candidate Transmission Lines
 		matrixCETranFile.close() #Close the candidate lines file
 		if self.internalCLines>0:
 		#/* Internal Candidate Transmission Lines */################################################################################################################################################
-		ifstream matrixIntCETranFile( intCandLineFile, ios::in ); // ifstream constructor opens the file of internal candidate Transmission lines
-		// exit program if ifstream could not open file
-		if ( !matrixIntCETranFile ) {
-			cerr << "\nFile for Internal Candidate Transmission lines could not be opened\n" << endl;
-			exit( 1 );
-		} // end if
-		int intCFields; // Number of columns in the internal candidate transmission lines file
-		matrixIntCETranFile >> intCFields; // get the dimensions of the internal candidate Transmission line matrix
-		double matrixIntCETran[ internalCLines ][ intCFields ]; // internal candidate Transmission line matrix
-		for ( int i = 0; i < internalCLines; ++i ) {
-			for ( int j = 0; j < intCFields; ++j ) {
-				matrixIntCETranFile >> matrixIntCETran[ i ][ j ]; // read the internal candidate Transmission line matrix
-			}
-		}
-		//cout << "\nFile for Internal Candidate Transmission lines read\n" << endl;
-		/* Instantiate Internal Candidate Transmission Lines */
-		for ( int k = 0; k < internalCLines; ++k ) {
-			int serNum, tNodeID1, tNodeID2, presAbsence, lifeTime; // node object IDs to which the particular transmission line object is connected
-			do {
-				//node IDs of the node objects to which this transmission line is connected.
-				tNodeID1 = matrixIntCETran[ k ][ 0 ]; // From end node 
-				tNodeID2 = matrixIntCETran[ k ][ 1 ]; // To end node
-			} while ( ( tNodeID1 <= 0 ) || ( tNodeID1 > nodeNumber ) || ( tNodeID2 <= 0 ) || ( tNodeID2 > nodeNumber ) || ( tNodeID1 == tNodeID2) ); // validity check // validity check
-			double reacT, ptMax, interestRate, costPerCap; // Parameters for Transmission Line
-			do {
-				//Reactance:
-				reacT = matrixIntCETran[ k ][ 2 ];
-				//values of maximum allowable power flow on line in the forward and reverse direction:
-				//Forward direction:
-				ptMax = matrixIntCETran[ k ][ 3 ]/100;
-				lifeTime = matrixIntCETran[ k ][ 4 ]; // life time of the candidate line
-				interestRate = matrixIntCETran[ k ][ 5 ]; // interest rate of the investment 
-				costPerCap = matrixIntCETran[ k ][ 6 ]*ptMax; // capital cost for the construction 
-				presAbsence = matrixIntCETran[ k ][ 7 ]; // status of the construction 
-			} while ( ( reacT <= 0 ) ); // check the bounds and validity of the parameter values
+			matrixIntCETranFile = json.load(open(os.path.join("data", self.intCandLineFile))) #ifstream constructor opens the file of internal candidate Transmission lines
+			#/* Instantiate Internal Candidate Transmission Lines */
+			for matrixIntCETran in matrixIntCETranFile:
+				#node object IDs to which the particular transmission line object is connected
+				#node IDs of the node objects to which this transmission line is connected.
+				tNodeID1 = matrixIntCETran['fromNode'] #From end node 
+				tNodeID2 = matrixIntCETran['toNode'] #To end node
+				#Parameters for Transmission Line
+				#Reactance:
+				reacT = matrixIntCETran['Reactance']
+				#values of maximum allowable power flow on line in the forward and reverse direction:
+				#Forward direction:
+				ptMax = matrixIntCETran['lineLimit']/100
+				lifeTime = matrixIntCETran['lifeTime'] #life time of the candidate line
+				interestRate = matrixIntCETran['interestRate'] #interest rate of the investment 
+				costPerCap = matrixIntCETran['costPerCap']*ptMax #capital cost for the construction 
+				presAbsence = matrixIntCETran['presAbsence'] #status of the construction
 			
-			// creates intCandLineInstance object with ID k + 1
-			intCandLine *intCandLineInstance = new intCandLine( k + 1, nodeObject[ tNodeID1 - 1 ], nodeObject[ tNodeID2 - 1 ], ptMax, reacT, interestRate, lifeTime, costPerCap, presAbsence );// Create the internal candidate transmission line object with node 1 
-			intCandLineObject.push_back( intCandLineInstance ); // pushes the transLineInstance object into the vector
-		} // end initialization for candidate Transmission Lines
-		matrixIntCETranFile.close(); // Close the candidate lines file
-		}
+				#creates intCandLineInstance object with ID k + 1
+				intCandLineInstance = intCandLine( k + 1, self.nodeObject[ tNodeID1 - 1 ], self.nodeObject[ tNodeID2 - 1 ], ptMax, reacT, interestRate, lifeTime, costPerCap, presAbsence ) #Create the internal candidate transmission line object with node 1 
+				self.intCandLineObject.append( intCandLineInstance ) #pushes the transLineInstance object into the vector
+			#end initialization for candidate Transmission Lines
+			matrixIntCETranFile.close() #Close the candidate lines file
 		#/* Loads */################################################################################################################################################################################
-		ifstream matrixLoadFile( loadFile, ios::in ); // ifstream constructor opens the file of Loads
+		matrixLoadFile = json.load(open(os.path.join("data", self.loadFile))) #ifstream constructor opens the file of Loads
 
-		// exit program if ifstream could not open file
-		if ( !matrixLoadFile ) {
-			cerr << "\nFile for Loads could not be opened\n" << endl;
-			exit( 1 );
-		} // end if
 		int loadFields; // Number of columns in the load file
 		matrixLoadFile >> loadFields; // get the dimensions of the Load matrix
-		countOfScenarios = loadFields-1;
-		double matrixLoad[ loadNumber ][ loadFields ]; // Load matrix
-		for ( int i = 0; i < loadNumber; ++i ) {
-			for ( int j = 0; j < loadFields; ++j ) {
-				matrixLoadFile >> matrixLoad[ i ][ j ]; // read the Load matrix
-			}
-		}
-		// Initialize the default loads on all nodes to zero
-		for ( int l = 0; l < nodeNumber; ++l ) {
+		countOfScenarios = loadFields-1
+		#Initialize the default loads on all nodes to zero
+		for l in range(self.nodeNumber):
+			(self.nodeObject[l]).initLoad(self.countOfScenarios) #Initialize the default loads on all nodes to zero
+		#end initialization for Nodes		
+		#/* Instantiate Loads */
+		for matrixLoad in matrixLoadFile:
+			#node object ID to which the particular load object is connected
+			#node ID of the node object to which this load object is connected.
+			lNodeID = matrixLoad['loadNodeID']
+			for f in range(self.countOfScenarios):
+				#value of allowable power consumption capability of load in pu with a negative sign to indicate consumption:
+				#Power Consumption:
+				P_Load[f] = matrixLoad['loadMW']/100
 
-			(nodeObject[l])->initLoad( countOfScenarios ); // Initialize the default loads on all nodes to zero
+			loadInstance = Load( j + 1, self.nodeObject[ lNodeID - 1 ], loadFields-1, P_Load ) #creates loadInstance object object with ID number j + 1
 
-		} // end initialization for Nodes		
-		/* Instantiate Loads */
-		for ( int j = 0; j < loadNumber; ++j ) {
-			int lNodeID; // node object ID to which the particular load object is connected
-			do {
-				//node ID of the node object to which this load object is connected.
-				lNodeID = matrixLoad[ j ][ 0 ]; 
-			} while ( ( lNodeID <= 0 ) || ( lNodeID > nodeNumber ) ); // validity check
+			self.loadObject.append( loadInstance ) #pushes the loadInstance object into the vector
+		#end initialization for Loads
+		matrixLoadFile.close() #Closes the load file
+		for f in range(self.countOfScenarios):
+			self.probability.append(1/(self.countOfScenarios))
 
-			double P_Load[loadFields-1]; // Parameters for Load
-			for (int f=0;f<(loadFields-1); ++f) {
-				do {
-					//value of allowable power consumption capability of load in pu with a negative sign to indicate consumption:
-					//Power Consumption:
-					P_Load[f] = matrixLoad[ j ][ 1+f ]/100;
-				} while ( -P_Load[f] <= 0 ); // check the bounds and validity of the parameter values
-			}		
-
-			Load *loadInstance = new Load( j + 1, nodeObject[ lNodeID - 1 ], loadFields-1, P_Load ); // creates loadInstance object object with ID number j + 1
-
-			loadObject.push_back( loadInstance ); // pushes the loadInstance object into the vector
-
-		} // end initialization for Loads
-		matrixLoadFile.close(); // Closes the load file
-	} while ( (genNumber <= 0 ) || ( nodeNumber <= 0 ) || ( loadNumber <= 0 )); //|| ( tranNumber <= 0 ) 
-	for (int f=0; f < countOfScenarios; ++f) {
-		probability.push_back((static_cast<double>(1)/(countOfScenarios)));
-	}
-	// check the bounds and validity of the parameter values
-	otherZoneNodeIter = diffZoneNodeID.begin(); // Initialize the otherZoneNodeIter iterator to point to the beginning of the diffZoneNodeID vector
-	otherZoneNodeIter++; // Increment the pointer to point to the actual non-zero entry
-	otherZoneIter = diffZoneID.begin(); // Initialize the otherZoneIter iterator to point to the beginning of the diffZoneID vector
-	otherZoneIter++; // Increment the pointer to point to the actual non-zero entry	
-	sharedELineIt = SELineObject.begin(); // Initialize the sharedELineIt iterator to point to the beginning of the SELineObject vector 
-	sharedELineFromIt = SELineObject.begin(); // Initialize the sharedELineFromIt iterator to point to the beginning of the SELineObject vector
-	sharedELineFZoneIt = SELineObject.begin(); // Initialize the sharedELineFZoneIt iterator to point to the beginning of the SELineObject vector
-	sharedELineToIt = SELineObject.begin(); // Initialize the sharedELineToIt iterator to point to the beginning of the SELineObject vector
-	sharedELineTZoneIt = SELineObject.begin(); // Initialize the sharedELineTZoneIt iterator to point to the beginning of the SELineObject vector
-	sharedELineReactIt = SELineObject.begin(); // Initialize the sharedELineReactIt iterator to point to the beginning of the SELineObject vector
-	sharedELineCapIt = SELineObject.begin(); // Initialize the sharedELineCapIt iterator to point to the beginning of the SELineObject vector
-	sharedCandLineIt = candLineObject.begin(); // Initialize the sharedCandLineIt iterator to point to the beginning of the candLineObject vector 
-	sharedCandLineFromIt = candLineObject.begin(); // Initialize the sharedCandLineFromIt iterator to point to the beginning of the candLineObject vector
-	sharedCandLineFZoneIt = candLineObject.begin(); // Initialize the sharedCandLineFZoneIt iterator to point to the beginning of the candLineObject vector
-	sharedCandLineToIt = candLineObject.begin(); // Initialize the sharedCandLineToIt iterator to point to the beginning of the candLineObject vector
-	sharedCandLineTZoneIt = candLineObject.begin(); // Initialize the sharedCandLineTZoneIt iterator to point to the beginning of the candLineObject vector
-	sharedCandLineReactIt = candLineObject.begin(); // Initialize the sharedCandLineReactIt iterator to point to the beginning of the candLineObject vector
-	sharedCandLineCapIt = candLineObject.begin(); // Initialize the sharedCandLineCapIt iterator to point to the beginning of the candLineObject vector
+		#check the bounds and validity of the parameter values
+		otherZoneNodeIter = diffZoneNodeID.begin(); // Initialize the otherZoneNodeIter iterator to point to the beginning of the diffZoneNodeID vector
+		otherZoneNodeIter++; // Increment the pointer to point to the actual non-zero entry
+		otherZoneIter = diffZoneID.begin(); // Initialize the otherZoneIter iterator to point to the beginning of the diffZoneID vector
+		otherZoneIter++; // Increment the pointer to point to the actual non-zero entry	
+		sharedELineIt = SELineObject.begin(); // Initialize the sharedELineIt iterator to point to the beginning of the SELineObject vector 
+		sharedELineFromIt = SELineObject.begin(); // Initialize the sharedELineFromIt iterator to point to the beginning of the SELineObject vector
+		sharedELineFZoneIt = SELineObject.begin(); // Initialize the sharedELineFZoneIt iterator to point to the beginning of the SELineObject vector
+		sharedELineToIt = SELineObject.begin(); // Initialize the sharedELineToIt iterator to point to the beginning of the SELineObject vector
+		sharedELineTZoneIt = SELineObject.begin(); // Initialize the sharedELineTZoneIt iterator to point to the beginning of the SELineObject vector
+		sharedELineReactIt = SELineObject.begin(); // Initialize the sharedELineReactIt iterator to point to the beginning of the SELineObject vector
+		sharedELineCapIt = SELineObject.begin(); // Initialize the sharedELineCapIt iterator to point to the beginning of the SELineObject vector
+		sharedCandLineIt = candLineObject.begin(); // Initialize the sharedCandLineIt iterator to point to the beginning of the candLineObject vector 
+		sharedCandLineFromIt = candLineObject.begin(); // Initialize the sharedCandLineFromIt iterator to point to the beginning of the candLineObject vector
+		sharedCandLineFZoneIt = candLineObject.begin(); // Initialize the sharedCandLineFZoneIt iterator to point to the beginning of the candLineObject vector
+		sharedCandLineToIt = candLineObject.begin(); // Initialize the sharedCandLineToIt iterator to point to the beginning of the candLineObject vector
+		sharedCandLineTZoneIt = candLineObject.begin(); // Initialize the sharedCandLineTZoneIt iterator to point to the beginning of the candLineObject vector
+		sharedCandLineReactIt = candLineObject.begin(); // Initialize the sharedCandLineReactIt iterator to point to the beginning of the candLineObject vector
+		sharedCandLineCapIt = candLineObject.begin(); // Initialize the sharedCandLineCapIt iterator to point to the beginning of the candLineObject vector
 	#end constructor
 
 	def getNumberOfScenarios(self): #Returns the number of scenarios
@@ -369,10 +329,10 @@ class Nettran(object):
 	
 	#Function MILP() ends
 
-double Nettran::calcMILPBounds(double LagMultXi[], double LagMultPi[], int totalCandLineNum, int totalSharedNodeNum) // Function MILPAvgHR() implements the Mixed Integer Linear Programming Unit Commitment Solver routine by calling GLPK routines for average heat rate objective for Horizontal Coordination Investment decision making
+	def calcMILPBounds(double LagMultXi[], double LagMultPi[], int totalCandLineNum, int totalSharedNodeNum) // Function MILPAvgHR() implements the Mixed Integer Linear Programming Unit Commitment Solver routine by calling GLPK routines for average heat rate objective for Horizontal Coordination Investment decision making
 
 
-int Nettran::getConnZone(int i) // returns the pointer to the base of the vector, diffZoneID
+	def getConnZone(int i) // returns the pointer to the base of the vector, diffZoneID
 {
 	if (otherZoneIter != diffZoneID.end()) { // check to see if the end of the diffZoneID vector has been reached
 		otherZoneIter++; // if not, increment otherZoneIter iterator for the next call
@@ -382,7 +342,7 @@ int Nettran::getConnZone(int i) // returns the pointer to the base of the vector
 		return -1; // if end is reached, return -1
 } // Function getConnZone() ends
 
-int Nettran::getConnNode(int i) // returns the pointer to the base of the vector, diffZoneNodeID
+	def getConnNode(int i) // returns the pointer to the base of the vector, diffZoneNodeID
 {
 	if (otherZoneNodeIter != diffZoneNodeID.end()) { // check to see if the end of the diffZoneNodeID vector has been reached
 		otherZoneNodeIter++; // if not, increment otherZoneNodeIter iterator for the next call
@@ -392,7 +352,7 @@ int Nettran::getConnNode(int i) // returns the pointer to the base of the vector
 		return -1; // if end is reached, return -1
 } // Function getConnNode() ends
 
-int Nettran::getSESerial(int i) // returns the pointer to the base of the vector, SELineObject
+	def getSESerial(int i) // returns the pointer to the base of the vector, SELineObject
 {
 	if (sharedELineIt != SELineObject.end()) { // check to see if the end of the SELineObject vector has been reached
 		sharedELineIt++; // if not, increment sharedELineIt iterator for the next call
@@ -402,7 +362,7 @@ int Nettran::getSESerial(int i) // returns the pointer to the base of the vector
 		return -1; // if end is reached, return -1
 } // Function getSESerial() ends
 
-int Nettran::getSEFromNode(int i) // returns the ID number of the from node of the shared existing line
+	def getSEFromNode(int i) // returns the ID number of the from node of the shared existing line
 {
 	if (sharedELineFromIt != SELineObject.end()) { // check to see if the end of the SELineObject vector has been reached
 		sharedELineFromIt++; // if not, increment iterator for the next call
@@ -415,7 +375,7 @@ int Nettran::getSEFromNode(int i) // returns the ID number of the from node of t
 		return -1; // if end is reached, return -1 
 } // Function getSEFromNode() ends
 
-int Nettran::getSEFromZone(int i) // returns the ID number of the from zone of the shared existing line
+	def getSEFromZone(int i) // returns the ID number of the from zone of the shared existing line
 {
 	if (sharedELineFZoneIt != SELineObject.end()) { // check to see if the end of the SELineObject vector has been reached
 		sharedELineFZoneIt++; // if not, increment iterator for the next call
@@ -428,7 +388,7 @@ int Nettran::getSEFromZone(int i) // returns the ID number of the from zone of t
 		return -1; // if end is reached, return -1 
 } // Function getSEFromZone() ends
 
-int Nettran::getSEToNode(int i) // returns the ID number of the to node of the shared existing line
+	def getSEToNode(int i) // returns the ID number of the to node of the shared existing line
 {
 	if (sharedELineToIt != SELineObject.end()) { // check to see if the end of the SELineObject vector has been reached
 		sharedELineToIt++; // if not, increment iterator for the next call
@@ -441,7 +401,7 @@ int Nettran::getSEToNode(int i) // returns the ID number of the to node of the s
 		return -1; // if end is reached, return -1 
 } // Function getSEToNode() ends
 
-int Nettran::getSEToZone(int i) // returns the ID number of the to zone of the shared existing line
+	def getSEToZone(int i) // returns the ID number of the to zone of the shared existing line
 {
 	if (sharedELineTZoneIt != SELineObject.end()) { // check to see if the end of the SELineObject vector has been reached
 		sharedELineTZoneIt++; // if not, increment iterator for the next call
@@ -454,7 +414,7 @@ int Nettran::getSEToZone(int i) // returns the ID number of the to zone of the s
 		return -1; // if end is reached, return -1 
 } // Function getSEToZone() ends
 
-double Nettran::getSEReactance(int i) // returns the reactance of the shared existing line
+	def getSEReactance(int i) // returns the reactance of the shared existing line
 {
 	if (sharedELineReactIt != SELineObject.end()) { // check to see if the end of the SELineObject vector has been reached
 		sharedELineReactIt++; // if not, increment iterator for the next call
@@ -464,7 +424,7 @@ double Nettran::getSEReactance(int i) // returns the reactance of the shared exi
 		return -1; // if end is reached, return -1 
 } // Function getConnNode() ends
 
-double Nettran::getSECapacity(int i) // returns the capacity of the shared existing line
+	def getSECapacity(int i) // returns the capacity of the shared existing line
 {
 	if (sharedELineCapIt != SELineObject.end()) { // check to see if the end of the SELineObject vector has been reached
 		sharedELineCapIt++; // if not, increment iterator for the next call
@@ -474,7 +434,7 @@ double Nettran::getSECapacity(int i) // returns the capacity of the shared exist
 		return -1; // if end is reached, return -1 
 } // Function getConnNode() ends
 
-int Nettran::getCandSerial(int i) // returns the pointer to the base of the vector, SELineObject
+	def getCandSerial(int i) // returns the pointer to the base of the vector, SELineObject
 {
 	if (sharedCandLineIt != candLineObject.end()) { // check to see if the end of the SELineObject vector has been reached
 		sharedCandLineIt++; // if not, increment sharedELineIt iterator for the next call
@@ -484,7 +444,7 @@ int Nettran::getCandSerial(int i) // returns the pointer to the base of the vect
 		return -1; // if end is reached, return -1
 } // Function getSESerial() ends
 
-int Nettran::getCandFromNode(int i) // returns the ID number of the from node of the shared existing line
+	def getCandFromNode(int i) // returns the ID number of the from node of the shared existing line
 {
 	if (sharedCandLineFromIt != candLineObject.end()) { // check to see if the end of the SELineObject vector has been reached
 		sharedCandLineFromIt++; // if not, increment iterator for the next call
@@ -497,7 +457,7 @@ int Nettran::getCandFromNode(int i) // returns the ID number of the from node of
 		return -1; // if end is reached, return -1 
 } // Function getSEFromNode() ends
 
-int Nettran::getCandFromZone(int i) // returns the ID number of the from zone of the shared existing line
+	def getCandFromZone(int i) // returns the ID number of the from zone of the shared existing line
 {
 	if (sharedCandLineFZoneIt != candLineObject.end()) { // check to see if the end of the SELineObject vector has been reached
 		sharedCandLineFZoneIt++; // if not, increment iterator for the next call
@@ -510,7 +470,7 @@ int Nettran::getCandFromZone(int i) // returns the ID number of the from zone of
 		return -1; // if end is reached, return -1 
 } // Function getSEFromZone() ends
 
-int Nettran::getCandToNode(int i) // returns the ID number of the to node of the shared existing line
+	def getCandToNode(int i) // returns the ID number of the to node of the shared existing line
 {
 	if (sharedCandLineToIt != candLineObject.end()) { // check to see if the end of the SELineObject vector has been reached
 		sharedCandLineToIt++; // if not, increment iterator for the next call
@@ -523,7 +483,7 @@ int Nettran::getCandToNode(int i) // returns the ID number of the to node of the
 		return -1; // if end is reached, return -1 
 } // Function getSEToNode() ends
 
-int Nettran::getCandToZone(int i) // returns the ID number of the to zone of the shared existing line
+	def getCandToZone(int i) // returns the ID number of the to zone of the shared existing line
 {
 	if (sharedCandLineTZoneIt != candLineObject.end()) { // check to see if the end of the SELineObject vector has been reached
 		sharedCandLineTZoneIt++; // if not, increment iterator for the next call
@@ -536,7 +496,7 @@ int Nettran::getCandToZone(int i) // returns the ID number of the to zone of the
 		return -1; // if end is reached, return -1 
 } // Function getSEToZone() ends
 
-double Nettran::getCandReactance(int i) // returns the reactance of the shared existing line
+	def getCandReactance(int i) // returns the reactance of the shared existing line
 {
 	if (sharedCandLineReactIt != candLineObject.end()) { // check to see if the end of the SELineObject vector has been reached
 		sharedCandLineReactIt++; // if not, increment iterator for the next call
@@ -546,7 +506,7 @@ double Nettran::getCandReactance(int i) // returns the reactance of the shared e
 		return -1; // if end is reached, return -1 
 } // Function getConnNode() ends
 
-double Nettran::getCandCapacity(int i) // returns the capacity of the shared existing line
+	def getCandCapacity(int i) // returns the capacity of the shared existing line
 {
 	if (sharedCandLineCapIt != candLineObject.end()) { // check to see if the end of the SELineObject vector has been reached
 		sharedCandLineCapIt++; // if not, increment iterator for the next call
@@ -556,27 +516,27 @@ double Nettran::getCandCapacity(int i) // returns the capacity of the shared exi
 		return -1; // if end is reached, return -1 
 } // Function getConnNode() ends
 
-void Nettran::setSEFromRank(int existingCounter, int rankFrom) // sets the from rank for the internal zone node end of the shared existing line
+	def setSEFromRank(int existingCounter, int rankFrom) // sets the from rank for the internal zone node end of the shared existing line
 {
 	 (*(SELineObject.at(existingCounter))).assignRank(rankFrom);
 }
 
-void Nettran::setSEToRank(int existingCounter, int rankTo) // sets the to rank for the internal zone node end of the shared existing line
+	def setSEToRank(int existingCounter, int rankTo) // sets the to rank for the internal zone node end of the shared existing line
 {
 	(*(SELineObject.at(existingCounter))).assignRank(rankTo);
 }
 
-void Nettran::setCandFromRank(int candidateCounter, int rankFrom) // sets the from rank for the internal zone node end of the shared candidate line
+	def setCandFromRank(int candidateCounter, int rankFrom) // sets the from rank for the internal zone node end of the shared candidate line
 {
 	(*(candLineObject.at(candidateCounter))).assignRank(rankFrom);
 }
 
-void Nettran::setCandToRank(int candidateCounter, int rankTo) // sets the to rank for the internal zone node end of the shared candidate line
+	def setCandToRank(int candidateCounter, int rankTo) // sets the to rank for the internal zone node end of the shared candidate line
 {
 	(*(candLineObject.at(candidateCounter))).assignRank(rankTo);
 }
 
-void Nettran::setSEFromRankConn(int existingCounter, int rankFrom) // populates the vector of the global ranks of all the external from nodes of SE lines
+	def setSEFromRankConn(int existingCounter, int rankFrom) // populates the vector of the global ranks of all the external from nodes of SE lines
 {
 	for (globalIterator = globalRankDiffNode.begin(); globalIterator != globalRankDiffNode.end(); ++globalIterator) {
 		if (*globalIterator == rankFrom) { // Check whether the other-zone node is already present in the list
@@ -592,7 +552,7 @@ void Nettran::setSEFromRankConn(int existingCounter, int rankFrom) // populates 
 	(*(SELineObject.at(existingCounter))).connectRank(rankFrom);			
 }
 
-void Nettran::setSEToRankConn(int existingCounter, int rankTo) // populates the vector of the global ranks of all the external to nodes of SE lines
+	def setSEToRankConn(int existingCounter, int rankTo) // populates the vector of the global ranks of all the external to nodes of SE lines
 {
 	for (globalIterator = globalRankDiffNode.begin(); globalIterator != globalRankDiffNode.end(); ++globalIterator) {
 		if (*globalIterator == rankTo) { // Check whether the other-zone node is already present in the list
@@ -608,7 +568,7 @@ void Nettran::setSEToRankConn(int existingCounter, int rankTo) // populates the 
 	(*(SELineObject.at(existingCounter))).connectRank(rankTo);
 }
 
-void Nettran::setCandFromRankConn(int candidateCounter, int rankFrom) // populates the vector of the global ranks of all the external from nodes of cand lines
+	def setCandFromRankConn(int candidateCounter, int rankFrom) // populates the vector of the global ranks of all the external from nodes of cand lines
 {
 	for (globalIterator = globalRankDiffNode.begin(); globalIterator != globalRankDiffNode.end(); ++globalIterator) {
 		if (*globalIterator == rankFrom) { // Check whether the other-zone node is already present in the list
@@ -622,7 +582,7 @@ void Nettran::setCandFromRankConn(int candidateCounter, int rankFrom) // populat
 	(*(candLineObject.at(candidateCounter))).connectRank(rankFrom);
 }
 
-void Nettran::setCandToRankConn(int candidateCounter, int rankTo) // populates the vector of the global ranks of all the external to nodes of cand lines
+	def setCandToRankConn(int candidateCounter, int rankTo) // populates the vector of the global ranks of all the external to nodes of cand lines
 {
 	for (globalIterator = globalRankDiffNode.begin(); globalIterator != globalRankDiffNode.end(); ++globalIterator) {
 		if (*globalIterator == rankTo) { // Check whether the other-zone node is already present in the list
@@ -636,12 +596,12 @@ void Nettran::setCandToRankConn(int candidateCounter, int rankTo) // populates t
 	(*(candLineObject.at(candidateCounter))).connectRank(rankTo);
 }
 
-void Nettran::assignCandGlobalRank(int candidateCounter, int candGlobalRank) // assigns the global rank of the shared candidate line
+	def assignCandGlobalRank(int candidateCounter, int candGlobalRank) // assigns the global rank of the shared candidate line
 {
 	(*(candLineObject.at(candidateCounter))).assignLineRank(candGlobalRank);
 }
 
-void Nettran::setRealizedCLines(Marketover &coordInstanceRef) // Assigns the realizedCLine variable, the number of candidate lines that are actually built
+	def setRealizedCLines(Marketover &coordInstanceRef) // Assigns the realizedCLine variable, the number of candidate lines that are actually built
 {
 	// *** Built shared candidate lines *** //
 	vector<candLine*>::iterator candIterator; // Iterator for candidate lines
@@ -708,7 +668,7 @@ void Nettran::setRealizedCLines(Marketover &coordInstanceRef) // Assigns the rea
 	//cout << "Number of constructed internal lines in network " << zonalIndex << " is " << realizedIntCLines << endl; 
 }
 
-void Nettran::TestBuiltExternalNodes()
+	def TestBuiltExternalNodes()
 {
 	//cout << " Subnetwork # : " << zonalIndex << endl;
 	int indCount = 0;
@@ -724,7 +684,7 @@ void Nettran::TestBuiltExternalNodes()
 	//cout << " Total number of outer zone nodes for this subnetwork to which existing or built lines are connected : " << existingOtherZoneNodeNum << endl;
 }
 
-int Nettran::returnMultiplicity() // Returns the total multiplicity of the shared nodes
+	def returnMultiplicity() // Returns the total multiplicity of the shared nodes
 {
 	vector<Node*>::iterator nodeIterator; // Iterator for node objects
 	int connMult = 0;
@@ -734,15 +694,11 @@ int Nettran::returnMultiplicity() // Returns the total multiplicity of the share
 	return connMult;
 }
 
-double Nettran::APPQPAvgHR(Marketover &coordInstanceRef, double LagMultXi[], int totalCandLineNum, int totalSharedNodeNum, GRBEnv* environmentGUROBI, int iterCount) // Calls the GUROBI solver object and solver method to solve the problem of determining the values of the continuous variables
+	def APPQPAvgHR(Marketover &coordInstanceRef, double LagMultXi[], int totalCandLineNum, int totalSharedNodeNum, GRBEnv* environmentGUROBI, int iterCount): #Calls the GUROBI solver object and solver method to solve the problem of determining the values of the continuous variables
 
 
-vector<double> Nettran::getZonalDecision() // Returns the intermediate decision variable values from APP
-{
-	return thetaBuffer;
-}
+	def getZonalDecision(self): #Returns the intermediate decision variable values from APP
+		return self.thetaBuffer
 
-vector<int> Nettran::getZonalRanks() // Returns the global ranks of the shared decision variables from APP
-{
-	return globRankBuffer;
-}
+	def getZonalRanks(self): #Returns the global ranks of the shared decision variables from APP
+		return self.globRankBuffer
