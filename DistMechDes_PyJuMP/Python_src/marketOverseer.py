@@ -69,1009 +69,15 @@ class Marketover(object):
 		exit(1);
 		}
 		"""
-		dimRow = countOfScenarios*(4 * candLineNumber + 2 * sharedELineNumber); // Total number of rows of the A matrix (number of structural constraints of the LP) first term to account for lower and upper line limits & lower and upper definition limits of candidate shared lines, and second term for lower and upper line limits for shared existing lines
-		dimCol = countOfScenarios*nodeNumber+(countOfScenarios+1)*candLineNumber; // Total number of columns of the LP (number of Decision Variables) first term to account for voltage phase angles for inter-zonal lines' nodes, and second term for power flow values and binary integer decision variable values for shared candidate lines
-	outPutFile << "\nTotal Number of Structural Constraints (Rows) is: " << dimRow << endl;
-	outPutFile << "\nTotal Number of Decision Variables (Columns) is: " << dimCol << endl;
-	//cout << "\nTotal Number of Structural Constraints (Rows) is: " << dimRow << endl;
-	//cout << "\nTotal Number of Decision Variables (Columns) is: " << dimCol << endl;
-	//cout << "\nTotal Number of Shared Nodes is: " << nodeNumber << endl;	
-	//cout << "\nTotal Number of shared candidate lines is: " << candLineNumber << endl;
-	//cout << "\nTotal Number of shared existing lines is: " << sharedELineNumber << endl;
-	glp_prob *milp; // Instantiate GLPK Problem Object pointer
-	glp_iocp *ipControlParam = new glp_iocp; // Instantiate the Control parameters for the Integer Programming Problem
-	glp_init_iocp(ipControlParam); // Initialize the Control Parameters for the Integer Programming Problem with default values
-	ipControlParam->mip_gap = 1e-1; // Set the tolerance for the Integer Programming Problem
+		dimRow = self.countOfScenarios*(4 * self.candLineNumber + 2 * self.sharedELineNumber) #Total number of rows of the A matrix (number of structural constraints of the LP) first term to account for lower and upper line limits & lower and upper definition limits of candidate shared lines, and second term for lower and upper line limits for shared existing lines
+		dimCol = self.countOfScenarios*self.nodeNumber+(self.countOfScenarios+1)*self.candLineNumber #Total number of columns of the LP (number of Decision Variables) first term to account for voltage phase angles for inter-zonal lines' nodes, and second term for power flow values and binary integer decision variable values for shared candidate lines
 
-	// arrays to store the row and column index combinations for the coefficient matrix
-	vector<int> ia; // array to store the non zero element row indices of A matrix
-	vector<int> ja; // array to store the non-zero element column indices of A matrix
-	vector<double> ar; // array to store the coefficients of the A matrix
-	double z; // variable to store the objective value
-	vector<double> x; // Coefficient matrix entires, objective function, and decision variables
+	#Function MILP() ends
 
-	milp = glp_create_prob(); // Creates the GLPK MILP Problem
-	glp_set_prob_name(milp, "MOTransDec"); // Names the particular problem instance 
-	glp_set_obj_dir(milp, GLP_MAX); // Set direction (Declares the MILP Problem as a Maximization Problem)
-
-	/* SPECIFICATION OF PROBLEM PARAMETERS */
-	/*Row Definitions: Specification of RHS or b vector of b<=Ax<=b*/
-	glp_add_rows(milp, dimRow);
-	//Row Definitions and Bounds Corresponding to Constraints/
-	string outPGenFileName = "/home/samie/code/Horizontal_Coordination_MILP_Dist_Mechanism_Design/Horizontal_Proper/output/outputPowerGLPK/OutPowerGenMOGLPK.txt"; 
-	ofstream powerGenOut(outPGenFileName, ios::out);
-	if (!powerGenOut){
-		cerr << "\nCouldn't open the file" << endl;
-		exit(1);
-	}
-	outPutFile << "\nTesting of interzonal transmission limits" << endl; 
-	int rowCount = 1;
-
-	/*******************************************************************************************/
-
-	// Constraints corresponding to Line Forward Flow limits for shared existing lines
-	outPutFile << "\nConstraints corresponding to Line Forward Flow limits for shared existing lines" << endl;
-	for (int scenCounter=0; scenCounter < countOfScenarios; ++scenCounter) { 
-		for (exsharedCapIterator = SECapacity.begin(); exsharedCapIterator != SECapacity.end(); ++exsharedCapIterator){
-			glp_set_row_name(milp, rowCount, NULL);
-			glp_set_row_bnds(milp, rowCount, GLP_UP, 0.0, (*exsharedCapIterator));
-			outPutFile << rowCount << "\t";
-			outPutFile << ((*exsharedCapIterator)) << endl;
-			++rowCount;
-		}
-	}
-	outPutFile << endl;
-	// Constraints corresponding to Line Reverse Flow limits for shared existing lines
-	outPutFile << "\nConstraints corresponding to Line Reverse Flow limits for shared existing lines" << endl;
-	for (int scenCounter=0; scenCounter < countOfScenarios; ++scenCounter) {
-		for (exsharedCapIterator = SECapacity.begin(); exsharedCapIterator != SECapacity.end(); ++exsharedCapIterator){
-			glp_set_row_name(milp, rowCount, NULL);
-			glp_set_row_bnds(milp, rowCount, GLP_LO, -((*exsharedCapIterator)), 0.0);
-			outPutFile << rowCount << "\t";
-			outPutFile << -((*exsharedCapIterator)) << endl;
-			++rowCount;
-		}
-	}
-	outPutFile << "\nTotal number of rows after accounting for Line Flow limits for shared existing lines: " << rowCount << endl;
-
-	/*******************************************************************************************/
-
-	// Constraints corresponding to Line Forward Flow limits for shared candidate lines
-	outPutFile << "\nConstraints corresponding to Line Forward Flow limits for shared candidate lines" << endl; 
-	for (int scenCounter=0; scenCounter < countOfScenarios; ++scenCounter) {
-		for (candCapIterator = candCapacity.begin(); candCapIterator != candCapacity.end(); ++candCapIterator){
-			glp_set_row_name(milp, rowCount, NULL);
-			glp_set_row_bnds(milp, rowCount, GLP_UP, 0.0, 0.0);
-			outPutFile << rowCount << "\t";
-			outPutFile << 0.0 << endl;
-			++rowCount;
-		}
-	}
-	outPutFile << endl;
-	// Constraints corresponding to Line Reverse Flow limits for shared candidate lines
-	outPutFile << "\nConstraints corresponding to Line Reverse Flow limits for shared candidate lines" << endl; 
-	for (int scenCounter=0; scenCounter < countOfScenarios; ++scenCounter) {
-		for (candCapIterator = candCapacity.begin(); candCapIterator != candCapacity.end(); ++candCapIterator){
-			glp_set_row_name(milp, rowCount, NULL);
-			glp_set_row_bnds(milp, rowCount, GLP_LO, 0.0, 0.0);
-			outPutFile << rowCount << "\t";
-			outPutFile << 0.0 << endl;
-			++rowCount;
-		}
-	}
-	outPutFile << "\nTotal number of rows after accounting for Line Flow limits for shared candidate lines: " << rowCount << endl;
-
-	/*******************************************************************************************/
-
-	// Constraints corresponding to shared candidate lines flow definition upper bound
-	outPutFile << "\nTesting of Definition of Flows on Shared Candidate transmission lines" << endl; 
-	for (int scenCounter=0; scenCounter < countOfScenarios; ++scenCounter) {
-		for (candCapIterator = candCapacity.begin(); candCapIterator != candCapacity.end(); ++candCapIterator){
-			glp_set_row_name(milp, rowCount, NULL);
-			glp_set_row_bnds(milp, rowCount, GLP_UP, 0.0, (2.5*(*candCapIterator)));
-			outPutFile << rowCount << "\t";
-			outPutFile << BIGM << endl;
-			++rowCount;
-		}
-	}
-	outPutFile << endl;
-	// Constraints corresponding to shared candidate lines flow definition lower bound
-	for (int scenCounter=0; scenCounter < countOfScenarios; ++scenCounter) {
-		for (candCapIterator = candCapacity.begin(); candCapIterator != candCapacity.end(); ++candCapIterator){
-			glp_set_row_name(milp, rowCount, NULL);
-			glp_set_row_bnds(milp, rowCount, GLP_LO, -(2.5*(*candCapIterator)), 0.0);
-			outPutFile << rowCount << "\t";
-			outPutFile << -BIGM << endl;
-			++rowCount;
-		}
-	}
-	outPutFile << "\nTotal number of rows after accounting for shared candidate lines flow definition: " << rowCount << endl;
-	outPutFile << "\nConstraint bounds (rows) Specified" << endl;
-	outPutFile << "\nTotal number of rows: " << rowCount - 1 << endl;
-	//cout << "\nConstraint bounds (rows) Specified" << endl;
-	//cout << "\nTotal number of rows: " << rowCount - 1 << endl;
-	/*******************************************************************************************/
-
-	/*******************************************************************************************/
-
-	/*Column Definitions, Bounds, and Objective Function Co-efficients*/
-	glp_add_cols(milp, dimCol);
-	int colCount = 1;
-
-	/*******************************************************************************************/
-
-	//Columns corresponding to Shared Candidate Line Flows continuous variables//
-	outPutFile << "\nColumns corresponding to Shared Candidate Line Flows continuous variables" << endl;
-	for (int scenCounter=0; scenCounter < countOfScenarios; ++scenCounter) {
-		for (candCapIterator = candCapacity.begin(); candCapIterator != candCapacity.end(); ++candCapIterator){
-			glp_set_col_kind(milp, colCount, GLP_CV);
-			glp_set_col_name(milp, colCount, NULL);
-			glp_set_col_bnds(milp, colCount, GLP_FR, 0.0, 0.0);
-			glp_set_obj_coef(milp, colCount, 0.0);
-			outPutFile << colCount << "\t";
-			outPutFile << 0 << endl;
-			++colCount;
-		}
-	}
-	outPutFile << "\nTotal number of columns after accounting for Shared Candidate Line Flows continuous variables: " << colCount << endl;
-	/*******************************************************************************************/
-
-	//Columns corresponding to Shared Candidate Line Construction Decision Binary Integer variables//
-	outPutFile << "\nColumns corresponding to Shared Candidate Line Construction Decision Binary Integer variables" << endl;
-	int candInd = 0; // Initialize the counter for indexing the candidate lines
-	int diffCandCounter = 0; // counter flag to indicate the first element of the candSerial list
-	for (candIterator = candSerial.begin(); candIterator != candSerial.end(); ++candIterator){
-		if (diffCandCounter > 0) { // Skip the first element, since it's a dummy "0"
-			glp_set_col_kind(milp, colCount, GLP_BV);
-			glp_set_col_name(milp, colCount, NULL);
-			glp_set_col_bnds(milp, colCount, GLP_DB, 0.0, 1.0);
-			glp_set_obj_coef(milp, colCount, LagMultPi[candInd]);
-			outPutFile << colCount << "\t";
-			outPutFile << LagMultPi[candInd] << "\t" << candInd << endl;
-			++candInd;
-			++colCount;
-		}
-		++diffCandCounter;
-	}
-	outPutFile << "\nTotal number of columns after accounting for Shared Candidate Line Construction Decision Binary Integer variables: " << colCount << endl;
-	/*******************************************************************************************/
-
-	//Columns corresponding to Voltage Phase Angles continuous variables for other zone nodes for shared lines//
-	outPutFile << "\nColumns corresponding to Voltage Phase Angles continuous variables for other zone nodes for shared lines" << endl;
-	int otherInd = 0; // Initialize the counter for indexing the other-zone nodes
-	for (int scenCounter=0; scenCounter < countOfScenarios; ++scenCounter) {
-		int columnCount = 1;
-		int diffNodeCounter = 0; // counter flag to indicate the first element of the diffZoneNodeID list
-		/*for (diffZNIt = diffZoneNodeID.begin(); diffZNIt != diffZoneNodeID.end(); ++diffZNIt){
-			cout << " Column count after the shared node is " << columnCount << endl;	
-			++columnCount;
-		}*/
-		for (diffZNIt = nodeList.begin(); diffZNIt != nodeList.end(); ++diffZNIt){
-			if (diffNodeCounter > 0) { // Skip the first element, since it's a dummy "0"
-				glp_set_col_kind(milp, colCount, GLP_CV);
-				glp_set_col_name(milp, colCount, NULL);
-				glp_set_col_bnds(milp, colCount, GLP_DB, 0, (44/7));
-				glp_set_obj_coef(milp, colCount, LagMultXi[otherInd]);
-				outPutFile << colCount << "\t";
-				outPutFile << LagMultXi[otherInd] << "\t" << otherInd << endl;
-				++otherInd;	
-				++colCount;
-			}
-			++diffNodeCounter;
-		}
-	}
-	outPutFile << "\nDecision Variables and Objective Function defined" << endl;
-	outPutFile << "\nTotal Number of columns: " << colCount - 1 << endl;
-	//cout << "\nDecision Variables and Objective Function defined" << endl;
-	//cout << "\nTotal Number of columns: " << colCount - 1 << endl;
-	/*******************************************************************************************/
-
-	//Non-Zero entries of A matrix (Constraint/Coefficient matrix entries)//
-	int index = 1;
-	ia.push_back(0), ja.push_back(0), ar.push_back(0.0);
-	int rCount = 1; // Initialize the row count
-
-	/*******************************************************************************************/
-	
-	// Coefficients corresponding to shared existing Line Forward Flow Limit Constraints
-	for (int scenCounter=0; scenCounter < countOfScenarios; ++scenCounter) {
-		int jockey = 0;
-		int diffSerCounter = 0;
-		outPutFile << "\nCoefficients corresponding to shared existing Line Forward Flow Limit Constraints" << endl;
-		for (exsharedIterator = SESerial.begin(); exsharedIterator != SESerial.end(); ++exsharedIterator){
-			if (diffSerCounter > 0) { // Skip the first element, since it's a dummy "0"
-				//cout << "Test Message 2" << endl;
-				//cout << "SE From Rank" << SEFromRank.at(jockey) << endl;
-				//cout << "SE Reactance" << 1/(SEReactance.at(jockey)) << endl;
-				ia.push_back(rCount), ja.push_back((countOfScenarios+1)*candLineNumber + scenCounter*nodeNumber+SEFromRank.at(jockey)), ar.push_back(1/(SEReactance.at(jockey)));
-				++index;
-				outPutFile << "\n" << rCount << "\t" << (countOfScenarios+1)*candLineNumber + scenCounter*nodeNumber+SEFromRank.at(jockey) << "\t" << 1/(SEReactance.at(jockey)) << endl;
-				ia.push_back(rCount), ja.push_back((countOfScenarios+1)*candLineNumber + scenCounter*nodeNumber+SEToRank.at(jockey)), ar.push_back(-1/(SEReactance.at(jockey)));
-				++index;
-				outPutFile << "\n" << rCount << "\t" << (countOfScenarios+1)*candLineNumber + scenCounter*nodeNumber+SEToRank.at(jockey) << "\t" << -1/(SEReactance.at(jockey)) << endl;
-				++rCount; // Increment the row count to point to the next transmission line object
-				++jockey;
-				//cout << "\nTest after shared existing Line Forward Flow Limit Constraint " << diffSerCounter << endl;
-			}
-			++diffSerCounter;	
-		}
-	}
-	// Coefficients corresponding to shared existing Line Reverse Flow Limit Constraints
-	for (int scenCounter=0; scenCounter < countOfScenarios; ++scenCounter) {
-		int jockey = 0;
-		int diffSerCounter = 0;
-		outPutFile << "\nCoefficients corresponding to shared existing Line Reverse Flow Limit Constraints" << endl;
-		for (exsharedIterator = SESerial.begin(); exsharedIterator != SESerial.end(); ++exsharedIterator){
-			if (diffSerCounter > 0) { // Skip the first element, since it's a dummy "0"
-				ia.push_back(rCount), ja.push_back((countOfScenarios+1)*candLineNumber + scenCounter*nodeNumber+SEFromRank.at(jockey)), ar.push_back(1/(SEReactance.at(jockey)));
-				++index;
-				outPutFile << "\n" << rCount << "\t" << (countOfScenarios+1)*candLineNumber + scenCounter*nodeNumber+SEFromRank.at(jockey) << "\t" << 1/(SEReactance.at(jockey)) << endl;
-				ia.push_back(rCount), ja.push_back((countOfScenarios+1)*candLineNumber + scenCounter*nodeNumber+SEToRank.at(jockey)), ar.push_back(-1/(SEReactance.at(jockey)));
-				++index;
-				outPutFile << "\n" << rCount << "\t" << (countOfScenarios+1)*candLineNumber + scenCounter*nodeNumber+SEToRank.at(jockey) << "\t" << -1/(SEReactance.at(jockey)) << endl;
-				++rCount; // Increment the row count to point to the next transmission line object
-				++jockey;
-				//cout << "\nTest after shared existing Line Reverse Flow Limit Constraint " << diffSerCounter << endl;
-			}
-			++diffSerCounter;
-		}
-	}
-	/*******************************************************************************************/
-	
-	// Coefficients corresponding to shared candidate Line Forward Flow Limit Constraints
-	for (int scenCounter=0; scenCounter < countOfScenarios; ++scenCounter) {
-		int jockey = 0;
-		int diffSerCounter = 0;
-		outPutFile << "\nCoefficients corresponding to shared candidate Line Forward Flow Limit Constraints" << endl;
-		for (candIterator = candSerial.begin(); candIterator != candSerial.end(); ++candIterator){
-			if (diffSerCounter > 0) { // Skip the first element, since it's a dummy "0"
-				ia.push_back(rCount), ja.push_back(rCount-2*countOfScenarios*sharedELineNumber), ar.push_back(1);
-				++index;
-				outPutFile << "\n" << rCount << "\t" << rCount-2*countOfScenarios*sharedELineNumber << "\t" << 1 << endl;
-				ia.push_back(rCount), ja.push_back(countOfScenarios*candLineNumber+rCount-2*countOfScenarios*sharedELineNumber-scenCounter*candLineNumber), ar.push_back(-candCapacity.at(jockey));
-				++index;
-				outPutFile << "\n" << rCount << "\t" << countOfScenarios*candLineNumber+rCount-2*countOfScenarios*sharedELineNumber-scenCounter*candLineNumber << "\t" << -candCapacity.at(jockey) << endl;
-				++rCount;
-				++jockey;
-				//cout << "\nTest after shared candidate Line Forward Flow Limit Constraint " << diffSerCounter << endl;
-			}
-			++diffSerCounter;
-		}
-	}
-	// Coefficients corresponding to shared candidate Line Reverse Flow Limit Constraints
-	for (int scenCounter=0; scenCounter < countOfScenarios; ++scenCounter) {
-		int jockey = 0;
-		int diffSerCounter = 0;
-		outPutFile << "\nCoefficients corresponding to shared candidate Line Reverse Flow Limit Constraints" << endl;
-		for (candIterator = candSerial.begin(); candIterator != candSerial.end(); ++candIterator){
-			if (diffSerCounter > 0) { // Skip the first element, since it's a dummy "0"
-				ia.push_back(rCount), ja.push_back(rCount-countOfScenarios*(2*sharedELineNumber+candLineNumber)), ar.push_back(1);
-				++index;
-				outPutFile << "\n" << rCount << "\t" << rCount-countOfScenarios*(2*sharedELineNumber+candLineNumber) << "\t" << 1 << endl;
-				ia.push_back(rCount), ja.push_back(rCount-countOfScenarios*(2*sharedELineNumber)-scenCounter*candLineNumber), ar.push_back(candCapacity.at(jockey));
-				++index;
-				outPutFile << "\n" << rCount << "\t" << (rCount-countOfScenarios*(2*sharedELineNumber)-scenCounter*candLineNumber) << "\t" << candCapacity.at(jockey) << endl;
-				++rCount;
-				++jockey;
-				//cout << "\nTest after shared candidate Line Reverse Flow Limit Constraint " << diffSerCounter << endl;
-			}
-			++diffSerCounter;
-		}
-	}
-	/*******************************************************************************************/
-	
-	// Coefficients corresponding to shared candidate Line Definition upper bound
-	for (int scenCounter=0; scenCounter < countOfScenarios; ++scenCounter) {
-		int jockey = 0;
-		int diffSerCounter = 0;
-		outPutFile << "\nCoefficients corresponding to shared candidate Line Definition upper bound" << endl;
-		for (candIterator = candSerial.begin(); candIterator != candSerial.end(); ++candIterator){
-			if (diffSerCounter > 0) { // Skip the first element, since it's a dummy "0"
-				ia.push_back(rCount), ja.push_back(rCount-countOfScenarios*(2*sharedELineNumber+2*candLineNumber)), ar.push_back(1);
-				++index;
-				outPutFile << rCount << "\t" << rCount-countOfScenarios*(2*sharedELineNumber+2*candLineNumber) << " Power term for candidate line " << diffSerCounter << "-th candidate line" << endl;
-				ia.push_back(rCount), ja.push_back((countOfScenarios+1)*candLineNumber + scenCounter*nodeNumber+candFromRank.at(jockey)), ar.push_back(-1/(candReactance.at(jockey)));
-				++index;
-				outPutFile << rCount << "\t" << (countOfScenarios+1)*candLineNumber + scenCounter*nodeNumber+candFromRank.at(jockey) << "\t" << -1/(candReactance.at(jockey)) << endl;
-				ia.push_back(rCount), ja.push_back((countOfScenarios+1)*candLineNumber + scenCounter*nodeNumber+candToRank.at(jockey)), ar.push_back(1/(candReactance.at(jockey)));
-				++index;
-				outPutFile << rCount << "\t" << (countOfScenarios+1)*candLineNumber + scenCounter*nodeNumber+candToRank.at(jockey) << "\t" << 1/(candReactance.at(jockey)) << endl;
-				ia.push_back(rCount), ja.push_back(rCount-countOfScenarios*(2*sharedELineNumber+candLineNumber)-scenCounter*candLineNumber), ar.push_back(2.5*(candCapacity.at(jockey)));
-				++index;
-				outPutFile << rCount << "\t" << rCount-countOfScenarios*(2*sharedELineNumber+candLineNumber)-scenCounter*candLineNumber << "\t" << BIGM << endl;
-				++rCount; // Increment the row count to point to the next transmission line object
-				++jockey;
-				//cout << "\nTest after shared candidate Line Definition upper bound " << diffSerCounter << endl;
-			}
-			++diffSerCounter;
-		}
-	}
-	// Coefficients corresponding to shared candidate Line Definition lower bound
-	for (int scenCounter=0; scenCounter < countOfScenarios; ++scenCounter) {
-		int jockey = 0;
-		int diffSerCounter = 0;
-		outPutFile << "\nCoefficients corresponding to shared candidate Line Definition lower bound" << endl;
-		for (candIterator = candSerial.begin(); candIterator != candSerial.end(); ++candIterator){
-			if (diffSerCounter > 0) { // Skip the first element, since it's a dummy "0"
-				ia.push_back(rCount), ja.push_back(rCount-countOfScenarios*(2*sharedELineNumber+3*candLineNumber)), ar.push_back(1);
-				++index;
-				outPutFile << rCount << "\t" << rCount-countOfScenarios*(2*sharedELineNumber+3*candLineNumber) << " Power term for candidate line " << diffSerCounter << "-th candidate line" << endl;
-				ia.push_back(rCount), ja.push_back((countOfScenarios+1)*candLineNumber + scenCounter*nodeNumber+candFromRank.at(jockey)), ar.push_back(-1/(candReactance.at(jockey)));
-				++index;
-				outPutFile << rCount << "\t" << (countOfScenarios+1)*candLineNumber + scenCounter*nodeNumber+candFromRank.at(jockey) << "\t" << -1/(candReactance.at(jockey)) << endl;
-				ia.push_back(rCount), ja.push_back((countOfScenarios+1)*candLineNumber + scenCounter*nodeNumber+candToRank.at(jockey)), ar.push_back(1/(candReactance.at(jockey)));
-				++index;
-				outPutFile << rCount << "\t" << (countOfScenarios+1)*candLineNumber + scenCounter*nodeNumber+candToRank.at(jockey) << "\t" << 1/(candReactance.at(jockey)) << endl;
-				ia.push_back(rCount), ja.push_back(rCount-countOfScenarios*(2*sharedELineNumber+2*candLineNumber)-scenCounter*candLineNumber), ar.push_back(-(2.5*(candCapacity.at(jockey))));
-				++index;
-				outPutFile << rCount << "\t" << rCount-countOfScenarios*(2*sharedELineNumber+candLineNumber)-scenCounter*candLineNumber << "\t" << -BIGM << endl;
-				++rCount; // Increment the row count to point to the next transmission line object
-				++jockey;
-				//cout << "\nTest after shared candidate Line Definition lower bound " << diffSerCounter << endl;
-			}
-			++diffSerCounter;
-		}
-	}
-	/*******************************************************************************************/
-
-	/*******************************************************************************************/
-
-	outPutFile << "\nCoefficient Matrix specified" << endl;
-	clock_t end1 = clock(); // stop the timer
-	double elapsed_secs1 = double(end1 - begin) / CLOCKS_PER_SEC; // Calculate the time required to populate the constraint matrix and objective coefficients
-	outPutFile << "\nTotal time taken to define the rows, columns, objective and populate the coefficient matrix = " << elapsed_secs1 << " s " << endl;
-	/* RUN THE OPTIMIZATION SIMULATION ALGORITHM */
-	cout << "\nSimulation in Progress. Wait !!! ....." << endl;
-	glp_load_matrix(milp, --index, &ia[0], &ja[0], &ar[0]); // Loads the Problem
-	int lpMethodChoice; // Choice between Simplex or Interior Point Methods to solve the LP relaxation problem
-	lpMethodChoice = lpSolveAlgo;
-	glp_init_iocp(ipControlParam); // Initialize the Mixed Integer Programming Control Parameters with the default setting values
-	ipControlParam->mip_gap = 1e-1; // Adjust the tolerance of the Integer Oprtimization part for faster convergence 
-	cout << "\nTolerence for MIP is " << ipControlParam->mip_gap;
-	switch (lpMethodChoice){
-	case 1:
-		glp_simplex(milp, NULL);
-		break;
-	case 2:
-		glp_interior(milp, NULL);
-		break;
-	default:
-		cout << "\nInvalid Choice" << endl;
-		break;
-	}
-	string outLPLogFileName = "/home/samie/code/Horizontal_Coordination_MILP_Dist_Mechanism_Design/Horizontal_Proper/output/outputSummaryGLPK/OutLPLogMOGLPK.txt";
-	string outMILPLogFileName = "/home/samie/code/Horizontal_Coordination_MILP_Dist_Mechanism_Design/Horizontal_Proper/output/outputSummaryGLPK/OutMIPLogMOGLPK.txt";
-	glp_print_sol(milp, outLPLogFileName.c_str()); // write the solution log to the relaxed LP problem
-	glp_intopt(milp, ipControlParam); // Calls the GLPK Branch & Bound-Cutting Plane and Simplex Method to solve the integer optimization problem
-	glp_print_sol(milp, outMILPLogFileName.c_str()); // write the solution log to the integer optimization problem
-	int stat = glp_mip_status(milp); // Outputs the solution status of the problem 
-
-	/* DISPLAY THE SOLUTION DETAILS */
-	switch (stat){
-	case 1:
-		outPutFile << "\nThe solution to the problem is UNDEFINED." << endl;
-		cout << "\nThe solution to the problem is UNDEFINED." << endl;
-		break;
-	case 2:
-		outPutFile << "\nThe solution to the problem is FEASIBLE." << endl;
-		cout << "\nThe solution to the problem is FEASIBLE." << endl;
-		break;
-	case 3:
-		outPutFile << "\nThe solution to the problem is INFEASIBLE." << endl;
-		cout << "\nThe solution to the problem is INFEASIBLE." << endl;
-		break;
-	case 4:
-		outPutFile << "\nNO FEASIBLE solution to the problem exists." << endl;
-		cout << "\nNO FEASIBLE solution to the problem exists." << endl;
-		break;
-	case 5:
-		outPutFile << "\nThe solution to the problem is OPTIMAL." << endl;
-		cout << "\nThe solution to the problem is OPTIMAL." << endl;
-		break;
-	case 6:
-		outPutFile << "\nThe solution to the problem is UNBOUNDED." << endl;
-		cout << "\nThe solution to the problem is UNBOUNDED." << endl;
-		break;
-	default:
-		outPutFile << "\nERROR in Solution Status." << endl;
-		cout << "\nERROR in Solution Status." << endl;
-		break;
-	}
-
-	//Get the Optimal Objective Value results//
-	z = glp_mip_obj_val(milp);
-
-	// Open separate output files for writing results of different variables
-	string outCandFlowFileName = "/home/samie/code/Horizontal_Coordination_MILP_Dist_Mechanism_Design/Horizontal_Proper/output/candidateLinesGLPK/candFlowMWMOGLPK.txt";
-	string outCandDecFileName = "/home/samie/code/Horizontal_Coordination_MILP_Dist_Mechanism_Design/Horizontal_Proper/output/candidateLinesGLPK/candLineDecisionMOGLPK.txt";
-	string outExtAngFileName = "/home/samie/code/Horizontal_Coordination_MILP_Dist_Mechanism_Design/Horizontal_Proper/output/outputAnglesGLPK/externalAngleMOGLPK.txt";
-	ofstream candFlowMWOut(outCandFlowFileName, ios::out); //switchOnOut
-	ofstream candLineDecisionOut(outCandDecFileName, ios::out); //switchOffOut
-	ofstream externalAngleOut(outExtAngFileName, ios::out);
-	outPutFile << "\nThe Optimal Objective value (Line Building Decision cost) is: " << -z << endl;
-	powerGenOut << "\nThe Optimal Objective value (Line Building Decision cost) is: " << -z << endl;
-	cout << "\nThe Optimal Objective value (Line Building Decision cost) is: " << -z << endl;
-	x.push_back(0); // Initialize the decision Variable vector
-
-	// Display Shared Candidate lines' Power Flow variables
-	candFlowMWOut << "\n****************** SHARED CANDIDATE LINES POWER FLOW VALUES *********************" << endl;
-	candFlowMWOut << "CANDIDATE LINE ID" << "\t" << "MW FLOW VALUE" << "\n";
-	int arrayInd = 1;
-	for (int scenCounter=0; scenCounter < countOfScenarios; ++scenCounter) {
-		int diffCandCounter2 = 0; // counter flag to indicate the first element of the candSerial list
-		for (candIterator = candSerial.begin(); candIterator != candSerial.end(); ++candIterator){
-			if (diffCandCounter2 > 0) { // Skip the first element, since it's a dummy "0"
-				x.push_back(glp_mip_col_val(milp, arrayInd));
-				candFlowMWOut << (*candIterator) << "\t" << (glp_mip_col_val(milp, arrayInd))*100 << " MW" << endl;
-				++arrayInd;
-			}
-			++diffCandCounter2;
-		}
-	}
-	candFlowMWOut << "Finished writing Shared Candidate lines' Power Flow variables" << endl;
-
-	// Display Shared Candidate lines' Construction Decisions
-	candLineDecisionOut << "\n****************** SHARED CANDIDATE LINES CONSTRUCTION DECISIONS *********************" << endl;
-	candLineDecisionOut << "CANDIDATE LINE ID" << "\t" << "CONSTRUCTION DECISIONS" << "\n";
-	int candInd1 = 0; // Initialize the counter for indexing the candidate lines
-	int diffCandCounter1 = 0; // counter flag to indicate the first element of the candSerial list
-	for (candIterator = candSerial.begin(); candIterator != candSerial.end(); ++candIterator){
-		if (diffCandCounter1 > 0) { // Skip the first element, since it's a dummy "0"
-			x.push_back(glp_mip_col_val(milp, arrayInd));
-			interimIntDecVar.push_back(glp_mip_col_val(milp, arrayInd));
-			candLineDecisionOut << (*candIterator) << "\t" << (glp_mip_col_val(milp, arrayInd)) << endl;
-			++arrayInd;
-			++candInd1;
-		}
-		++diffCandCounter1;
-	}
-	candLineDecisionOut << "Finished writing Shared Candidate lines' Construction decisions" << endl;
-
-	// Display shared node angles
-	externalAngleOut << "\n****************** OUTER ZONAL NODE VOLTAGE PHASE ANGLE VALUES *********************" << endl;
-	externalAngleOut << "EXTERNAL NODE ID" << "\t" << "VOLTAGE PHASE ANGLE" << "\n";
-	for (int scenCounter=0; scenCounter < countOfScenarios; ++scenCounter) {
-		int otherInd1 = 0; // Initialize the counter for indexing the other-zone nodes
-		int dummyStart = 0;
-		for (diffZNIt = nodeList.begin(); diffZNIt != nodeList.end(); ++diffZNIt){
-			if (dummyStart > 0) { // Skip the dummy element "0" at the beginning
-				x.push_back(glp_mip_col_val(milp, arrayInd));
-				interimContDecVar.push_back(glp_mip_col_val(milp, arrayInd));
-				externalAngleOut << (*diffZNIt) << "\t" << (glp_mip_col_val(milp, arrayInd)) << endl;
-				++arrayInd;
-				++otherInd1;
-			}
-			++dummyStart;
-		}
-	}
-	externalAngleOut << "Finished writing shared node voltage phase angle values" << endl;
-
-	delete ipControlParam; // free the memory of the Integer Programming Control Parameter struct
-	glp_delete_prob(milp); // Free the memory of the GLPK Problem Object
-	clock_t end2 = clock(); // stop the timer
-	double elapsed_secs2 = double(end2 - begin) / CLOCKS_PER_SEC; // Calculate the Total Time
-	outPutFile << "\nTotal time taken to solve the MILP Line Construction Decision Making Problem instance and retrieve the results = " << elapsed_secs2 << " s " << endl;
-	cout << "\nTotal time taken to solve the MILP Line Construction Decision Making Problem instance and retrieve the results = " << elapsed_secs2 << " s " << endl;
-
-	// Close the different output files
-	outPutFile.close();
-	powerGenOut.close();
-	candFlowMWOut.close();
-	candLineDecisionOut.close();
-	externalAngleOut.close();
-	cout << "\nSimulation Completed.\nResults written on the different output files" << endl;
-	//%%calcMILPBounds(); // Calculate the bounds
-} // Function MILP() ends
-
-	def LBMarketover(double LagMultXi[], double LagMultPi[], int totalCandLineNum, int totalSharedNodeNum): #Function LBMarketover() calculates the lower bound of the Mixed Integer Linear Programming Solver routine by calling GLPK routines for average heat rate objective
-{
-	/* CREATION OF THE MIP SOLVER INSTANCE */
-	clock_t begin = clock(); // start the timer
-	vector<int>::iterator diffZNIt; // Iterator for diffZoneNodeID
-	vector<Node*>::iterator nodeIterator; // Iterator for node objects
-	vector<double>::iterator candCapIterator; // Iterator for candidate lines for capacity
-	vector<int>::iterator candIterator; // Iterator for candidate lines	
-	vector<double>::iterator exsharedCapIterator; // Iterator for shared existing lines for capacity
-	vector<int>::iterator exsharedIterator;
-
-	string outSummaryFileName = "/home/samie/code/Horizontal_Coordination_MILP_Dist_Mechanism_Design/Horizontal_Proper/output/outputSummaryGLPKBounds/OutSummaryMOBoundGLPK.txt";
-	ofstream outPutFile(outSummaryFileName, ios::out); // Create Output File to output the Summary of Results
-	if (!outPutFile){
-		cerr << "\nCouldn't open the file" << endl;
-		exit(1);
-	}
-
-	int dimRow = countOfScenarios*(4 * candLineNumber + 2 * sharedELineNumber); // Total number of rows of the A matrix (number of structural constraints of the LP) first term to account for lower and upper line limits & lower and upper definition limits of candidate shared lines, and second term for lower and upper line limits for shared existing lines
-	int dimCol = countOfScenarios*nodeNumber+(countOfScenarios+1)*candLineNumber; // Total number of columns of the LP (number of Decision Variables) first term to account for voltage phase angles for inter-zonal lines' nodes, and second term for power flow values and binary integer decision variable values for shared candidate lines
-	outPutFile << "\nTotal Number of Structural Constraints (Rows) is: " << dimRow << endl;
-	outPutFile << "\nTotal Number of Decision Variables (Columns) is: " << dimCol << endl;
-	//cout << "\nTotal Number of Structural Constraints (Rows) is: " << dimRow << endl;
-	//cout << "\nTotal Number of Decision Variables (Columns) is: " << dimCol << endl;
-	//cout << "\nTotal Number of Shared Nodes is: " << nodeNumber << endl;	
-	//cout << "\nTotal Number of shared candidate lines is: " << candLineNumber << endl;
-	//cout << "\nTotal Number of shared existing lines is: " << sharedELineNumber << endl;
-	glp_prob *milp; // Instantiate GLPK Problem Object pointer
-	glp_iocp *ipControlParam = new glp_iocp; // Instantiate the Control parameters for the Integer Programming Problem
-	glp_init_iocp(ipControlParam); // Initialize the Control Parameters for the Integer Programming Problem with default values
-	ipControlParam->mip_gap = 1e-1; // Set the tolerance for the Integer Programming Problem
-
-	// arrays to store the row and column index combinations for the coefficient matrix
-	vector<int> ia; // array to store the non zero element row indices of A matrix
-	vector<int> ja; // array to store the non-zero element column indices of A matrix
-	vector<double> ar; // array to store the coefficients of the A matrix
-	double z; // variable to store the objective value
-	vector<double> x; // Coefficient matrix entires, objective function, and decision variables
-
-	milp = glp_create_prob(); // Creates the GLPK MILP Problem
-	glp_set_prob_name(milp, "MOTransDec"); // Names the particular problem instance 
-	glp_set_obj_dir(milp, GLP_MAX); // Set direction (Declares the MILP Problem as a Minimization Problem)
-
-	/* SPECIFICATION OF PROBLEM PARAMETERS */
-	/*Row Definitions: Specification of RHS or b vector of b<=Ax<=b*/
-	glp_add_rows(milp, dimRow);
-	//Row Definitions and Bounds Corresponding to Constraints/
-	string outPGenFileName = "/home/samie/code/Horizontal_Coordination_MILP_Dist_Mechanism_Design/Horizontal_Proper/output/outputPowerGLPKBounds/OutPowerGenMOBoundGLPK.txt"; 
-	ofstream powerGenOut(outPGenFileName, ios::out);
-	if (!powerGenOut){
-		cerr << "\nCouldn't open the file" << endl;
-		exit(1);
-	}
-	int rowCount = 1;
-
-	/*******************************************************************************************/
-
-	// Constraints corresponding to Line Forward Flow limits for shared existing lines
-	outPutFile << "\nConstraints corresponding to Line Forward Flow limits for shared existing lines" << endl;
-	for (int scenCounter=0; scenCounter < countOfScenarios; ++scenCounter) { 
-		for (exsharedCapIterator = SECapacity.begin(); exsharedCapIterator != SECapacity.end(); ++exsharedCapIterator){
-			glp_set_row_name(milp, rowCount, NULL);
-			glp_set_row_bnds(milp, rowCount, GLP_UP, 0.0, (*exsharedCapIterator));
-			outPutFile << rowCount << "\t";
-			outPutFile << ((*exsharedCapIterator)) << endl;
-			++rowCount;
-		}
-	}
-	outPutFile << endl;
-	// Constraints corresponding to Line Reverse Flow limits for shared existing lines
-	outPutFile << "\nConstraints corresponding to Line Reverse Flow limits for shared existing lines" << endl;
-	for (int scenCounter=0; scenCounter < countOfScenarios; ++scenCounter) {
-		for (exsharedCapIterator = SECapacity.begin(); exsharedCapIterator != SECapacity.end(); ++exsharedCapIterator){
-			glp_set_row_name(milp, rowCount, NULL);
-			glp_set_row_bnds(milp, rowCount, GLP_LO, -((*exsharedCapIterator)), 0.0);
-			outPutFile << rowCount << "\t";
-			outPutFile << -((*exsharedCapIterator)) << endl;
-			++rowCount;
-		}
-	}
-	outPutFile << "\nTotal number of rows after accounting for Line Flow limits for shared existing lines: " << rowCount << endl;
-
-	/*******************************************************************************************/
-
-	// Constraints corresponding to Line Forward Flow limits for shared candidate lines
-	outPutFile << "\nConstraints corresponding to Line Forward Flow limits for shared candidate lines" << endl; 
-	for (int scenCounter=0; scenCounter < countOfScenarios; ++scenCounter) {
-		for (candCapIterator = candCapacity.begin(); candCapIterator != candCapacity.end(); ++candCapIterator){
-			glp_set_row_name(milp, rowCount, NULL);
-			glp_set_row_bnds(milp, rowCount, GLP_UP, 0.0, 0.0);
-			outPutFile << rowCount << "\t";
-			outPutFile << 0.0 << endl;
-			++rowCount;
-		}
-	}
-	outPutFile << endl;
-	// Constraints corresponding to Line Reverse Flow limits for shared candidate lines
-	outPutFile << "\nConstraints corresponding to Line Reverse Flow limits for shared candidate lines" << endl; 
-	for (int scenCounter=0; scenCounter < countOfScenarios; ++scenCounter) {
-		for (candCapIterator = candCapacity.begin(); candCapIterator != candCapacity.end(); ++candCapIterator){
-			glp_set_row_name(milp, rowCount, NULL);
-			glp_set_row_bnds(milp, rowCount, GLP_LO, 0.0, 0.0);
-			outPutFile << rowCount << "\t";
-			outPutFile << 0.0 << endl;
-			++rowCount;
-		}
-	}
-	outPutFile << "\nTotal number of rows after accounting for Line Flow limits for shared candidate lines: " << rowCount << endl;
-
-	/*******************************************************************************************/
-
-	// Constraints corresponding to shared candidate lines flow definition upper bound
-	outPutFile << "\nTesting of Definition of Flows on Shared Candidate transmission lines" << endl; 
-	for (int scenCounter=0; scenCounter < countOfScenarios; ++scenCounter) {
-		for (candCapIterator = candCapacity.begin(); candCapIterator != candCapacity.end(); ++candCapIterator){
-			glp_set_row_name(milp, rowCount, NULL);
-			glp_set_row_bnds(milp, rowCount, GLP_UP, 0.0, (2.5*(*candCapIterator)));
-			outPutFile << rowCount << "\t";
-			outPutFile << BIGM << endl;
-			++rowCount;
-		}
-	}
-	outPutFile << endl;
-	// Constraints corresponding to shared candidate lines flow definition lower bound
-	for (int scenCounter=0; scenCounter < countOfScenarios; ++scenCounter) {
-		for (candCapIterator = candCapacity.begin(); candCapIterator != candCapacity.end(); ++candCapIterator){
-			glp_set_row_name(milp, rowCount, NULL);
-			glp_set_row_bnds(milp, rowCount, GLP_LO, -(2.5*(*candCapIterator)), 0.0);
-			outPutFile << rowCount << "\t";
-			outPutFile << -BIGM << endl;
-			++rowCount;
-		}
-	}
-	outPutFile << "\nTotal number of rows after accounting for shared candidate lines flow definition: " << rowCount << endl;
-	outPutFile << "\nConstraint bounds (rows) Specified" << endl;
-	outPutFile << "\nTotal number of rows: " << rowCount - 1 << endl;
-	//cout << "\nConstraint bounds (rows) Specified" << endl;
-	//cout << "\nTotal number of rows: " << rowCount - 1 << endl;
-	/*******************************************************************************************/
-
-	/*******************************************************************************************/
-
-	/*Column Definitions, Bounds, and Objective Function Co-efficients*/
-	glp_add_cols(milp, dimCol);
-	int colCount = 1;
-
-	/*******************************************************************************************/
-
-	//Columns corresponding to Shared Candidate Line Flows continuous variables//
-	outPutFile << "\nColumns corresponding to Shared Candidate Line Flows continuous variables" << endl;
-	for (int scenCounter=0; scenCounter < countOfScenarios; ++scenCounter) {
-		for (candCapIterator = candCapacity.begin(); candCapIterator != candCapacity.end(); ++candCapIterator){
-			glp_set_col_kind(milp, colCount, GLP_CV);
-			glp_set_col_name(milp, colCount, NULL);
-			glp_set_col_bnds(milp, colCount, GLP_FR, 0.0, 0.0);
-			glp_set_obj_coef(milp, colCount, 0.0);
-			outPutFile << colCount << "\t";
-			outPutFile << 0 << endl;
-			++colCount;
-		}
-	}
-	outPutFile << "\nTotal number of columns after accounting for Shared Candidate Line Flows continuous variables: " << colCount << endl;
-	/*******************************************************************************************/
-
-	//Columns corresponding to Shared Candidate Line Construction Decision Binary Integer variables//
-	outPutFile << "\nColumns corresponding to Shared Candidate Line Construction Decision Binary Integer variables" << endl;
-	int candInd = 0; // Initialize the counter for indexing the candidate lines
-	int diffCandCounter = 0; // counter flag to indicate the first element of the candSerial list
-	for (candIterator = candSerial.begin(); candIterator != candSerial.end(); ++candIterator){
-		if (diffCandCounter > 0) { // Skip the first element, since it's a dummy "0"
-			glp_set_col_kind(milp, colCount, GLP_CV);
-			glp_set_col_name(milp, colCount, NULL);
-			glp_set_col_bnds(milp, colCount, GLP_DB, 0.0, 1.0);
-			glp_set_obj_coef(milp, colCount, LagMultPi[candInd]);
-			outPutFile << colCount << "\t";
-			outPutFile << LagMultPi[candInd] << "\t" << candInd << endl;
-			++candInd;
-			++colCount;
-		}
-		++diffCandCounter;
-	}
-	outPutFile << "\nTotal number of columns after accounting for Shared Candidate Line Construction Decision Binary Integer variables: " << colCount << endl;
-	/*******************************************************************************************/
-
-	//Columns corresponding to Voltage Phase Angles continuous variables for other zone nodes for shared lines//
-	outPutFile << "\nColumns corresponding to Voltage Phase Angles continuous variables for other zone nodes for shared lines" << endl;
-	int otherInd = 0; // Initialize the counter for indexing the other-zone nodes
-	for (int scenCounter=0; scenCounter < countOfScenarios; ++scenCounter) {
-		int columnCount = 1;
-		int diffNodeCounter = 0; // counter flag to indicate the first element of the diffZoneNodeID list
-		/*for (diffZNIt = diffZoneNodeID.begin(); diffZNIt != diffZoneNodeID.end(); ++diffZNIt){
-			cout << " Column count after the shared node is " << columnCount << endl;	
-			++columnCount;
-		}*/
-		for (diffZNIt = nodeList.begin(); diffZNIt != nodeList.end(); ++diffZNIt){
-			if (diffNodeCounter > 0) { // Skip the first element, since it's a dummy "0"
-				glp_set_col_kind(milp, colCount, GLP_CV);
-				glp_set_col_name(milp, colCount, NULL);
-				glp_set_col_bnds(milp, colCount, GLP_DB, 0, (44/7));
-				glp_set_obj_coef(milp, colCount, LagMultXi[otherInd]);
-				outPutFile << colCount << "\t";
-				outPutFile << LagMultXi[otherInd] << "\t" << otherInd << endl;
-				++otherInd;	
-				++colCount;
-			}
-			++diffNodeCounter;
-		}
-	}
-	outPutFile << "\nDecision Variables and Objective Function defined" << endl;
-	outPutFile << "\nTotal Number of columns: " << colCount - 1 << endl;
-	//cout << "\nDecision Variables and Objective Function defined" << endl;
-	//cout << "\nTotal Number of columns: " << colCount - 1 << endl;
-	/*******************************************************************************************/
-
-	//Non-Zero entries of A matrix (Constraint/Coefficient matrix entries)//
-	int index = 1;
-	ia.push_back(0), ja.push_back(0), ar.push_back(0.0);
-	int rCount = 1; // Initialize the row count
-
-	/*******************************************************************************************/
-	
-	// Coefficients corresponding to shared existing Line Forward Flow Limit Constraints
-	for (int scenCounter=0; scenCounter < countOfScenarios; ++scenCounter) {
-		int jockey = 0;
-		int diffSerCounter = 0;
-		outPutFile << "\nCoefficients corresponding to shared existing Line Forward Flow Limit Constraints" << endl;
-		for (exsharedIterator = SESerial.begin(); exsharedIterator != SESerial.end(); ++exsharedIterator){
-			if (diffSerCounter > 0) { // Skip the first element, since it's a dummy "0"
-				//cout << "Test Message 2" << endl;
-				//cout << "SE From Rank" << SEFromRank.at(jockey) << endl;
-				//cout << "SE Reactance" << 1/(SEReactance.at(jockey)) << endl;
-				ia.push_back(rCount), ja.push_back((countOfScenarios+1)*candLineNumber + scenCounter*nodeNumber+SEFromRank.at(jockey)), ar.push_back(1/(SEReactance.at(jockey)));
-				++index;
-				outPutFile << "\n" << rCount << "\t" << (countOfScenarios+1)*candLineNumber + scenCounter*nodeNumber+SEFromRank.at(jockey) << "\t" << 1/(SEReactance.at(jockey)) << endl;
-				ia.push_back(rCount), ja.push_back((countOfScenarios+1)*candLineNumber + scenCounter*nodeNumber+SEToRank.at(jockey)), ar.push_back(-1/(SEReactance.at(jockey)));
-				++index;
-				outPutFile << "\n" << rCount << "\t" << (countOfScenarios+1)*candLineNumber + scenCounter*nodeNumber+SEToRank.at(jockey) << "\t" << -1/(SEReactance.at(jockey)) << endl;
-				++rCount; // Increment the row count to point to the next transmission line object
-				++jockey;
-				//cout << "\nTest after shared existing Line Forward Flow Limit Constraint " << diffSerCounter << endl;
-			}
-			++diffSerCounter;	
-		}
-	}
-	// Coefficients corresponding to shared existing Line Reverse Flow Limit Constraints
-	for (int scenCounter=0; scenCounter < countOfScenarios; ++scenCounter) {
-		int jockey = 0;
-		int diffSerCounter = 0;
-		outPutFile << "\nCoefficients corresponding to shared existing Line Reverse Flow Limit Constraints" << endl;
-		for (exsharedIterator = SESerial.begin(); exsharedIterator != SESerial.end(); ++exsharedIterator){
-			if (diffSerCounter > 0) { // Skip the first element, since it's a dummy "0"
-				ia.push_back(rCount), ja.push_back((countOfScenarios+1)*candLineNumber + scenCounter*nodeNumber+SEFromRank.at(jockey)), ar.push_back(1/(SEReactance.at(jockey)));
-				++index;
-				outPutFile << "\n" << rCount << "\t" << (countOfScenarios+1)*candLineNumber + scenCounter*nodeNumber+SEFromRank.at(jockey) << "\t" << 1/(SEReactance.at(jockey)) << endl;
-				ia.push_back(rCount), ja.push_back((countOfScenarios+1)*candLineNumber + scenCounter*nodeNumber+SEToRank.at(jockey)), ar.push_back(-1/(SEReactance.at(jockey)));
-				++index;
-				outPutFile << "\n" << rCount << "\t" << (countOfScenarios+1)*candLineNumber + scenCounter*nodeNumber+SEToRank.at(jockey) << "\t" << -1/(SEReactance.at(jockey)) << endl;
-				++rCount; // Increment the row count to point to the next transmission line object
-				++jockey;
-				//cout << "\nTest after shared existing Line Reverse Flow Limit Constraint " << diffSerCounter << endl;
-			}
-			++diffSerCounter;
-		}
-	}
-	/*******************************************************************************************/
-	
-	// Coefficients corresponding to shared candidate Line Forward Flow Limit Constraints
-	for (int scenCounter=0; scenCounter < countOfScenarios; ++scenCounter) {
-		int jockey = 0;
-		int diffSerCounter = 0;
-		outPutFile << "\nCoefficients corresponding to shared candidate Line Forward Flow Limit Constraints" << endl;
-		for (candIterator = candSerial.begin(); candIterator != candSerial.end(); ++candIterator){
-			if (diffSerCounter > 0) { // Skip the first element, since it's a dummy "0"
-				ia.push_back(rCount), ja.push_back(rCount-2*countOfScenarios*sharedELineNumber), ar.push_back(1);
-				++index;
-				outPutFile << "\n" << rCount << "\t" << rCount-2*countOfScenarios*sharedELineNumber << "\t" << 1 << endl;
-				ia.push_back(rCount), ja.push_back(countOfScenarios*candLineNumber+rCount-2*countOfScenarios*sharedELineNumber-scenCounter*candLineNumber), ar.push_back(-candCapacity.at(jockey));
-				++index;
-				outPutFile << "\n" << rCount << "\t" << countOfScenarios*candLineNumber+rCount-2*countOfScenarios*sharedELineNumber-scenCounter*candLineNumber << "\t" << -candCapacity.at(jockey) << endl;
-				++rCount;
-				++jockey;
-				//cout << "\nTest after shared candidate Line Forward Flow Limit Constraint " << diffSerCounter << endl;
-			}
-			++diffSerCounter;
-		}
-	}
-	// Coefficients corresponding to shared candidate Line Reverse Flow Limit Constraints
-	for (int scenCounter=0; scenCounter < countOfScenarios; ++scenCounter) {
-		int jockey = 0;
-		int diffSerCounter = 0;
-		outPutFile << "\nCoefficients corresponding to shared candidate Line Reverse Flow Limit Constraints" << endl;
-		for (candIterator = candSerial.begin(); candIterator != candSerial.end(); ++candIterator){
-			if (diffSerCounter > 0) { // Skip the first element, since it's a dummy "0"
-				ia.push_back(rCount), ja.push_back(rCount-countOfScenarios*(2*sharedELineNumber+candLineNumber)), ar.push_back(1);
-				++index;
-				outPutFile << "\n" << rCount << "\t" << rCount-countOfScenarios*(2*sharedELineNumber+candLineNumber) << "\t" << 1 << endl;
-				ia.push_back(rCount), ja.push_back(rCount-countOfScenarios*(2*sharedELineNumber)-scenCounter*candLineNumber), ar.push_back(candCapacity.at(jockey));
-				++index;
-				outPutFile << "\n" << rCount << "\t" << (rCount-countOfScenarios*(2*sharedELineNumber)-scenCounter*candLineNumber) << "\t" << candCapacity.at(jockey) << endl;
-				++rCount;
-				++jockey;
-				//cout << "\nTest after shared candidate Line Reverse Flow Limit Constraint " << diffSerCounter << endl;
-			}
-			++diffSerCounter;
-		}
-	}
-	/*******************************************************************************************/
-	
-	// Coefficients corresponding to shared candidate Line Definition upper bound
-	for (int scenCounter=0; scenCounter < countOfScenarios; ++scenCounter) {
-		int jockey = 0;
-		int diffSerCounter = 0;
-		outPutFile << "\nCoefficients corresponding to shared candidate Line Definition upper bound" << endl;
-		for (candIterator = candSerial.begin(); candIterator != candSerial.end(); ++candIterator){
-			if (diffSerCounter > 0) { // Skip the first element, since it's a dummy "0"
-				ia.push_back(rCount), ja.push_back(rCount-countOfScenarios*(2*sharedELineNumber+2*candLineNumber)), ar.push_back(1);
-				++index;
-				outPutFile << rCount << "\t" << rCount-countOfScenarios*(2*sharedELineNumber+2*candLineNumber) << " Power term for candidate line " << diffSerCounter << "-th candidate line" << endl;
-				ia.push_back(rCount), ja.push_back((countOfScenarios+1)*candLineNumber + scenCounter*nodeNumber+candFromRank.at(jockey)), ar.push_back(-1/(candReactance.at(jockey)));
-				++index;
-				outPutFile << rCount << "\t" << (countOfScenarios+1)*candLineNumber + scenCounter*nodeNumber+candFromRank.at(jockey) << "\t" << -1/(candReactance.at(jockey)) << endl;
-				ia.push_back(rCount), ja.push_back((countOfScenarios+1)*candLineNumber + scenCounter*nodeNumber+candToRank.at(jockey)), ar.push_back(1/(candReactance.at(jockey)));
-				++index;
-				outPutFile << rCount << "\t" << (countOfScenarios+1)*candLineNumber + scenCounter*nodeNumber+candToRank.at(jockey) << "\t" << 1/(candReactance.at(jockey)) << endl;
-				ia.push_back(rCount), ja.push_back(rCount-countOfScenarios*(2*sharedELineNumber+candLineNumber)-scenCounter*candLineNumber), ar.push_back(2.5*(candCapacity.at(jockey)));
-				++index;
-				outPutFile << rCount << "\t" << rCount-countOfScenarios*(2*sharedELineNumber+candLineNumber)-scenCounter*candLineNumber << "\t" << BIGM << endl;
-				++rCount; // Increment the row count to point to the next transmission line object
-				++jockey;
-				//cout << "\nTest after shared candidate Line Definition upper bound " << diffSerCounter << endl;
-			}
-			++diffSerCounter;
-		}
-	}
-	// Coefficients corresponding to shared candidate Line Definition lower bound
-	for (int scenCounter=0; scenCounter < countOfScenarios; ++scenCounter) {
-		int jockey = 0;
-		int diffSerCounter = 0;
-		outPutFile << "\nCoefficients corresponding to shared candidate Line Definition lower bound" << endl;
-		for (candIterator = candSerial.begin(); candIterator != candSerial.end(); ++candIterator){
-			if (diffSerCounter > 0) { // Skip the first element, since it's a dummy "0"
-				ia.push_back(rCount), ja.push_back(rCount-countOfScenarios*(2*sharedELineNumber+3*candLineNumber)), ar.push_back(1);
-				++index;
-				outPutFile << rCount << "\t" << rCount-countOfScenarios*(2*sharedELineNumber+3*candLineNumber) << " Power term for candidate line " << diffSerCounter << "-th candidate line" << endl;
-				ia.push_back(rCount), ja.push_back((countOfScenarios+1)*candLineNumber + scenCounter*nodeNumber+candFromRank.at(jockey)), ar.push_back(-1/(candReactance.at(jockey)));
-				++index;
-				outPutFile << rCount << "\t" << (countOfScenarios+1)*candLineNumber + scenCounter*nodeNumber+candFromRank.at(jockey) << "\t" << -1/(candReactance.at(jockey)) << endl;
-				ia.push_back(rCount), ja.push_back((countOfScenarios+1)*candLineNumber + scenCounter*nodeNumber+candToRank.at(jockey)), ar.push_back(1/(candReactance.at(jockey)));
-				++index;
-				outPutFile << rCount << "\t" << (countOfScenarios+1)*candLineNumber + scenCounter*nodeNumber+candToRank.at(jockey) << "\t" << 1/(candReactance.at(jockey)) << endl;
-				ia.push_back(rCount), ja.push_back(rCount-countOfScenarios*(2*sharedELineNumber+2*candLineNumber)-scenCounter*candLineNumber), ar.push_back(-(2.5*(candCapacity.at(jockey))));
-				++index;
-				outPutFile << rCount << "\t" << rCount-countOfScenarios*(2*sharedELineNumber+candLineNumber)-scenCounter*candLineNumber << "\t" << -BIGM << endl;
-				++rCount; // Increment the row count to point to the next transmission line object
-				++jockey;
-				//cout << "\nTest after shared candidate Line Definition lower bound " << diffSerCounter << endl;
-			}
-			++diffSerCounter;
-		}
-	}
-	/*******************************************************************************************/
-
-	/*******************************************************************************************/
-
-	outPutFile << "\nCoefficient Matrix specified" << endl;
-	clock_t end1 = clock(); // stop the timer
-	double elapsed_secs1 = double(end1 - begin) / CLOCKS_PER_SEC; // Calculate the time required to populate the constraint matrix and objective coefficients
-	outPutFile << "\nTotal time taken to define the rows, columns, objective and populate the coefficient matrix = " << elapsed_secs1 << " s " << endl;
-	/* RUN THE OPTIMIZATION SIMULATION ALGORITHM */
-	cout << "\nSimulation in Progress. Wait !!! ....." << endl;
-	glp_load_matrix(milp, --index, &ia[0], &ja[0], &ar[0]); // Loads the Problem
-	int lpMethodChoice; // Choice between Simplex or Interior Point Methods to solve the LP relaxation problem
-	lpMethodChoice = lpSolveAlgo;
-	glp_init_iocp(ipControlParam); // Initialize the Mixed Integer Programming Control Parameters with the default setting values
-	ipControlParam->mip_gap = 1e-1; // Adjust the tolerance of the Integer Oprtimization part for faster convergence 
-	cout << "\nTolerence for MIP is " << ipControlParam->mip_gap;
-	switch (lpMethodChoice){
-	case 1:
-		glp_simplex(milp, NULL);
-		break;
-	case 2:
-		glp_interior(milp, NULL);
-		break;
-	default:
-		cout << "\nInvalid Choice" << endl;
-		break;
-	}
-	string outLPLogFileName = "/home/samie/code/Horizontal_Coordination_MILP_Dist_Mechanism_Design/Horizontal_Proper/output/outputSummaryGLPKBounds/OutLPLogMOBoundGLPK.txt";
-	string outMILPLogFileName = "/home/samie/code/Horizontal_Coordination_MILP_Dist_Mechanism_Design/Horizontal_Proper/output/outputSummaryGLPKBounds/OutMIPLogMOBoundGLPK.txt";
-	glp_print_sol(milp, outLPLogFileName.c_str()); // write the solution log to the relaxed LP problem
-	glp_intopt(milp, ipControlParam); // Calls the GLPK Branch & Bound-Cutting Plane and Simplex Method to solve the integer optimization problem
-	glp_print_sol(milp, outMILPLogFileName.c_str()); // write the solution log to the integer optimization problem
-	int stat = glp_mip_status(milp); // Outputs the solution status of the problem 
-
-	/* DISPLAY THE SOLUTION DETAILS */
-	switch (stat){
-	case 1:
-		outPutFile << "\nThe solution to the problem is UNDEFINED." << endl;
-		cout << "\nThe solution to the problem is UNDEFINED." << endl;
-		break;
-	case 2:
-		outPutFile << "\nThe solution to the problem is FEASIBLE." << endl;
-		cout << "\nThe solution to the problem is FEASIBLE." << endl;
-		break;
-	case 3:
-		outPutFile << "\nThe solution to the problem is INFEASIBLE." << endl;
-		cout << "\nThe solution to the problem is INFEASIBLE." << endl;
-		break;
-	case 4:
-		outPutFile << "\nNO FEASIBLE solution to the problem exists." << endl;
-		cout << "\nNO FEASIBLE solution to the problem exists." << endl;
-		break;
-	case 5:
-		outPutFile << "\nThe solution to the problem is OPTIMAL." << endl;
-		cout << "\nThe solution to the problem is OPTIMAL." << endl;
-		break;
-	case 6:
-		outPutFile << "\nThe solution to the problem is UNBOUNDED." << endl;
-		cout << "\nThe solution to the problem is UNBOUNDED." << endl;
-		break;
-	default:
-		outPutFile << "\nERROR in Solution Status." << endl;
-		cout << "\nERROR in Solution Status." << endl;
-		break;
-	}
-
-	//Get the Optimal Objective Value results//
-	z = glp_mip_obj_val(milp);
-
-	// Open separate output files for writing results of different variables
-	string outCandFlowFileName = "/home/samie/code/Horizontal_Coordination_MILP_Dist_Mechanism_Design/Horizontal_Proper/output/candidateLinesGLPKBounds/candFlowMWMOBoundGLPK.txt";
-	string outCandDecFileName = "/home/samie/code/Horizontal_Coordination_MILP_Dist_Mechanism_Design/Horizontal_Proper/output/candidateLinesGLPKBounds/candLineDecisionMOBoundGLPK.txt";
-	string outExtAngFileName = "/home/samie/code/Horizontal_Coordination_MILP_Dist_Mechanism_Design/Horizontal_Proper/output/outputAnglesGLPKBounds/externalAngleMOBoundGLPK.txt";
-	ofstream candFlowMWOut(outCandFlowFileName, ios::out); //switchOnOut
-	ofstream candLineDecisionOut(outCandDecFileName, ios::out); //switchOffOut
-	ofstream externalAngleOut(outExtAngFileName, ios::out);
-	outPutFile << "\nThe Optimal Objective value (Line Building Decision cost) is: " << -z << endl;
-	powerGenOut << "\nThe Optimal Objective value (Line Building Decision cost) is: " << -z << endl;
-	cout << "\nThe Optimal Objective value (Line Building Decision cost) is: " << -z << endl;
-	x.push_back(0); // Initialize the decision Variable vector
-
-	// Display Shared Candidate lines' Power Flow variables
-	candFlowMWOut << "\n****************** SHARED CANDIDATE LINES POWER FLOW VALUES *********************" << endl;
-	candFlowMWOut << "CANDIDATE LINE ID" << "\t" << "MW FLOW VALUE" << "\n";
-	int arrayInd = 1;
-	for (int scenCounter=0; scenCounter < countOfScenarios; ++scenCounter) {
-		int diffCandCounter2 = 0; // counter flag to indicate the first element of the candSerial list
-		for (candIterator = candSerial.begin(); candIterator != candSerial.end(); ++candIterator){
-			if (diffCandCounter2 > 0) { // Skip the first element, since it's a dummy "0"
-				x.push_back(glp_mip_col_val(milp, arrayInd));
-				candFlowMWOut << (*candIterator) << "\t" << (glp_mip_col_val(milp, arrayInd))*100 << " MW" << endl;
-				++arrayInd;
-			}
-			++diffCandCounter2;
-		}
-	}
-	candFlowMWOut << "Finished writing Shared Candidate lines' Power Flow variables" << endl;
-
-	// Display Shared Candidate lines' Construction Decisions
-	candLineDecisionOut << "\n****************** SHARED CANDIDATE LINES CONSTRUCTION DECISIONS *********************" << endl;
-	candLineDecisionOut << "CANDIDATE LINE ID" << "\t" << "CONSTRUCTION DECISIONS" << "\n";
-	int candInd1 = 0; // Initialize the counter for indexing the candidate lines
-	int diffCandCounter1 = 0; // counter flag to indicate the first element of the candSerial list
-	for (candIterator = candSerial.begin(); candIterator != candSerial.end(); ++candIterator){
-		if (diffCandCounter1 > 0) { // Skip the first element, since it's a dummy "0"
-			x.push_back(glp_mip_col_val(milp, arrayInd));
-			candLineDecisionOut << (*candIterator) << "\t" << (glp_mip_col_val(milp, arrayInd)) << endl;
-			++arrayInd;
-			++candInd1;
-		}
-		++diffCandCounter1;
-	}
-	candLineDecisionOut << "Finished writing Shared Candidate lines' Construction decisions" << endl;
-
-	// Display shared node angles
-	externalAngleOut << "\n****************** OUTER ZONAL NODE VOLTAGE PHASE ANGLE VALUES *********************" << endl;
-	externalAngleOut << "EXTERNAL NODE ID" << "\t" << "VOLTAGE PHASE ANGLE" << "\n";
-	for (int scenCounter=0; scenCounter < countOfScenarios; ++scenCounter) {
-		int otherInd1 = 0; // Initialize the counter for indexing the other-zone nodes
-		int dummyStart = 0;
-		for (diffZNIt = nodeList.begin(); diffZNIt != nodeList.end(); ++diffZNIt){
-			if (dummyStart > 0) { // Skip the dummy element "0" at the beginning
-				x.push_back(glp_mip_col_val(milp, arrayInd));
-				externalAngleOut << (*diffZNIt) << "\t" << (glp_mip_col_val(milp, arrayInd)) << endl;
-				++arrayInd;
-				++otherInd1;
-			}
-			++dummyStart;
-		}
-	}
-	externalAngleOut << "Finished writing shared node voltage phase angle values" << endl;
-
-	delete ipControlParam; // free the memory of the Integer Programming Control Parameter struct
-	glp_delete_prob(milp); // Free the memory of the GLPK Problem Object
-	clock_t end2 = clock(); // stop the timer
-	double elapsed_secs2 = double(end2 - begin) / CLOCKS_PER_SEC; // Calculate the Total Time
-	outPutFile << "\nTotal time taken to solve the MILP Line Construction Decision Making Problem instance and retrieve the results = " << elapsed_secs2 << " s " << endl;
-	cout << "\nTotal time taken to solve the MILP Line Construction Decision Making Problem instance and retrieve the results = " << elapsed_secs2 << " s " << endl;
-
-	// Close the different output files
-	outPutFile.close();
-	powerGenOut.close();
-	candFlowMWOut.close();
-	candLineDecisionOut.close();
-	externalAngleOut.close();
-	cout << "\nSimulation Completed.\nResults written on the different output files" << endl;
-	//%%calcMILPBounds(); // Calculate the bounds
-	return -z;
- // Function MILP() ends
+	def LBMarketover(self, LagMultXi, LagMultPi, totalCandLineNum, totalSharedNodeNum): #Function LBMarketover() calculates the lower bound of the Mixed Integer Linear Programming Solver routine by calling GLPK routines for average heat rate objective
+		dimRow = self.countOfScenarios*(4 * self.candLineNumber + 2 * self.sharedELineNumber) #Total number of rows of the A matrix (number of structural constraints of the LP) first term to account for lower and upper line limits & lower and upper definition limits of candidate shared lines, and second term for lower and upper line limits for shared existing lines
+		dimCol = self.countOfScenarios*self.nodeNumber+(self.countOfScenarios+1)*self.candLineNumber #Total number of columns of the LP (number of Decision Variables) first term to account for voltage phase angles for inter-zonal lines' nodes, and second term for power flow values and binary integer decision variable values for shared candidate lines
+	#Function MILP() ends
 
 	def bufferintermediateDecision(self, iterCountOut):
 		if iterCountOut==0: 
@@ -1079,87 +85,73 @@ class Marketover(object):
 				for nodeTrack in range(self.nodeNumber):
 					self.interimContDecVarPrev.append(0)
 	
-			for lineTrack = 0; lineTrack < candLineNumber; ++lineTrack
-				interimIntDecVarPrev.push_back(0);
+			for lineTrack in range(self.candLineNumber):
+				self.interimIntDecVarPrev.append(0)
 		else: 
-			interimContDecVarPrev = interimContDecVar
-			interimIntDecVarPrev = interimIntDecVar
+			interimContDecVarPrev = self.interimContDecVar
+			interimIntDecVarPrev = self.interimIntDecVar
 	
 
-	def getGlobalUpper(double LagMultXi[], double LagMultPi[], double regionalUpper[], int numberOfZones): #Function getGlobalUpper() returns the global upper bound for the investment coordination problem
-{
-	// Sum up the regional upper bounds, which are the tentative regional minima, at the end of every iteration
-	double revisedUpperBound = 0; // total upper bound initialized
-	for ( int i = 0; i < numberOfZones; ++i ) {
-		revisedUpperBound += regionalUpper[i];
-	}
-	// Calculate the MO upper bound, which is the minimum value of the MO objective, calculated with a given mix of the intermediate, shared continuous variable values from different regions/zones
-	for (int scenPos = 0; scenPos < countOfScenarios; ++scenPos) {
-		int interNodeRank; // Intermediate variable for storing the rank of the node 
-		vector<int> rankPresChecker; // Vector to check if a particular rank has been accounted for 
-		int length = (angleDecIndex[scenPos]).size(); // length of the rank vector
-		vector<int>::iterator angleDecIndexIterator; // Iterator for the rank vector
-		for (int i = 0; i < length; ++i) // Put as many zeroes on the rankPresChecker vector as is the length of the rank vector 
-			rankPresChecker.push_back(0);
-		vector<double> interAngleTermVec; // Intermediate vector for storing the costs of the angle terms from each sub-network
-		int tracker = 0; // tracker to track the position of the angleDecIndexIterator
-		for (angleDecIndexIterator=(angleDecIndex[scenPos]).begin(); angleDecIndexIterator!=(angleDecIndex[scenPos]).end(); ++angleDecIndexIterator) { // Iterate through rank vector
-			interNodeRank = (*angleDecIndexIterator); // Store the value of the rank of the present node iterate in the list 
-			if ( rankPresChecker.at(tracker) == 0 ) { // If this node rank hasn't been already accounted for
-				auto pos = std::find((angleDecIndex[scenPos]).begin(), (angleDecIndex[scenPos]).end(), interNodeRank); // find the first position of this rank in the vector
-				while(pos != (angleDecIndex[scenPos]).end()) // while all the different positions of this rank hasn't been accounted for 
+	def getGlobalUpper(self, LagMultXi, LagMultPi, regionalUpper, numberOfZones): #Function getGlobalUpper() returns the global upper bound for the investment coordination problem
+		#Sum up the regional upper bounds, which are the tentative regional minima, at the end of every iteration
+		revisedUpperBound = 0 #total upper bound initialized
+		for i in range(numberOfZones):
+			revisedUpperBound += regionalUpper[i]
+		#Calculate the MO upper bound, which is the minimum value of the MO objective, calculated with a given mix of the intermediate, shared continuous variable values from different regions/zones
+		for scenPos in range(self.countOfScenarios):
+			rankPresChecker = [] #Vector to check if a particular rank has been accounted for 
+			length = len(self.angleDecIndex[scenPos]) #length of the rank vector
+			for i in range(length): #Put as many zeroes on the rankPresChecker vector as is the length of the rank vector 
+				rankPresChecker.append(0)
+			interAngleTermVec = [] #Intermediate vector for storing the costs of the angle terms from each sub-network
+			tracker = 0 #tracker to track the position of the angleDecIndexIterator
+			for angleDecIndexIterator in self.angleDecIndex[scenPos]: #Iterate through rank vector
+				interNodeRank = angleDecIndexIterator #Store the value of the rank of the present node iterate in the list 
+				if rankPresChecker[tracker] == 0: #If this node rank hasn't been already accounted for
+					while interNodeRank in self.angleDecIndex[scenPos]: # while all the different positions of this rank hasn't been accounted for
+      						auto pos1 = std::distance((angleDecIndex[scenPos]).begin(), pos) #get the location in the vector, of this rank
+						rankPresChecker.at(pos1) = 1 #Mark the element in the corresponding position of checker vector 1, to indicate this rank has been accounted for 
+						interAngleTermVec.push_back(-((phaseAngleDecision[scenPos]).at(pos1))*(LagMultXi[scenPos*nodeNumber+(*angleDecIndexIterator-1)])) #Calculate cost term
+      						pos = std::find(pos + 1, (angleDecIndex[scenPos]).end(), interNodeRank) #Find position of the next occurence of this rank
+					smallest_element = *min_element(interAngleTermVec.begin(), interAngleTermVec.end())
+					revisedUpperBound += smallest_element
+					interAngleTermVec = []
+				tracker += 1 #Increment the tracker
+		// Calculate the MO upper bound, which is the minimum value of the MO objective, calculated with a given mix of the intermediate, shared discrete variable values from different regions/zones
+		int interLineRank; // Intermediate variable for storing the rank of the line 
+		vector<int> rankPresCheckerInt; // Vector to check if a particular rank has been accounted for 
+		int lengthInt = lineDecIndex.size(); // length of the rank vector
+		vector<int>::iterator lineDecIndexIterator; // Iterator for the rank vector
+		for (int i = 0; i < lengthInt; ++i) // Put as many zeroes on the rankPresChecker vector as is the length of the rank vector 
+			rankPresCheckerInt.push_back(0);
+		vector<double> interLineTermVec; // Intermediate vector for storing the costs of the line building decisions from each sub-network
+		int trackerInt = 0; // tracker to track the position of the lineDecIndexIterator
+		for (lineDecIndexIterator=lineDecIndex.begin(); lineDecIndexIterator!=lineDecIndex.end(); ++lineDecIndexIterator) { // Iterate through rank vector
+			interLineRank = (*lineDecIndexIterator); // Store the value of the rank of the present line iterate in the list 
+			if ( rankPresCheckerInt.at(trackerInt) == 0 ) { // If this line rank hasn't been already accounted for
+				auto pos = std::find(lineDecIndex.begin(), lineDecIndex.end(), interLineRank); // find the first position of this rank in the vector
+				while(pos != lineDecIndex.end()) // while all the different positions of this rank hasn't been accounted for 
     				{
-      					auto pos1 = std::distance((angleDecIndex[scenPos]).begin(), pos); // get the location in the vector, of this rank
-					rankPresChecker.at(pos1) = 1; // Mark the element in the corresponding position of checker vector 1, to indicate this rank has been accounted for 
-					interAngleTermVec.push_back(-((phaseAngleDecision[scenPos]).at(pos1))*(LagMultXi[scenPos*nodeNumber+(*angleDecIndexIterator-1)])); // Calculate cost term
-      					pos = std::find(pos + 1, (angleDecIndex[scenPos]).end(), interNodeRank); // Find position of the next occurence of this rank
+      					auto pos1 = std::distance(lineDecIndex.begin(), pos); // get the location in the vector, of this rank
+					rankPresCheckerInt.at(pos1) = 1; // Mark the element in the corresponding position of checker vector 1, to indicate this rank has been accounted for 
+					interLineTermVec.push_back(-(lineInterDecision[pos1])*(LagMultPi[(*lineDecIndexIterator-1)])); // Calculate cost term
+      					pos = std::find(pos + 1, lineDecIndex.end(), interLineRank); // Find position of the next occurence of this rank
    				}
-				double smallest_element = *min_element(interAngleTermVec.begin(), interAngleTermVec.end());
+				double smallest_element = *min_element(interLineTermVec.begin(), interLineTermVec.end());
 				revisedUpperBound += smallest_element;
-				interAngleTermVec.clear();					
+				interLineTermVec.clear();					
 			}
-			++tracker; // Increment the tracker
+			++trackerInt; // Increment the tracker
 		}
-	}
-	// Calculate the MO upper bound, which is the minimum value of the MO objective, calculated with a given mix of the intermediate, shared discrete variable values from different regions/zones
-	int interLineRank; // Intermediate variable for storing the rank of the line 
-	vector<int> rankPresCheckerInt; // Vector to check if a particular rank has been accounted for 
-	int lengthInt = lineDecIndex.size(); // length of the rank vector
-	vector<int>::iterator lineDecIndexIterator; // Iterator for the rank vector
-	for (int i = 0; i < lengthInt; ++i) // Put as many zeroes on the rankPresChecker vector as is the length of the rank vector 
-		rankPresCheckerInt.push_back(0);
-	vector<double> interLineTermVec; // Intermediate vector for storing the costs of the line building decisions from each sub-network
-	int trackerInt = 0; // tracker to track the position of the lineDecIndexIterator
-	for (lineDecIndexIterator=lineDecIndex.begin(); lineDecIndexIterator!=lineDecIndex.end(); ++lineDecIndexIterator) { // Iterate through rank vector
-		interLineRank = (*lineDecIndexIterator); // Store the value of the rank of the present line iterate in the list 
-		if ( rankPresCheckerInt.at(trackerInt) == 0 ) { // If this line rank hasn't been already accounted for
-			auto pos = std::find(lineDecIndex.begin(), lineDecIndex.end(), interLineRank); // find the first position of this rank in the vector
-			while(pos != lineDecIndex.end()) // while all the different positions of this rank hasn't been accounted for 
-    			{
-      				auto pos1 = std::distance(lineDecIndex.begin(), pos); // get the location in the vector, of this rank
-				rankPresCheckerInt.at(pos1) = 1; // Mark the element in the corresponding position of checker vector 1, to indicate this rank has been accounted for 
-				interLineTermVec.push_back(-(lineInterDecision[pos1])*(LagMultPi[(*lineDecIndexIterator-1)])); // Calculate cost term
-      				pos = std::find(pos + 1, lineDecIndex.end(), interLineRank); // Find position of the next occurence of this rank
-   			}
-			double smallest_element = *min_element(interLineTermVec.begin(), interLineTermVec.end());
-			revisedUpperBound += smallest_element;
-			interLineTermVec.clear();					
-		}
-		++trackerInt; // Increment the tracker
-	}
-	return revisedUpperBound;
-	
-} // Function getGlobalUpper ends
+		return revisedUpperBound
+	#Function getGlobalUpper ends
 
-	def getGlobalLower(double regionalLower[], int numberOfZones): #Function getGlobalLower() returns the global lower bound for the investment coordination problem
-{
-	double revisedLowerBound = 0; // total lower bound initialized
-	for ( int i = 0; i < numberOfZones; ++i ) {
-		revisedLowerBound += regionalLower[i];
-	}
-	return revisedLowerBound;
-	
-} // Function getGlobalLower ends
+	def getGlobalLower(regionalLower, numberOfZones): #Function getGlobalLower() returns the global lower bound for the investment coordination problem
+		revisedLowerBound = 0 #total lower bound initialized
+		for i in range(numberOfZones):
+			revisedLowerBound += regionalLower[i]
+		return revisedLowerBound
+	#Function getGlobalLower ends
 
 	def getGlobalConsensus(): #Function getGlobalConsensus() returns the global consensus for the investment coordination problem
 {
@@ -1333,48 +325,37 @@ class Marketover(object):
 	return lagrangeMult;	
 } // Function getGlobalUpper ends
 
-	def rewardPenaltyInteger(double lagrangeMult, int matrixIndex, int iteration): #Function getGlobalUpper() returns the global upper bound for the investment coordination problem
-{
-	//cout << "\nITERATION COUNT : " << iteration << endl;
-	int tracker = 0;
-	vector<int>::iterator lineDecIndexIterator;
-	for (lineDecIndexIterator=lineDecIndex.begin();lineDecIndexIterator!=lineDecIndex.end();++lineDecIndexIterator) {
-		if (matrixIndex==(zonalIndVectorInt[tracker]-1)*candLineNumber+(*lineDecIndexIterator))	{
-			if (compareBasis == 1) {		
-				lagrangeMult += (lineInterDecision[tracker]-interimIntDecVar[(*lineDecIndexIterator-1)]);
-				//cout << "From MO Integer Lagrange Multiplier update: " << "Line Decision from Zones. Tracker: " << tracker << " Zonal Decision value " << lineInterDecision[tracker] << " MO decision index: " << (*lineDecIndexIterator-1) << " MO Decision value: " << interimIntDecVar[(*lineDecIndexIterator-1)] << " Updated Lagrange Multiplier: " << lagrangeMult << endl; 
-			}
-			else {
-				lagrangeMult += (lineInterDecision[tracker]-interimIntDecVarPrev[(*lineDecIndexIterator-1)]);
-				//cout << "From MO Integer Lagrange Multiplier update: " << "Line Decision from Zones. Tracker: " << tracker << " Zonal Decision value " << lineInterDecision[tracker] << " MO decision index: " << (*lineDecIndexIterator-1) << " MO Decision value: " << interimIntDecVar[(*lineDecIndexIterator-1)] << " Updated Lagrange Multiplier: " << lagrangeMult << endl; 
-			}
-		}
-		++tracker;
-	}
-	//cout << "Tracker " << tracker << endl;
-	return lagrangeMult;	
-} // Function getGlobalUpper ends
+	def rewardPenaltyInteger(lagrangeMult, matrixIndex, iteration): #Function getGlobalUpper() returns the global upper bound for the investment coordination problem
+		#log.info("\nITERATION COUNT : {}".format(iteration))
+		tracker = 0
+		for lineDecIndexIterator in self.lineDecIndex:
+			if matrixIndex==(zonalIndVectorInt[tracker]-1)*candLineNumber+(*lineDecIndexIterator):
+				if self.compareBasis == 1:	
+					lagrangeMult += (lineInterDecision[tracker]-interimIntDecVar[(*lineDecIndexIterator-1)])
+					#cout << "From MO Integer Lagrange Multiplier update: " << "Line Decision from Zones. Tracker: " << tracker << " Zonal Decision value " << lineInterDecision[tracker] << " MO decision index: " << (*lineDecIndexIterator-1) << " MO Decision value: " << interimIntDecVar[(*lineDecIndexIterator-1)] << " Updated Lagrange Multiplier: " << lagrangeMult << endl
+				else:
+					lagrangeMult += (lineInterDecision[tracker]-interimIntDecVarPrev[(*lineDecIndexIterator-1)])
+					#log.info("From MO Integer Lagrange Multiplier update: " << "Line Decision from Zones. Tracker: " << tracker << " Zonal Decision value " << lineInterDecision[tracker] << " MO decision index: " << (*lineDecIndexIterator-1) << " MO Decision value: " << interimIntDecVar[(*lineDecIndexIterator-1)] << " Updated Lagrange Multiplier: " << lagrangeMult << endl
+			tracker+=1
+		#log.info("Tracker {}".format(tracker))
+		return lagrangeMult	
+	#Function getGlobalUpper ends
 
-	def clearVectors(): #Clears the different interim vectors for making them ready for the next iteration
-{
-	for (int scenPos = 0; scenPos < countOfScenarios; ++scenPos) {
-		// Clear vectors for interim continuous decision variables
-		(phaseAngleDecision[scenPos]).clear();
-		(angleDecIndex[scenPos]).clear();
-		(zonalIndVectorCont[scenPos]).clear();
-	}
-	interimContDecVar.clear();
-	interimContDecVarPrev.clear();
-	// Clear vectors for interim integer decision variables
-	lineInterDecision.clear();
-	lineDecIndex.clear();
-	zonalIndVectorInt.clear();
-	interimIntDecVar.clear();
-	interimIntDecVarPrev.clear();
-}
+	def clearVectors(self): #Clears the different interim vectors for making them ready for the next iteration
+		for scenPos in range(self.countOfScenarios):
+			#Clear vectors for interim continuous decision variables
+			self.phaseAngleDecision[scenPos] = []
+			self.angleDecIndex[scenPos] = []
+			self.zonalIndVectorCont[scenPos] = []
+		self.interimContDecVar = []
+		self.interimContDecVarPrev = []
+		#Clear vectors for interim integer decision variables
+		self.lineInterDecision = []
+		self.lineDecIndex = []
+		self.zonalIndVectorInt = []
+		self.interimIntDecVar = []
+		self.interimIntDecVarPrev = []
 
-	def clearDelayedVectors(): #Clears the different interim vectors only buffer vectors
-{
-	interimContDecVarPrev.clear();
-	interimIntDecVarPrev.clear();
-}
+	def clearDelayedVectors(self): #Clears the different interim vectors only buffer vectors
+		self.interimContDecVarPrev = []
+		self.interimIntDecVarPrev = []
