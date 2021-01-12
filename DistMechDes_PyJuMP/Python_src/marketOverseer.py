@@ -154,10 +154,9 @@ class Marketover(object):
 	#Function getGlobalLower ends
 
 	def getGlobalConsensus(): #Function getGlobalConsensus() returns the global consensus for the investment coordination problem
-{
-	double globConsensus = 0; // total consensus
-	// Calculate the MO upper bound, which is the minimum value of the MO objective, calculated with a given mix of the intermediate, shared continuous variable values from different regions/zones
-	for (int scenPos = 0; scenPos < countOfScenarios; ++scenPos) {
+	globConsensus = 0 #total consensus
+	#Calculate the MO upper bound, which is the minimum value of the MO objective, calculated with a given mix of the intermediate, shared continuous variable values from different regions/zones
+	for scenPos in range(countOfScenarios):
 		int interNodeRank; // Intermediate variable for storing the rank of the node 
 		vector<int> rankPresChecker; // Vector to check if a particular rank has been accounted for 
 		int length = (angleDecIndex[scenPos]).size(); // length of the rank vector
@@ -177,7 +176,7 @@ class Marketover(object):
       					pos = std::find(pos + 1, (angleDecIndex[scenPos]).end(), interNodeRank); // Find position of the next occurence of this rank
    				}					
 			}
-			++tracker; // Increment the tracker
+			tracker+=1 #Increment the tracker
 		}
 	}
 	// Calculate the MO upper bound, which is the minimum value of the MO objective, calculated with a given mix of the intermediate, shared discrete variable values from different regions/zones
