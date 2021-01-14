@@ -109,40 +109,34 @@ class Marketover(object):
 				interNodeRank = angleDecIndexIterator #Store the value of the rank of the present node iterate in the list 
 				if rankPresChecker[tracker] == 0: #If this node rank hasn't been already accounted for
 					while interNodeRank in self.angleDecIndex[scenPos]: # while all the different positions of this rank hasn't been accounted for
-      						auto pos1 = std::distance((angleDecIndex[scenPos]).begin(), pos) #get the location in the vector, of this rank
-						rankPresChecker.at(pos1) = 1 #Mark the element in the corresponding position of checker vector 1, to indicate this rank has been accounted for 
-						interAngleTermVec.push_back(-((phaseAngleDecision[scenPos]).at(pos1))*(LagMultXi[scenPos*nodeNumber+(*angleDecIndexIterator-1)])) #Calculate cost term
-      						pos = std::find(pos + 1, (angleDecIndex[scenPos]).end(), interNodeRank) #Find position of the next occurence of this rank
+      						pos1 = (self.angleDecIndex[scenPos]).index(interNodeRank) #get the location in the vector, of this rank
+						rankPresChecker[pos1] = 1 #Mark the element in the corresponding position of checker vector 1, to indicate this rank has been accounted for 
+						interAngleTermVec.append(-(self.phaseAngleDecision[scenPos][pos1])*(LagMultXi[scenPos*self.nodeNumber+(angleDecIndexIterator-1)])) #Calculate cost term
+      						pos = std::find(pos + 1, (self.angleDecIndex[scenPos]).index(interNodeRank), ) #Find position of the next occurence of this rank
 					smallest_element = *min_element(interAngleTermVec.begin(), interAngleTermVec.end())
 					revisedUpperBound += smallest_element
 					interAngleTermVec = []
 				tracker += 1 #Increment the tracker
-		// Calculate the MO upper bound, which is the minimum value of the MO objective, calculated with a given mix of the intermediate, shared discrete variable values from different regions/zones
-		int interLineRank; // Intermediate variable for storing the rank of the line 
-		vector<int> rankPresCheckerInt; // Vector to check if a particular rank has been accounted for 
-		int lengthInt = lineDecIndex.size(); // length of the rank vector
-		vector<int>::iterator lineDecIndexIterator; // Iterator for the rank vector
-		for (int i = 0; i < lengthInt; ++i) // Put as many zeroes on the rankPresChecker vector as is the length of the rank vector 
-			rankPresCheckerInt.push_back(0);
-		vector<double> interLineTermVec; // Intermediate vector for storing the costs of the line building decisions from each sub-network
-		int trackerInt = 0; // tracker to track the position of the lineDecIndexIterator
-		for (lineDecIndexIterator=lineDecIndex.begin(); lineDecIndexIterator!=lineDecIndex.end(); ++lineDecIndexIterator) { // Iterate through rank vector
-			interLineRank = (*lineDecIndexIterator); // Store the value of the rank of the present line iterate in the list 
-			if ( rankPresCheckerInt.at(trackerInt) == 0 ) { // If this line rank hasn't been already accounted for
-				auto pos = std::find(lineDecIndex.begin(), lineDecIndex.end(), interLineRank); // find the first position of this rank in the vector
-				while(pos != lineDecIndex.end()) // while all the different positions of this rank hasn't been accounted for 
-    				{
-      					auto pos1 = std::distance(lineDecIndex.begin(), pos); // get the location in the vector, of this rank
-					rankPresCheckerInt.at(pos1) = 1; // Mark the element in the corresponding position of checker vector 1, to indicate this rank has been accounted for 
-					interLineTermVec.push_back(-(lineInterDecision[pos1])*(LagMultPi[(*lineDecIndexIterator-1)])); // Calculate cost term
-      					pos = std::find(pos + 1, lineDecIndex.end(), interLineRank); // Find position of the next occurence of this rank
-   				}
-				double smallest_element = *min_element(interLineTermVec.begin(), interLineTermVec.end());
-				revisedUpperBound += smallest_element;
-				interLineTermVec.clear();					
-			}
-			++trackerInt; // Increment the tracker
-		}
+		#Calculate the MO upper bound, which is the minimum value of the MO objective, calculated with a given mix of the intermediate, shared discrete variable values from different regions/zones
+		rankPresCheckerInt = [] #Vector to check if a particular rank has been accounted for 
+		lengthInt = len(self.lineDecIndex) #length of the rank vector
+		for i in range(lengthInt):#Put as many zeroes on the rankPresChecker vector as is the length of the rank vector 
+			self.rankPresCheckerInt.append(0)
+		interLineTermVec = [] #Intermediate vector for storing the costs of the line building decisions from each sub-network
+		trackerInt = 0 #tracker to track the position of the lineDecIndexIterator
+		for lineDecIndexIterator in self.lineDecIndex: #Iterate through rank vector
+			interLineRank = lineDecIndexIterator #Store the value of the rank of the present line iterate in the list 
+			if self.rankPresCheckerInt[trackerInt] == 0: #If this line rank hasn't been already accounted for
+				pos = self.lineDecIndex.index(interLineRank) #find the first position of this rank in the vector
+				while(pos != self.lineDecIndex[lengthInt-1]): #while all the different positions of this rank hasn't been accounted for
+      					pos1 = std::distance(lineDecIndex.begin(), pos) #get the location in the vector, of this rank
+					rankPresCheckerInt.at(pos1) = 1 #Mark the element in the corresponding position of checker vector 1, to indicate this rank has been accounted for 
+					interLineTermVec.push_back(-(lineInterDecision[pos1])*(LagMultPi[(*lineDecIndexIterator-1)])) #Calculate cost term
+      					pos = std::find(pos + 1, lineDecIndex.end(), interLineRank) #Find position of the next occurence of this rank
+				double smallest_element = *min_element(interLineTermVec.begin(), interLineTermVec.end())
+				revisedUpperBound += smallest_element
+				interLineTermVec = []
+			trackerInt += 1 #Increment the tracker
 		return revisedUpperBound
 	#Function getGlobalUpper ends
 
