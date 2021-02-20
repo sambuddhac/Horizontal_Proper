@@ -207,38 +207,47 @@ class Nettran(object):
 					SELineObject.append( SELineInstance )
 					SELineSerList.append(serNum)
 					univSELineNum = univSELineNum + 1
+					k +=1
 			matrixSETranFile.close() #Close the shared existing file
 			self.sharedExistingDF = pd.DataFrame([seDF.__dict__ for seDF in self.SELineObject])
 ###########################################################################################/* Shared Candidate Transmission Lines */
-        matrixCETranFile = json.load(open(os.path.join("data", self.candLineFile))) #ifstream constructor opens the file of candidate Transmission lines
+        		matrixCETranFile = json.load(open(os.path.join("data", self.candLineFile))) #ifstream constructor opens the file of candidate Transmission lines
 		#/* Instantiate Shared Candidate Transmission Lines */
-		k2=0
-		for matrixCETran in matrixCETranFile:
+			k=0
+			for matrixCETran in matrixCETranFile:
 			# node object IDs to which the particular transmission line object is connected
 			# node IDs of the node objects to which this transmission line is connected.
-			serNum = matrixCETran['globalSerial'] #global serial number of the shared existing transmission line
-			tNodeID1 = matrixCETran['fromNode'] #From end node 
-			nodeZone1 = matrixCETran['fromZone'] #From end zone number
-			tNodeID2 = matrixCETran['toNode'] #To end node
-			nodeZone2 = matrixCETran['toZone'] #To end zone number
+				serNum = matrixCETran['globalSerial'] #global serial number of the shared existing transmission line
+				tNodeID1 = matrixCETran['fromNode'] #From end node 
+				nodeZone1 = matrixCETran['fromZone'] #From end zone number
+				tNodeID2 = matrixCETran['toNode'] #To end node
+				nodeZone2 = matrixCETran['toZone'] #To end zone number
 			#Parameters for Transmission Line
 			#Reactance
-			reacT = matrixCETran['Reactance']
+				reacT = matrixCETran['Reactance']
 			#values of maximum allowable power flow on line in the forward and reverse direction:
 			#Forward direction:
-			ptMax = matrixCETran['lineLimit']/100
-			lifeTime = matrixCETran['lifeTime'] #life time of the candidate line
-			interestRate = matrixCETran['interestRate'] #interest rate of the investment 
-			costPerCap = matrixCETran['costPerCap']*ptMax #capital cost for the construction 
-			presAbsence = matrixCETran['presAbsence'] #status of the construction 
-			ownership = matrixCETran['ownership'] #ownership of the candidate line for this zone
-			
-			candLineInstance = candLine( k2 + 1, serNum, self.nodeObject[ tNodeID1 - 1 ], tNodeID1, nodeZone1, tNodeID2, nodeZone2, self.zonalIndex, ptMax, reacT, interestRate, lifeTime, costPerCap, presAbsence, ownership ) #Create the shared candidate transmission line object with node 1 
-			self.candLineObject.append( candLineInstance ) #pushes the transLineInstance object into the vector
-			k2 +=1
-		#end initialization for candidate Transmission Lines
-		matrixCETranFile.close() #Close 
-###############################################################
+				ptMax = matrixCETran['lineLimit']/100
+				lifeTime = matrixCETran['lifeTime'] #life time of the candidate line
+				interestRate = matrixCETran['interestRate'] #interest rate of the investment 
+				costPerCap = matrixCETran['costPerCap']*ptMax #capital cost for the construction 
+				presAbsence = matrixCETran['presAbsence'] #status of the construction 
+				if serNum in SELineSerList:
+					newNodeBase = 0
+					for aggrCount in nodeZone1:
+						newNodeBase = newNodeBase + nodeNumVector[aggrCount]
+					tNodeID1 = tNodeID1 + newNodeBase
+					newNodeBase = 0
+					for aggrCount in nodeZone2:
+						newNodeBase = newNodeBase + nodeNumVector[aggrCount]
+					tNodeID2 = tNodeID2 + newNodeBase
+					candLineInstance = self.candLine( k + 1, serNum, self.nodeObject[ tNodeID1 - 1 ], self.nodeObject[ tNodeID2 - 1 ], ptMax, reacT, interestRate, lifeTime, costPerCap, presAbsence )
+					candLineObject.append( candLineInstance )		# pushes the transLineInstance object into the vector
+					candLineSerList.append(serNum)  
+					univCandLineNum = univCandLineNum + 1
+					k +=1
+			matrixCETranFile.close() #Close 
+#########################################################################################End of my translation
 				
 	assignProb()
 	#end constructor
