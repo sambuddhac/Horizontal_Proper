@@ -1,0 +1,248 @@
+[
+  {
+    "tNodeID1": 1,
+    "tNodeID2": 2,
+    "reacT": 0.0575,
+    "ptMax": 100
+  },
+  {
+    "tNodeID1": 1,
+    "tNodeID2": 3,
+    "reacT": 0.1652,
+    "ptMax": 100
+  },
+  {
+    "tNodeID1": 2,
+    "tNodeID2": 4,
+    "reacT": 0.1737,
+    "ptMax": 100
+  },
+  {
+    "tNodeID1": 2,
+    "tNodeID2": 5,
+    "reacT": 0.1983,
+    "ptMax": 100
+  },
+  {
+    "tNodeID1": 2,
+    "tNodeID2": 6,
+    "reacT": 0.1763,
+    "ptMax": 100
+  },
+  {
+    "tNodeID1": 3,
+    "tNodeID2": 4,
+    "reacT": 0.0379,
+    "ptMax": 100
+  },
+  {
+    "tNodeID1": 4,
+    "tNodeID2": 6,
+    "reacT": 0.0414,
+    "ptMax": 100
+  },
+  {
+    "tNodeID1": 4,
+    "tNodeID2": 12,
+    "reacT": 0.256,
+    "ptMax": 100
+  },
+  {
+    "tNodeID1": 5,
+    "tNodeID2": 7,
+    "reacT": 0.116,
+    "ptMax": 100
+  },
+  {
+    "tNodeID1": 6,
+    "tNodeID2": 7,
+    "reacT": 0.082,
+    "ptMax": 100
+  },
+  {
+    "tNodeID1": 6,
+    "tNodeID2": 8,
+    "reacT": 0.042,
+    "ptMax": 100
+  },
+  {
+    "tNodeID1": 6,
+    "tNodeID2": 9,
+    "reacT": 0.208,
+    "ptMax": 100
+  },
+  {
+    "tNodeID1": 6,
+    "tNodeID2": 10,
+    "reacT": 0.556,
+    "ptMax": 100
+  },
+  {
+    "tNodeID1": 6,
+    "tNodeID2": 28,
+    "reacT": 0.0599,
+    "ptMax": 100
+  },
+  {
+    "tNodeID1": 8,
+    "tNodeID2": 28,
+    "reacT": 0.2,
+    "ptMax": 100
+  },
+  {
+    "tNodeID1": 9,
+    "tNodeID2": 10,
+    "reacT": 0.11,
+    "ptMax": 100
+  },
+  {
+    "tNodeID1": 9,
+    "tNodeID2": 11,
+    "reacT": 0.208,
+    "ptMax": 100
+  },
+  {
+    "tNodeID1": 10,
+    "tNodeID2": 17,
+    "reacT": 0.0845,
+    "ptMax": 100
+  },
+  {
+    "tNodeID1": 10,
+    "tNodeID2": 20,
+    "reacT": 0.209,
+    "ptMax": 100
+  },
+  {
+    "tNodeID1": 10,
+    "tNodeID2": 21,
+    "reacT": 0.0749,
+    "ptMax": 100
+  },
+  {
+    "tNodeID1": 10,
+    "tNodeID2": 22,
+    "reacT": 0.1499,
+    "ptMax": 100
+  },
+  {
+    "tNodeID1": 12,
+    "tNodeID2": 13,
+    "reacT": 0.14,
+    "ptMax": 100
+  },
+  {
+    "tNodeID1": 12,
+    "tNodeID2": 14,
+    "reacT": 0.2559,
+    "ptMax": 100
+  },
+  {
+    "tNodeID1": 12,
+    "tNodeID2": 15,
+    "reacT": 0.1304,
+    "ptMax": 100
+  },
+  {
+    "tNodeID1": 12,
+    "tNodeID2": 16,
+    "reacT": 0.1987,
+    "ptMax": 100
+  },
+  {
+    "tNodeID1": 14,
+    "tNodeID2": 15,
+    "reacT": 0.1997,
+    "ptMax": 100
+  },
+  {
+    "tNodeID1": 15,
+    "tNodeID2": 18,
+    "reacT": 0.2185,
+    "ptMax": 100
+  },
+  {
+    "tNodeID1": 15,
+    "tNodeID2": 23,
+    "reacT": 0.202,
+    "ptMax": 100
+  },
+  {
+    "tNodeID1": 16,
+    "tNodeID2": 17,
+    "reacT": 0.1923,
+    "ptMax": 100
+  },
+  {
+    "tNodeID1": 18,
+    "tNodeID2": 19,
+    "reacT": 0.1292,
+    "ptMax": 100
+  },
+  {
+    "tNodeID1": 19,
+    "tNodeID2": 20,
+    "reacT": 0.068,
+    "ptMax": 100
+  },
+  {
+    "tNodeID1": 21,
+    "tNodeID2": 22,
+    "reacT": 0.0236,
+    "ptMax": 100
+  },
+  {
+    "tNodeID1": 22,
+    "tNodeID2": 24,
+    "reacT": 0.179,
+    "ptMax": 100
+  },
+  {
+    "tNodeID1": 23,
+    "tNodeID2": 24,
+    "reacT": 0.27,
+    "ptMax": 100
+  },
+  {
+    "tNodeID1": 24,
+    "tNodeID2": 25,
+    "reacT": 0.3292,
+    "ptMax": 100
+  },
+  {
+    "tNodeID1": 25,
+    "tNodeID2": 26,
+    "reacT": 0.38,
+    "ptMax": 100
+  },
+  {
+    "tNodeID1": 25,
+    "tNodeID2": 27,
+    "reacT": 0.2087,
+    "ptMax": 100
+  },
+  {
+    "tNodeID1": 28,
+    "tNodeID2": 27,
+    "reacT": 0.396,
+    "ptMax": 100
+  },
+  {
+    "tNodeID1": 27,
+    "tNodeID2": 29,
+    "reacT": 0.4153,
+    "ptMax": 100
+  },
+  {
+    "tNodeID1": 27,
+    "tNodeID2": 30,
+    "reacT": 0.6027,
+    "ptMax": 100
+  },
+  {
+    "tNodeID1": 29,
+    "tNodeID2": 30,
+    "reacT": 0.4533,
+    "ptMax": 100
+  }
+]

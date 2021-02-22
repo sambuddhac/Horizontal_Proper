@@ -1,0 +1,16 @@
+[
+  {
+    "serNum": 1,
+    "tNodeID1": 1,
+    "nodeZone1": 1,
+    "tNodeID2": 1,
+    "nodeZone2": 2,
+    "reacT": 0.05,
+    "ptMax": 1350,
+    "lifeTime": 50,
+    "interestRate": 0.05,
+    "costPerCap": 0.74074,
+    "presAbsence": 1,
+    "": ""
+  }
+]

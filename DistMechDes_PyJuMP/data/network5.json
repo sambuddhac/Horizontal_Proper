@@ -1,0 +1,11 @@
+[
+  {
+    "nodeNumber": 5,
+    "sharedELines": 6,
+    "sharedCLines": 5,
+    "genNumber": 2,
+    "loadNumber": 4,
+    "tranNumber": 7,
+    "internalCLines": 2
+  }
+]

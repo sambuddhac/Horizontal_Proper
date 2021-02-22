@@ -1,1 +1,4 @@
 systemChoice: 1
+basisForComparison: 0 #Choose, for updating the Lagrange multipliers, 0 when the current zonal updates are compared to previous iteration MO update;else, 1
+curveChoice: 1 # Number to indicate the type of Objective function among average heat rate, piecewise linear, or polynomial; Assume Average Heat Rate for now
+solverChoice: Gurobi

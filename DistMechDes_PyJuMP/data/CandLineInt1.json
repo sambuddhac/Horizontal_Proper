@@ -1,0 +1,12 @@
+[
+  {
+    "tNodeID1": 1,
+    "tNodeID2": 2,
+    "reacT": 0.0008,
+    "ptMax": 100000,
+    "lifeTime": 50,
+    "interestRate": 0.05,
+    "costPerCap": 0,
+    "presAbsence": 0
+  }
+]

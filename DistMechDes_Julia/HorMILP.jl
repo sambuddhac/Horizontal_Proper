@@ -17,28 +17,29 @@ using Nettran
 using Marketover
 
 function HorMILPCentral(setting::Dict, inputPath::AbstractString) # Main method begins program execution
+	if setting["MacOrWindows"]=="Mac"
+		sep = "/"
+	else
+		sep = "\U005c"
+	end
 	println("This is the simulation program of Stage-I and Stage-II of the Horizontal Investment Coordination MILP Market Mechanism Design Simulation application.")
-	basisForComparison = int(input("Choose, for updating the Lagrange multipliers, 0 when the current zonal updates are compared to previous iteration MO update;else, 1"))
-	curveChoice = 1 # Number to indicate the type of Objective function among average heat rate, piecewise linear, or polynomial; Assume Average Heat Rate for now
 	if setting["systemChoice"]==1
 		zoneSummaryFile = open(os.path.join("data", "masterZonesSummary.json")) #opens the master zones summary file
 	else
-		zoneSummaryFile = open(os.path.join("data", "masterZonesSummaryRevised.json")) #opens the master zones summary file
+		zoneSummaryFile = DataFrame(CSV.File(string(path,sep,"masterZonesSummaryRevised.csv"), header=true), copycols=true) #opens the master zones summary file
 	end
-	matrixFirstFile = json.load(zoneSummaryFile) #opens the file
+	matrixFirstFile = Dict() #opens the file
 
-	numberOfZones = int(input("\nEnter the number of zones")) #Number of zones between which horizontal investment coordination for transmission lines to be built is considered
-	solverChoice = int(input("\nChoose either the GLPK (1) or GUROBI (2) as the Solver. ")) #Choice of the solver
-	if solverChoice==1:
-		lpMethodChoice = int(input("\nChoose either the Simplex LP Rlaxation (1) or Interior Point Method LP Relaxation (2) as the method to provide the initial basis to the Mixed Integer Unit Commitment Problem. ")) #Simplex or interior method algorithm for MILP
-	#GRBEnv* environmentGUROBI = new GRBEnv("GUROBILogFile.log"); // GUROBI Environment object for storing the different optimization models	
+	matrixFirstFile["numberOfZones"] = size(collect(skipmissing(zoneSummaryFile[!,:Network File])),1) #Number of zones between which horizontal investment coordination for transmission lines to be built is considered
+	numZones = matrixFirstFile["numberOfZones"]
 
 	zonalNetVector = [] #Vector of zonal network objects
-	log.info("\n*** NETWORK INITIALIZATION STAGE BEGINS ***\n")
-	upperBoundVector = np.zeros(float, numberOfZones) #Vector of upper bounds by iteration
-	lowerBoundVector = np.zeros(float, numberOfZones) #Vector of lower bounds by iteration
-	for jSONIndex in matrixFirstFile:
-		zonalNetVector.append(Nettran(jSONIndex, numberOfZones, curveChoice, lpMethodChoice)) #push to the vector of zonal networks
+	println("*** NETWORK INITIALIZATION STAGE BEGINS ***")
+	matrixFirstFile["upperBoundVector"] = zeros(Float64, numZones) #Vector of upper bounds by iteration
+	matrixFirstFile[["lowerBoundVector"] = zeros(Float64, numZones) #Vector of lower bounds by iteration
+	for Index in 1:numZones:
+		NettranInit(Index, numZones, curveChoice) #push to the vector of zonal networks
+	end
 	log.info("\n*** NETWORK INITIALIZATION STAGE ENDS: ZONAL SUB-NETWORKS CREATED ***\n")
 	"""
 	#Initialize the Lagrange Multipliers/Dual Variables/Rewards/Penalties to zero for the first iteration
