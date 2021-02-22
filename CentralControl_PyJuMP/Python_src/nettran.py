@@ -64,8 +64,8 @@ class Nettran(object):
 
 				self.nodeObject.append( nodeInstance ) #pushes the nodeInstance object into the vector
 			#end initialization for Nodes
-
 ############################################################################################/* Generators */
+			#/* Instantiate Generators */
         		matrixGen = json.load(open(os.path.join("data", self.genFile))) #ifstream constructor opens the file of Generators
 			j = 0 #counter for generators
 			for matrixGenFile in matrixGen:
@@ -248,7 +248,6 @@ class Nettran(object):
 					k +=1
 			matrixCETranFile.close() #Close 
 #########################################################################################End of my translation
-				
 	assignProb()
 	#end constructor
 	def assignProb(self):

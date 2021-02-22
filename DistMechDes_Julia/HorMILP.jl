@@ -1,45 +1,30 @@
 # HorMILP.py : Defines the entry point for Stage-I and Stage-II of the Horizontal Investment Coordination MILP Market Mechanism Design Simulation application.
 # Main Method for running the Horizontal Investment Coordination Stage-I and Stage-II MILP Market Mechanism Design Simulation based on Distributed Stochastic UC and APP; Parts of the code follows the code design philosophy of Nick Laws of NREL
 # Authors of the code: Sambuddha Chakrabarti & Hosna Khajeh under the guidance and supervision of Dr. Mohammad Reza Hesamzadeh & Tom Nudell, Ph.D.
-import julia
-import os
-import subprocess
-import pandas as pd
-import numpy as np
-import json
-import sys
-import traceback
-from Python_src.log import log
-from Python_src.profiler import Profiler
-import gurobipy as gp
-from gurobipy import GRB
-from Python_src.nettran import Nettran
-from Python_src.marketoverseer import Marketover
+module HorMILPDist
 
-profiler = Profiler()
+export HorMILPCentral
 
-if sys.platform in ["darwin", "linux"]:
-	log.info("Using Julia executable in {}".format(str(subprocess.check_output(["which", "julia"]), 'utf-8').strip('\n')))
-elif sys.platform in ["win32", "win64", "cygwin"]:
-	log.info("Using Julia executable in {}".format(str(subprocess.check_output(["which", "julia"]), 'utf-8').strip('\n')))
+using JuMP # used for mathematical programming
+using DataFrames #This package allows put together data into a matrix
+using Gurobi #Gurobi solver
+using MathProgBase #for fix_integers
+using CSV
+using StatsBase
+using LinearAlgebra
+using JSON
+using Nettran
+using Marketover
 
-log.info("Loading Julia...")
-profiler.start()
-julSol = julia.Julia(compiled_modules=False)
-julSol.using("Pkg")
-julSol.eval('Pkg.activate(".")')
-julSol.include(os.path.join("JuMP_src", "HorMILPDistMech.jl")) # definition of Gensolver class for base case scenario first interval
-log.info(("Julia took {:..2f} seconds to start and include Horizontal Investment Coordination mechanism design models.".format(profiler.get_interval())))
-
-def HorMILPCentral(): # Main method begins program execution
-	systemChoice = int(input("Choose the type of System to be simulated: 1 for Simple two bus/two region, 2 for system combined of IEEE 14, 30, and 5 node systems"))
+function HorMILPCentral(setting::Dict, inputPath::AbstractString) # Main method begins program execution
+	println("This is the simulation program of Stage-I and Stage-II of the Horizontal Investment Coordination MILP Market Mechanism Design Simulation application.")
 	basisForComparison = int(input("Choose, for updating the Lagrange multipliers, 0 when the current zonal updates are compared to previous iteration MO update;else, 1"))
 	curveChoice = 1 # Number to indicate the type of Objective function among average heat rate, piecewise linear, or polynomial; Assume Average Heat Rate for now
-	if systemChoice==1:
+	if setting["systemChoice"]==1
 		zoneSummaryFile = open(os.path.join("data", "masterZonesSummary.json")) #opens the master zones summary file
-	else:
+	else
 		zoneSummaryFile = open(os.path.join("data", "masterZonesSummaryRevised.json")) #opens the master zones summary file
-	
+	end
 	matrixFirstFile = json.load(zoneSummaryFile) #opens the file
 
 	numberOfZones = int(input("\nEnter the number of zones")) #Number of zones between which horizontal investment coordination for transmission lines to be built is considered
@@ -435,10 +420,5 @@ def HorMILPCentral(): # Main method begins program execution
 		countOfIterate += 1
 	log.info("\n*** DISTRIBUTED STOCHASTIC OPTIMIZATION ALGORITHMIC MARKET MECHANISM DESIGN FIRST STAGE ENDS ***\n")
 	"""
-print("\nThis is the simulation program for Stage-I and Stage-II of the Horizontal Investment Coordination MILP Market Mechanism Design Simulation application.\n")
-
-try:
-    if __name__ == '__main__': HorMILPCentral()
-except:
-    log.warning("Simulation FAILED !!!!")
+end
 
