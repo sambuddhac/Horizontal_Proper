@@ -64,7 +64,7 @@ class Nettran(object):
 
 				self.nodeObject.append( nodeInstance ) #pushes the nodeInstance object into the vector
 			#end initialization for Nodes
-############################################################################################/* Generators */
+##/* Generators */
 			#/* Instantiate Generators */
         		matrixGen = json.load(open(os.path.join("data", self.genFile))) #ifstream constructor opens the file of Generators
 			j = 0 #counter for generators
@@ -93,7 +93,7 @@ class Nettran(object):
 				j +=1 #increment counter
 			matrixGen.close() #Close the generator file
 			self.genDF = pd.DataFrame([g.__dict__ for g in self.genObject])
-	######################################################################################			#/* Transmission Lines */
+##/* Transmission Lines */
         		if self.tranNumber > 0:
 				matrixTranFile = json.load(open(os.path.join("data", self.tranFile))) #ifstream constructor opens the file of Transmission lines
 		#/* Instantiate Transmission Lines */
@@ -113,7 +113,7 @@ class Nettran(object):
 		#end initialization for Transmission Lines 
 				matrixTranFile.close() #Close the transmission line file 
 				self.tranDF = pd.DataFrame([t.__dict__ for t in self.translObject])
-    ######################################################################################/* Internal Candidate Transmission Lines */
+##/* Internal Candidate Transmission Lines */
 			if self.internalCLines > 0:
         			matrixIntCETranFile = json.load(open(os.path.join("data", self.intCandLineFile))) #ifstream constructor opens the file of internal candidate Transmission lines
         			k = 0 #Counter for internal candidate lines
@@ -141,7 +141,7 @@ class Nettran(object):
 			#end initialization for candidate Transmission Lines
 				matrixIntCETranFile.close() #Close the candidate lines file
 				self.intCandtranDF = pd.DataFrame([t.__dict__ for t in elf.intCandLineObject])
-################################################################################# #/* Loads */
+##/* Loads */
         		matrixLoadFile = json.load(open(os.path.join("data", self.loadFile))) #ifstream constructor opens the file of Loads
 			countOfScenarios = loadFields-1
 			for l in range(self.nodeNumber+self.nodeNumber):
@@ -178,7 +178,7 @@ class Nettran(object):
 			self.sharedLineFile = jSONIndex['Shared Lines File'] 
 			self.tranFile = zonalIndex['Transmission Lines File'] 
 			self.candLineFile = jSONIndex['Candidate Lines File'] 
-########################################################################################### Shared Existing Transmission lines
+## Shared Existing Transmission lines
 			matrixSETranFile = json.load(open(os.path.join("data", self.sharedLineFile))) #ifstream constructor opens the file of Transmission lines
 			k = 0
 		#/* Instantiate Shared Existing Transmission Lines */
@@ -210,7 +210,7 @@ class Nettran(object):
 					k +=1
 			matrixSETranFile.close() #Close the shared existing file
 			self.sharedExistingDF = pd.DataFrame([seDF.__dict__ for seDF in self.SELineObject])
-###########################################################################################/* Shared Candidate Transmission Lines */
+##/* Shared Candidate Transmission Lines */
         		matrixCETranFile = json.load(open(os.path.join("data", self.candLineFile))) #ifstream constructor opens the file of candidate Transmission lines
 		#/* Instantiate Shared Candidate Transmission Lines */
 			k=0
@@ -247,7 +247,7 @@ class Nettran(object):
 					univCandLineNum = univCandLineNum + 1
 					k +=1
 			matrixCETranFile.close() #Close 
-#########################################################################################End of my translation
+##End of my translation
 	assignProb()
 	#end constructor
 	def assignProb(self):
