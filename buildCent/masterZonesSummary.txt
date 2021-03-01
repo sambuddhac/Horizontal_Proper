@@ -1,7 +1,0 @@
-network1.txt network2.txt
-Gen1.txt Gen2.txt
-SharedELine1.txt SharedELine2.txt
-Tran1.txt Tran2.txt
-Load1.txt Load2.txt
-CandLine1.txt CandLine2.txt
-CandLineInt1.txt CandLineInt2.txt

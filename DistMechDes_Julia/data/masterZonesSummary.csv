@@ -1,3 +1,0 @@
-Network File	Generator File	Shared Lines File	Transmission Lines File	Load File	Candidate Lines File	Intra Candidate Lines File
-network1.txt	Gen1.txt	SharedELine1.txt	Tran1.txt	Load1.txt	CandLine1.txt	CandLineInt1.txt
-network2.txt	Gen2.txt	SharedELine2.txt	Tran2.txt	Load2.txt	CandLine2.txt	CandLineInt2.txt
