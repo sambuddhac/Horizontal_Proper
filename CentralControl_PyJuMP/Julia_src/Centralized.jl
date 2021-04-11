@@ -118,27 +118,29 @@ function milp_avg_hr_central(network::Dict, Gen::Dict, Tran::Dict, setup::Dict)
     @variable(CMod, 0 <= dvPgen[1:S, 1:G, 1:T]) #Power of generator
     @variable(CMod, F) #Objective function
 
-    @expression(CMod, expTotalCost, sum(sum(prob[s].*sum(dvPgen[s,:].*Gen["linCostCoeff"][:]).+sum(dvCandLineDecision[:,z].*CandLine["interestRate"][:].*((CandLine["interestRate"][:]).^CandLine["lifeTime"][:])./((1+CandLine["interestRate"][:]).^CandLine["lifeTime"][:])-1))for s in S)for z in Z)) #Defining the OF
+    @expression(CMod, expTotalCost, sum(sum(prob[s,t].*sum(dvPgen[s,:,t].*Gen["linCostCoeff"][:])for s in S)for t in T)
+                                    .+sum(dvCandLineDecision[:].*CandLine["costPerCap"][:].*CandLine["interestRate"][:]
+                                    .*((1+CandLine["interestRate"][:]).^CandLine["lifeTime"][:])./((1+CandLine["interestRate"][:]).^CandLine["lifeTime"][:]-1)))
     for t in 1:T
         for s in 1:S
             for h in 1:H
                 if Tran["tranZoneID"][h]==z
-                    @constraint(model, EFlowMW[s,h] .== EPhaseAngleFrom[s,h]./Tran["Reactance"][h] .- EPhaseAngleTo[s,h]./Tran["Reactance"][h]) #Constraint regarding the power flowing on existing lines
-                    @constraint(model, EFlowMW[s,h]<= Tran["lineLimit"][h])  # Line capacity constraints
-                    @constraint(model, -Tran["lineLimit"][h]<= EFlowMW[s,h])  # Line capacity constraints
+                    @constraint(CMod, EFlowMW[s,h] .== EPhaseAngleFrom[s,h]./Tran["Reactance"][h] .- EPhaseAngleTo[s,h]./Tran["Reactance"][h]) #Constraint regarding the power flowing on existing lines
+                    @constraint(CMod, EFlowMW[s,h]<= Tran["lineLimit"][h])  # Line capacity constraints
+                    @constraint(CMod, -Tran["lineLimit"][h]<= EFlowMW[s,h])  # Line capacity constraints
                 end
             end
             for k in 1:K
                 if CandLine["tranZoneID"][h]==z
-                    @constraint(model, -10000 * (1-candLineDecision[k,z]) .<= candFlowMW[s,k] .- [candPhaseAngleFrom[s,k]./CandLine["Reactance"][k] .- candPhaseAngleTo[s,k]./CandLine["Reactance"][k]]) #Constraint regarding the power flowing on shared existing lines
-                    @constraint(model, candFlowMW[s,k] .- [candPhaseAngleFrom[s,k]./CandLine["Reactance"][k] .- candPhaseAngleTo[s,k]./CandLine["Reactance"][k]] .<= 10000 * (1-candLineDecision[k,z])) #Constraint regarding the power flowing on shared existing lines
-                    @constraint(model, candFlowMW[s,k]<= candLineDecision[k,z].*CandLine["lineLimit"][k])
-                    @constraint(model, -candLineDecision[k,z].*CandLine["lineLimit"][k]<=candFlowMW[s,k])
+                    @constraint(CMod, -10000 * (1-candLineDecision[k,z]) .<= candFlowMW[s,k] .- [candPhaseAngleFrom[s,k]./CandLine["Reactance"][k] .- candPhaseAngleTo[s,k]./CandLine["Reactance"][k]]) #Constraint regarding the power flowing on shared existing lines
+                    @constraint(CMod, candFlowMW[s,k] .- [candPhaseAngleFrom[s,k]./CandLine["Reactance"][k] .- candPhaseAngleTo[s,k]./CandLine["Reactance"][k]] .<= 10000 * (1-candLineDecision[k,z])) #Constraint regarding the power flowing on shared existing lines
+                    @constraint(CMod, candFlowMW[s,k]<= candLineDecision[k,z].*CandLine["lineLimit"][k])
+                    @constraint(CMod, -candLineDecision[k,z].*CandLine["lineLimit"][k]<=candFlowMW[s,k])
                 end
             end
             for n in N
                 if Node["nodeZoneID"][n]==z ####I think we should define a zoneID for each node
-                    @constraint(model, sum(P_gen[s,g] for g in G if Gen["genNodeID"][g]==n).- P_demand[s,n].== sum(candFlowMW[s,k] for k in K if CandLine["fromnode"][k]==n)-sum(candFlowMW[s,k] for k in K if CandLine["tonode"][k]==n)+sum(EFlowMW[s,h] for h in H if Tran["fromnode"][h]==n)-sum(EFlowMW[s,h] for h in H if Tran["tonode"][h]==n))
+                    @constraint(CMod, sum(P_gen[s,g] for g in G if Gen["genNodeID"][g]==n).- P_demand[s,n].== sum(candFlowMW[s,k] for k in K if CandLine["fromnode"][k]==n)-sum(candFlowMW[s,k] for k in K if CandLine["tonode"][k]==n)+sum(EFlowMW[s,h] for h in H if Tran["fromnode"][h]==n)-sum(EFlowMW[s,h] for h in H if Tran["tonode"][h]==n))
                 end
             end
             for g in G
@@ -149,7 +151,7 @@ function milp_avg_hr_central(network::Dict, Gen::Dict, Tran::Dict, setup::Dict)
             end
         end
     end
-    @objective(model, Min, F)
-    status = optimize!(model)
+    @objective(CMod, Min, F)
+    status = optimize!(CMod)
     @show(status, value.(candLineDecision))
 end
