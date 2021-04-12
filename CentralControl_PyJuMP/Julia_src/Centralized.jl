@@ -1,7 +1,7 @@
 using Pkg
 Pkg.activate("GTheoryJulEnv")
 #Defining sets
-function milp_avg_hr_central(network::Dict, Gen::Dict, Tran::Dict, setup::Dict)
+function milp_avg_hr_central(network::Dict, Gen::Dict, CandLine::Dict, IntCandLine::Dict, Tran::Dict, setup::Dict)
     C=network["sharedCLines"]
     I=network["internalCLines"] #The number of candidate Lines 
     S=network["CountofScenarios"] #Scenarios
@@ -120,7 +120,11 @@ function milp_avg_hr_central(network::Dict, Gen::Dict, Tran::Dict, setup::Dict)
 
     @expression(CMod, expTotalCost, sum(sum(prob[s,t].*sum(dvPgen[s,:,t].*Gen["linCostCoeff"][:])for s in S)for t in T)
                                     .+sum(dvCandLineDecision[:].*CandLine["costPerCap"][:].*CandLine["interestRate"][:]
-                                    .*((1+CandLine["interestRate"][:]).^CandLine["lifeTime"][:])./((1+CandLine["interestRate"][:]).^CandLine["lifeTime"][:]-1)))
+                                    .*((ones(C).+CandLine["interestRate"][:]).^CandLine["lifeTime"][:])
+                                    ./((ones(C).+CandLine["interestRate"][:]).^CandLine["lifeTime"][:].-ones(C)))
+                                    .+sum(dvIntCandLineDecision[:].*IntCandLine["costPerCap"][:].*IntCandLine["interestRate"][:]
+                                    .*((ones(C).+IntCandLine["interestRate"][:]).^IntCandLine["lifeTime"][:])
+                                    ./((ones(C).+IntCandLine["interestRate"][:]).^IntCandLine["lifeTime"][:].-ones(C))))
     for t in 1:T
         for s in 1:S
             for h in 1:H
