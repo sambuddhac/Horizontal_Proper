@@ -22,18 +22,20 @@ candReactance=[k] #Reactance of candidate lines
 SECapacity=[h]
 candCapacity=[k]
 """
-    model = Model(GLPK.Optimizer)
-    @variable(model, 0 <= candLineDecision[1:K] <= 1) #Decision variable 
-    @variable(model, 0 <= candFlowMW[1:S, 1:K])  #Power flowing on candidate candLineDecision 
-    @variable(model, 0 <= candPhaseAngleTo[1:S, 1:K]) #Phase angle decision for candidate line "To node"
-    @variable(model, 0 <= candPhaseAngleFrom[1:S, 1:K]) #Phase angle decision for candidate line "From node"
-    @variable(model, 0 <= SEFlowMW[1:S, 1:H])  #Power flowing on existing shared lines
-    @variable(model, 0 <= SEPhaseAngleTo[1:S, 1:H]) #Phase angle decision for existing shared lines "To node"
-    @variable(model, 0 <= SEPhaseAngleFrom[1:S, 1:H]) #Phase angle decision for existing shared lines "From node"
-    @variable(model, F[1:S,1:Z])
+    MOMod = Model(GLPK.Optimizer)
+    @variable(MOMod, 0 <= candLineDecision[1:K] <= 1) #Decision variable 
+    @variable(MOMod, 0 <= candFlowMW[1:S, 1:K])  #Power flowing on candidate candLineDecision 
+    @variable(MOMod, 0 <= candPhaseAngle[1:S, 1:K]) #Phase angle decision for candidate line 
+    @variable(MOMod, 0 <= SEFlowMW[1:S, 1:H])  #Power flowing on existing shared lines
+    @variable(MOMod, 0 <= SEPhaseAngle[1:S, 1:H]) #Phase angle decision for existing shared lines 
+    @variable(MOMod, F[1:S,1:Z])
+    
     for z in 1:S
         for s in 1:Z
-            @constraint(model, F[s,z] .==-[sum(lagrangeMultPi[z,:].*candLineDecision[:]) .+ sum(K2lagrangeMultXi[z,:,s].*candPhaseAngleTo[s,:]) .+ sum(K1lagrangeMultXi[z,:,s].*candPhaseAngleFrom[s,:]) .+ sum(H2lagrangeMultXi[z,:,s].*SEPhaseAngleTo[s,:]) .+ sum(H1lagrangeMultXi[z,:,s].*SEPhaseAngleFrom[s,:])])  #Objective Function
+            @expression(MOMod, F[1:S,1:Z], -[sum(lagrangeMultPi[z,:].*candLineDecision[:]) 
+                    .+ sum(K2lagrangeMultXi[z,:,s].*candPhaseAngle[s,:])])
+    
+            
             for h in 1:H
                 @constraint(model, SEFlowMW[s,h] .== SEPhaseAngleFrom[s,h]./SEReactance[h] .- SEPhaseAngleTo[s,h]./SEReactance[h]) #Constraint regarding the power flowing on shared existing lines
                 @constraint(model, SEFlowMW[s,h]<= SECapacity[h])  # Capacity constraints
