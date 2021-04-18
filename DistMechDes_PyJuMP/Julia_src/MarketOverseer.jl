@@ -4,8 +4,7 @@ function milp_marketOverseer(network::Dict, sharedCLines::Dict, sharedELines::Di
     K=network["sharedCLines"] #The number of shared candidate lines
     S=network["CountofScenarios"] #Scenarios
     H=network["sharedELines"]#Shared existing lines
-    N=network["nodeNumber"]
-    zoneList = Array{Int8}(undef, Z) #Array of zones ####I think we should define that and add zone ID for each network
+    zoneList = Array{Int8}(undef, Z) #Array of zones ####I think we should define an array of zones or for example create a dictionary file for ot
     Z=size(zoneList) #Total number of zones 
     flag=1 #If flag is 1 variable candLineDecision is binary, otherwise it is not (Determining relaxed LP or MIP)
     
@@ -115,8 +114,8 @@ function milp_marketOverseer(network::Dict, sharedCLines::Dict, sharedELines::Di
     @variable(MOMod, 0 <= SEPhaseAngle[1:S, 1:H]) #Phase angle decision for existing shared lines 
     @variable(MOMod, F[1:S,1:Z])
     
-    for z in 1:S
-        for s in 1:Z
+    for z in zoneList
+        for s in 1:S
             @expression(MOMod, F[1:S,1:Z], -[sum(lagrangeMultPi[z,:].*candLineDecision[:]) 
                     .+ sum(lagrangeMultXi[z,:,s].*candPhaseAngle[s,:])
                     .+ sum(lagrangeMultXi[z,:,s].*SEPhaseAngle[s,:])])
