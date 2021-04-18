@@ -1,6 +1,6 @@
 using Pkg
 Pkg.activate("GTheoryJulEnv")
-function milp_marketOverseer(network::Dict, Gen::Dict, CandLine::Dict, IntCandLine::Dict, Tran::Dict, lagrangeMultPi::Dict, lagrangeMultXi::Dict, setup::Dict)
+function milp_marketOverseer(network::Dict, sharedCLines::Dict,internalCLines::Dict, , sharedELines::Dict, Tran::Dict, lagrangeMultPi::Dict, lagrangeMultXi::Dict, setup::Dict)
     size(zoneList)[1] #Zones
     K=size(candLine)[1] #Candidate shared Lines 
     S=size(scenVector)[1] #Scenarios
