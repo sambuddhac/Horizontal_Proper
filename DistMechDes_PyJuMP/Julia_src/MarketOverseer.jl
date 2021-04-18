@@ -1,11 +1,9 @@
 using Pkg
 Pkg.activate("GTheoryJulEnv")
 function milp_marketOverseer(network::Dict, sharedCLines::Dict,internalCLines::Dict, , sharedELines::Dict, Tran::Dict, lagrangeMultPi::Dict, lagrangeMultXi::Dict, setup::Dict)
-    sC=network["sharedCLines"]
-    iC=network["internalCLines"] #The number of internal candidate lines 
+    K=network["sharedCLines"] #The number of shared candidate lines
     S=network["CountofScenarios"] #Scenarios
-    iH=network["tranNumber"]    # Internal existing lines
-    sH=network["sharedELines"]#Shared existing lines
+    H=network["sharedELines"]#Shared existing lines
     T=network["Hours"] #Total number of hours considered (whole year)
     N=network["nodeNumber"]
     zoneList = Array{Int8}(undef, Z) #Array of zones ####I think we should define that and add zone ID for each network
@@ -33,7 +31,8 @@ candCapacity=[k]
     for z in 1:S
         for s in 1:Z
             @expression(MOMod, F[1:S,1:Z], -[sum(lagrangeMultPi[z,:].*candLineDecision[:]) 
-                    .+ sum(K2lagrangeMultXi[z,:,s].*candPhaseAngle[s,:])])
+                    .+ sum(lagrangeMultXi[z,:,s].*candPhaseAngle[s,:])
+                    .+ sum(lagrangeMultXi[z,:,s].*SEPhaseAngle[s,:])])
     
             
             for h in 1:H
@@ -44,8 +43,8 @@ candCapacity=[k]
                 if flag==1
                     @constraint(model, candLineDecision[k] in MOI.Integer())
                 end
-                @constraint(model, -10000 * (1-candLineDecision[k]) .<= candFlowMW[s,k] .- [candPhaseAngleFrom[s,k]./candReactance[k] .- candPhaseAngleTo[s,k]./candReactance[k]]) #Constraint regarding the power flowing on shared existing lines
-                @constraint(model, candFlowMW[s,k] .- [candPhaseAngleFrom[s,k]./candReactance[k] .- candPhaseAngleTo[s,k]./candReactance[k]] .<= 10000 * (1-candLineDecision[k])) #Constraint regarding the power flowing on shared existing lines
+                @constraint(model, -10000 * (1-candLineDecision[k]) .<= candFlowMW[s,k] .- [candPhaseAngleFrom[s,k]./candReactance[k] .- candPhaseAngleTo[s,k]./candReactance[k]]) #Constraint regarding the power flowing on shared candidate lines
+                @constraint(model, candFlowMW[s,k] .- [candPhaseAngleFrom[s,k]./candReactance[k] .- candPhaseAngleTo[s,k]./candReactance[k]] .<= 10000 * (1-candLineDecision[k])) #Constraint regarding the power flowing on shared candidate lines
                 @constraint(model, candFlowMW[s,k]<= candCapacity[k])
             end
         end
