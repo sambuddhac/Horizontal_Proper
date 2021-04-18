@@ -1,6 +1,6 @@
 using Pkg
 Pkg.activate("GTheoryJulEnv")
-function milp_marketOverseer(network::Dict, sharedCLines::Dict,internalCLines::Dict, , sharedELines::Dict, Tran::Dict, lagrangeMultPi::Dict, lagrangeMultXi::Dict, setup::Dict)
+function milp_marketOverseer(network::Dict, sharedCLines::Dict, sharedELines::Dict, lagrangeMultPi::Dict, lagrangeMultXi::Dict, setup::Dict)
     K=network["sharedCLines"] #The number of shared candidate lines
     S=network["CountofScenarios"] #Scenarios
     H=network["sharedELines"]#Shared existing lines
@@ -36,15 +36,15 @@ candCapacity=[k]
     
             
             for h in 1:H
-                @constraint(model, SEFlowMW[s,h] .== SEPhaseAngleFrom[s,h]./SEReactance[h] .- SEPhaseAngleTo[s,h]./SEReactance[h]) #Constraint regarding the power flowing on shared existing lines
+                @constraint(model, SEFlowMW[s,h] .== SEPhaseAngle[s,h]./SEReactance[h]) #Constraint regarding the power flowing on shared existing lines
                 @constraint(model, SEFlowMW[s,h]<= SECapacity[h])  # Capacity constraints
             end
             for k in 1:K
                 if flag==1
                     @constraint(model, candLineDecision[k] in MOI.Integer())
                 end
-                @constraint(model, -10000 * (1-candLineDecision[k]) .<= candFlowMW[s,k] .- [candPhaseAngleFrom[s,k]./candReactance[k] .- candPhaseAngleTo[s,k]./candReactance[k]]) #Constraint regarding the power flowing on shared candidate lines
-                @constraint(model, candFlowMW[s,k] .- [candPhaseAngleFrom[s,k]./candReactance[k] .- candPhaseAngleTo[s,k]./candReactance[k]] .<= 10000 * (1-candLineDecision[k])) #Constraint regarding the power flowing on shared candidate lines
+                @constraint(model, -10000 * (1-candLineDecision[k]) .<= candFlowMW[s,k] .- [candPhaseAngle[s,k]./candReactance[k] ]) #Constraint regarding the power flowing on shared candidate lines
+                @constraint(model, candFlowMW[s,k] .- [candPhaseAngle=[s,k]./candReactance[k] ]) .<= 10000 * (1-candLineDecision[k])) #Constraint regarding the power flowing on shared candidate lines
                 @constraint(model, candFlowMW[s,k]<= candCapacity[k])
             end
         end
