@@ -36,16 +36,16 @@ candCapacity=[k]
     
             
             for h in 1:H
-                @constraint(MOMod, SEFlowMW[s,h] .== SEPhaseAngle[s,h]./SEReactance[h]) #Constraint regarding the power flowing on shared existing lines
-                @constraint(MOMod, SEFlowMW[s,h]<= SECapacity[h])  # Capacity constraints
+                @constraint(MOMod, SEFlowMW[s,h] .== SEPhaseAngle[s,h]./sharedELines["Reactance"][h]) #Constraint regarding the power flowing on shared existing lines
+                @constraint(MOMod, SEFlowMW[s,h]<= sharedELines["lineLimit"][h])  # Capacity constraints
             end
             for k in 1:K
                 if flag==1
                     @constraint(MOMod, candLineDecision[k] in MOI.Integer())
                 end
-                @constraint(MOMod, -10000 * (1-candLineDecision[k]) .<= candFlowMW[s,k] .- [candPhaseAngle[s,k]./candReactance[k] ]) #Constraint regarding the power flowing on shared candidate lines
-                @constraint(MOMod, candFlowMW[s,k] .- [candPhaseAngle=[s,k]./candReactance[k] ]) .<= 10000 * (1-candLineDecision[k])) #Constraint regarding the power flowing on shared candidate lines
-                @constraint(MOMod, candFlowMW[s,k]<= candCapacity[k])
+                @constraint(MOMod, -10000 * (1-candLineDecision[k]) .<= candFlowMW[s,k] .- [candPhaseAngle[s,k]./sharedCLines["Reactance"][k] ]) #Constraint regarding the power flowing on shared candidate lines
+                @constraint(MOMod, candFlowMW[s,k] .- [candPhaseAngle[s,k]./sharedCLines["Reactance"][k] ]) .<= 10000 * (1-candLineDecision[k])) #Constraint regarding the power flowing on shared candidate lines
+                @constraint(MOMod, candFlowMW[s,k]<= sharedCLines["lineLimit"][k])
             end
         end
     end
