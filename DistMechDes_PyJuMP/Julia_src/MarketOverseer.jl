@@ -8,7 +8,7 @@ function milp_marketOverseer(network::Dict, sharedCLines::Dict,internalCLines::D
     sH=network["sharedELines"]#Shared existing lines
     T=network["Hours"] #Total number of hours considered (whole year)
     N=network["nodeNumber"]
-    zoneList = Array{Int8}(undef, Z) #Array of zones ####I think we should define that
+    zoneList = Array{Int8}(undef, Z) #Array of zones ####I think we should define that and add zone ID for each network
     Z=size(zoneList) #Total number of zones 
     flag=1 #If flag is 1 variable candLineDecision is binary, otherwise it is not (Determining relaxed LP or MIP)
 """These parameters should be obtained or defined
