@@ -1,10 +1,15 @@
 using Pkg
 Pkg.activate("GTheoryJulEnv")
 function milp_marketOverseer(network::Dict, sharedCLines::Dict,internalCLines::Dict, , sharedELines::Dict, Tran::Dict, lagrangeMultPi::Dict, lagrangeMultXi::Dict, setup::Dict)
-    size(zoneList)[1] #Zones
-    K=size(candLine)[1] #Candidate shared Lines 
-    S=size(scenVector)[1] #Scenarios
-    H=size(SELine)[1]    #Shared existing Lines
+    sC=network["sharedCLines"]
+    iC=network["internalCLines"] #The number of internal candidate lines 
+    S=network["CountofScenarios"] #Scenarios
+    iH=network["tranNumber"]    # Internal existing lines
+    sH=network["sharedELines"]#Shared existing lines
+    T=network["Hours"] #Total number of hours considered (whole year)
+    N=network["nodeNumber"]
+    zoneList = Array{Int8}(undef, Z) #Array of zones ####I think we should define that
+    Z=size(zoneList) #Total number of zones 
     flag=1 #If flag is 1 variable candLineDecision is binary, otherwise it is not (Determining relaxed LP or MIP)
 """These parameters should be obtained or defined
 lagrangeMultPi=[z,k] #Binary decision variable lagrange multiplier
