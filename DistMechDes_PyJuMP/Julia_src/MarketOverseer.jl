@@ -4,6 +4,8 @@ function milp_marketOverseer(network::Dict, sharedCLines::Dict, sharedELines::Di
     K=network["sharedCLines"] #The number of shared candidate lines
     S=network["CountofScenarios"] #Scenarios
     H=network["sharedELines"]#Shared existing lines
+    N=network["nodeNumber"] #Total number of nodes
+    T=network["Hours"] #Total number of hours considered (whole year)
     zoneList = Array{Int8}(undef, Z) #Array of zones ####I think we should define an array of zones or for example create a dictionary file for ot
     Z=size(zoneList) #Total number of zones 
     flag=1 #If flag is 1 variable candLineDecision is binary, otherwise it is not (Determining relaxed LP or MIP)
@@ -108,30 +110,41 @@ function milp_marketOverseer(network::Dict, sharedCLines::Dict, sharedELines::Di
 
      
     @variable(MOMod, 0 <= candLineDecision[1:K] <= 1) #Decision variable 
-    @variable(MOMod, 0 <= candFlowMW[1:S, 1:K])  #Power flowing on candidate candLineDecision 
-    @variable(MOMod, 0 <= candPhaseAngle[1:S, 1:K]) #Phase angle decision for candidate line 
-    @variable(MOMod, 0 <= SEFlowMW[1:S, 1:H])  #Power flowing on existing shared lines
-    @variable(MOMod, 0 <= SEPhaseAngle[1:S, 1:H]) #Phase angle decision for existing shared lines 
+    @variable(MOMod, 0 <= CSFlowMW[1:S, 1:K, 1:T])  #Power flowing on shared candidate candLineDecision 
+    @variable(MOMod, 0 <= CSPhaseAngle[1:S, 1:K, 1:N, 1:T]) #Phase angle decision for  candidate shared lines
+    @variable(MOMod, 0 <= ESFlowMW[1:S, 1:H, 1:T])  #Power flowing on existing shared lines
+    @variable(MOMod, 0 <= ESPhaseAngle[1:S, 1:H, 1:N, 1:T]) #Phase angle decision for existing shared lines 
     @variable(MOMod, F[1:S,1:Z])
-    
-    for z in zoneList
-        for s in 1:S
-            @expression(MOMod, F[1:S,1:Z], -[sum(lagrangeMultPi[z,:].*candLineDecision[:]) 
-                    .+ sum(lagrangeMultXi[z,:,s].*candPhaseAngle[s,:])
-                    .+ sum(lagrangeMultXi[z,:,s].*SEPhaseAngle[s,:])])
+    for t in T
+        for z in zoneList
+            for s in 1:S
+                for k in 1:K
+                    for h in 1:H
+                        @expression(MOMod, F[1:S,1:Z], -[sum(lagrangeMultPi[z,:].*candLineDecision[:]) 
+                            .+ sum(lagrangeMultXi[z,n,s].*CSPhaseAngleFrom[s,k,n,t] for n in union(sharedCLines["fromNode"][k],sharedCLines["toNode"][k]))       ####I am not sure if langrange multipliers should have time index
+                            .+ sum(lagrangeMultXi[z,n,s].*ESPhaseAngleFrom[s,h,n,t] for n in union(sharedELines["fromNode"][h],sharedELines["toNode"][h])) 
+                            
+                    end
+                end
     
             
-            for h in 1:H
-                @constraint(MOMod, SEFlowMW[s,h] .== SEPhaseAngle[s,h]./sharedELines["Reactance"][h]) #Constraint regarding the power flowing on shared existing lines
-                @constraint(MOMod, SEFlowMW[s,h]<= sharedELines["lineLimit"][h])  # Capacity constraints
-            end
-            for k in 1:K
-                if flag==1
-                    @constraint(MOMod, candLineDecision[k] in MOI.Integer())
+                for h in 1:H
+                    @constraint(MOMod, ESFlowMW[s,h,t] .== (sum(ESPhaseAngle[s,h,n,t] for n in sharedELines["fromNode"][h]) 
+                                        .- sum(ESPhaseAngle[s,h,n,t] for n in sharedELines["toNode"][h])) ./sharedELines["Reactance"][h]) #Constraint regarding the power flowing on shared existing lines
+                    @constraint(MOMod, ESFlowMW[s,h,t]<= sharedELines["lineLimit"][h])  # Capacity constraints
                 end
-                @constraint(MOMod, -10000 * (1-candLineDecision[k]) .<= candFlowMW[s,k] .- [candPhaseAngle[s,k]./sharedCLines["Reactance"][k] ]) #Constraint regarding the power flowing on shared candidate lines
-                @constraint(MOMod, candFlowMW[s,k] .- [candPhaseAngle[s,k]./sharedCLines["Reactance"][k] ]) .<= 10000 * (1-candLineDecision[k])) #Constraint regarding the power flowing on shared candidate lines
-                @constraint(MOMod, candFlowMW[s,k]<= sharedCLines["lineLimit"][k])
+                for k in 1:K
+                    if flag==1
+                        @constraint(MOMod, candLineDecision[k] in MOI.Integer())
+                    end
+                    @constraint(MOMod, -10000 * (1-candLineDecision[k]) .<= CSFlowMW[s,k] 
+                                            .- [(sum(CSPhaseAngle[s,k,n,t] for n in sharedCLines["fromNode"][k]) 
+                                        .- sum(CSPhaseAngle[s,k,n,t] for n in sharedCLines["toNode"][k])) ./sharedCLines["Reactance"][k])] #Constraint regarding the power flowing on shared candidate lines
+                    @constraint(MOMod, CSFlowMW[s,k] .- [(sum(CSPhaseAngle[s,k,n,t] for n in sharedCLines["fromNode"][k]) 
+                                        .- sum(CSPhaseAngle[s,k,n,t] for n in sharedCLines["toNode"][k])) 
+                                                    ./sharedCLines["Reactance"][k])] .<= 10000 * (1-candLineDecision[k])) #Constraint regarding the power flowing on shared candidate lines
+                    @constraint(MOMod, CSFlowMW[s,k]<= sharedCLines["lineLimit"][k])
+                end
             end
         end
     end
