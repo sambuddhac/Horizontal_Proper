@@ -103,7 +103,7 @@ function milp_marketOverseer(network::Dict, sharedCLines::Dict, sharedELines::Di
         # Set solver to use Clp for LP problems
         Clp.Optimizer
         # NEED TO TES SETUP FOR CLP FOR LP PROBLEMS
-        CMod=Model(solver=ClpSolver())
+        MOMod=Model(solver=ClpSolver())
     elseif(setup["Solver"]=="GLPK")
         MOMod = Model(GLPK.Optimizer)
     end
@@ -115,14 +115,14 @@ function milp_marketOverseer(network::Dict, sharedCLines::Dict, sharedELines::Di
     @variable(MOMod, 0 <= ESFlowMW[1:S, 1:H, 1:T])  #Power flowing on existing shared lines
     @variable(MOMod, 0 <= ESPhaseAngle[1:S, 1:H, 1:N, 1:T]) #Phase angle decision for existing shared lines 
     @variable(MOMod, F[1:S,1:Z])
-    for t in T
-        for z in zoneList
+    for z in zoneList
+        for t in 1:T
             for s in 1:S
                 for k in 1:K
                     for h in 1:H
                         @expression(MOMod, F[1:S,1:Z], -[sum(lagrangeMultPi[z,:].*candLineDecision[:]) 
-                            .+ sum(lagrangeMultXi[z,n,s].*CSPhaseAngleFrom[s,k,n,t] for n in union(sharedCLines["fromNode"][k],sharedCLines["toNode"][k]))       ####I am not sure if langrange multipliers should have time index
-                            .+ sum(lagrangeMultXi[z,n,s].*ESPhaseAngleFrom[s,h,n,t] for n in union(sharedELines["fromNode"][h],sharedELines["toNode"][h])) 
+                            .+ sum(lagrangeMultXi[z,n,s].* CSPhaseAngleFrom[s,k,n,t] for n in union(sharedCLines["fromNode"][k],sharedCLines["toNode"][k]))       ####I am not sure if langrange multipliers should have time index
+                            .+ sum(lagrangeMultXi[z,n,s].* ESPhaseAngleFrom[s,h,n,t] for n in union(sharedELines["fromNode"][h],sharedELines["toNode"][h])) 
                             
                     end
                 end
