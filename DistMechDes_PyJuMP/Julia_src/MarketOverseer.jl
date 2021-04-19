@@ -140,10 +140,10 @@ function milp_marketOverseer(network::Dict, sharedCLines::Dict, sharedELines::Di
                     @constraint(MOMod, -10000 * (1-candLineDecision[k]) .<= CSFlowMW[s,k] 
                                             .- [(sum(CSPhaseAngle[s,k,n,t] for n in sharedCLines["fromNode"][k]) 
                                         .- sum(CSPhaseAngle[s,k,n,t] for n in sharedCLines["toNode"][k])) ./sharedCLines["Reactance"][k])] #Constraint regarding the power flowing on shared candidate lines
-                    @constraint(MOMod, CSFlowMW[s,k] .- [(sum(CSPhaseAngle[s,k,n,t] for n in sharedCLines["fromNode"][k]) 
+                    @constraint(MOMod, CSFlowMW[s,k,t] .- [(sum(CSPhaseAngle[s,k,n,t] for n in sharedCLines["fromNode"][k]) 
                                         .- sum(CSPhaseAngle[s,k,n,t] for n in sharedCLines["toNode"][k])) 
                                                     ./sharedCLines["Reactance"][k])] .<= 10000 * (1-candLineDecision[k])) #Constraint regarding the power flowing on shared candidate lines
-                    @constraint(MOMod, CSFlowMW[s,k]<= sharedCLines["lineLimit"][k])
+                    @constraint(MOMod, CSFlowMW[s,k,t]<= sharedCLines["lineLimit"][k])
                 end
             end
         end
