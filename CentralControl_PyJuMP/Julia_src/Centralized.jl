@@ -116,7 +116,7 @@ function milp_avg_hr_central(network::Dict, Gen::Dict, CandLine::Dict, IntCandLi
     @variable(CMod, dvIntCandFlowMW[1:S, 1:I, 1:T])  #Power flowing on internal candidate candLineDecision
     @variable(CMod, 0 <= dvPhaseAngle[1:S, 1:N, 1:T] <= 44/7) #Phase angle decision
     @variable(CMod, 0 <= dvPgen[1:S, 1:G, 1:T]) #Power of generator
-    @variable(CMod, F) #Objective function
+    #@variable(CMod, F) #Objective function
 
     @expression(CMod, expTotalCost, sum(sum(prob[s,t].*sum(dvPgen[s,:,t].*Gen["linCostCoeff"][:])for s in S)for t in T)
                                     .+sum(dvCandLineDecision[:].*CandLine["costPerCap"][:].*CandLine["interestRate"][:]
@@ -125,9 +125,9 @@ function milp_avg_hr_central(network::Dict, Gen::Dict, CandLine::Dict, IntCandLi
                                     .+sum(dvIntCandLineDecision[:].*IntCandLine["costPerCap"][:].*IntCandLine["interestRate"][:]
                                     .*((ones(C).+IntCandLine["interestRate"][:]).^IntCandLine["lifeTime"][:])
                                     ./((ones(C).+IntCandLine["interestRate"][:]).^IntCandLine["lifeTime"][:].-ones(C))))
-    for t in 1:T
-        for s in 1:S
-            for h in 1:H
+    for t in 1:T #The Hour/time loop
+        for s in 1:S #The scenario loop
+            for h in 1:H #Transmission lines loop 
                 if Tran["tranZoneID"][h]==z
                     @constraint(CMod, EFlowMW[s,h] .== EPhaseAngleFrom[s,h]./Tran["Reactance"][h] .- EPhaseAngleTo[s,h]./Tran["Reactance"][h]) #Constraint regarding the power flowing on existing lines
                     @constraint(CMod, EFlowMW[s,h]<= Tran["lineLimit"][h])  # Line capacity constraints
