@@ -129,7 +129,15 @@ function milp_avg_hr_central(network::Dict, Gen::Dict, CandLine::Dict, IntCandLi
         for s in 1:S #The scenario loop
             for h in 1:H #Transmission lines loop 
                 if Tran["tranZoneID"][h]==z
-                    @constraint(CMod, EFlowMW[s,h] .== EPhaseAngleFrom[s,h]./Tran["Reactance"][h] .- EPhaseAngleTo[s,h]./Tran["Reactance"][h]) #Constraint regarding the power flowing on existing lines
+                    @constraint(CMod, EFlowMW[s,h] .== dvPhaseAngle[s, Tran[l,:fromnode], t]./Tran["Reactance"][h] .- dvPhaseAngle[s, Tran[l,:tonode], t]./Tran["Reactance"][h]) #Constraint regarding the power flowing on existing lines
+                    cLineFlows = JuMP.Containers.DenseAxisArray{Any}(undef, 1:nrow(lines)) 
+                    for l in 1:nrow(lines)
+                        cLineFlows[l] = @constraint(DCOPF, 
+                            FLOW[lines[l,:fromnode],lines[l,:tonode]] == 
+                            baseMVA * lines[l,:b] * 
+                            ( - )
+                        )
+                    end
                     @constraint(CMod, EFlowMW[s,h]<= Tran["lineLimit"][h])  # Line capacity constraints
                     @constraint(CMod, -Tran["lineLimit"][h]<= EFlowMW[s,h])  # Line capacity constraints
                 end
