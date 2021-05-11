@@ -1,49 +1,154 @@
 using Pkg
 Pkg.activate("GTheoryJulEnv")
-function marketOverseerOpt(lagrangeMultPi, K1lagrangeMultXi, K2lagrangeMultXi, H1lagrangeMultXi, H2lagrangeMultXi)
-    size(zoneList)[1] #Zones
-    K=size(candLine)[1] #Candidate shared Lines 
-    S=size(scenVector)[1] #Scenarios
-    H=size(SELine)[1]    #Shared existing Lines
+function milp_marketOverseer(network::Dict, sharedCLines::Dict, sharedELines::Dict, lagrangeMultPi::Dict, lagrangeMultXi::Dict, setup::Dict)
+    K=network["sharedCLines"] #The number of shared candidate lines
+    S=network["CountofScenarios"] #Scenarios
+    H=network["sharedELines"]#Shared existing lines
+    N=network["nodeNumber"] #Total number of nodes
+    T=network["Hours"] #Total number of hours considered (whole year)
+    zoneList = Array{Int8}(undef, Z) #Array of zones ####I think we should define an array of zones or for example create a dictionary file for ot
+    Z=size(zoneList) #Total number of zones 
     flag=1 #If flag is 1 variable candLineDecision is binary, otherwise it is not (Determining relaxed LP or MIP)
-"""These parameters should be obtained or defined
-lagrangeMultPi=[z,k] #Binary decision variable lagrange multiplier
-K1lagrangeMultXi=[z,k,s] #Lagrange multiplier associated with "From node" candidate lines
-K2lagrangeMultXi=[z,k,s] #Lagrange multiplier associated with "To node" candidate lines
-H1lagrangeMultXi=[z,h,s] #Lagrange multiplier associated with "From node" shared existing lines
-H2lagrangeMultXi=[z,h,s] #Lagrange multiplier associated with "To node" shared existing lines
-SEReactance=[h] #Reactance of shared existing lines
-candReactance=[k] #Reactance of candidate lines
-SECapacity=[h]
-candCapacity=[k]
-"""
-    model = Model(GLPK.Optimizer)
-    @variable(model, 0 <= candLineDecision[1:K] <= 1) #Decision variable 
-    @variable(model, 0 <= candFlowMW[1:S, 1:K])  #Power flowing on candidate candLineDecision 
-    @variable(model, 0 <= candPhaseAngleTo[1:S, 1:K]) #Phase angle decision for candidate line "To node"
-    @variable(model, 0 <= candPhaseAngleFrom[1:S, 1:K]) #Phase angle decision for candidate line "From node"
-    @variable(model, 0 <= SEFlowMW[1:S, 1:H])  #Power flowing on existing shared lines
-    @variable(model, 0 <= SEPhaseAngleTo[1:S, 1:H]) #Phase angle decision for existing shared lines "To node"
-    @variable(model, 0 <= SEPhaseAngleFrom[1:S, 1:H]) #Phase angle decision for existing shared lines "From node"
-    @variable(model, F[1:S,1:Z])
-    for z in 1:S
-        for s in 1:Z
-            @constraint(model, F[s,z] .==-[sum(lagrangeMultPi[z,:].*candLineDecision[:]) .+ sum(K2lagrangeMultXi[z,:,s].*candPhaseAngleTo[s,:]) .+ sum(K1lagrangeMultXi[z,:,s].*candPhaseAngleFrom[s,:]) .+ sum(H2lagrangeMultXi[z,:,s].*SEPhaseAngleTo[s,:]) .+ sum(H1lagrangeMultXi[z,:,s].*SEPhaseAngleFrom[s,:])])  #Objective Function
-            for h in 1:H
-                @constraint(model, SEFlowMW[s,h] .== SEPhaseAngleFrom[s,h]./SEReactance[h] .- SEPhaseAngleTo[s,h]./SEReactance[h]) #Constraint regarding the power flowing on shared existing lines
-                @constraint(model, SEFlowMW[s,h]<= SECapacity[h])  # Capacity constraints
-            end
-            for k in 1:K
-                if flag==1
-                    @constraint(model, candLineDecision[k] in MOI.Integer())
+    
+    if(setup["Solver"]=="Gurobi")
+        # Set solver to use Gurobi for MIP or LP problems
+        Gurobi.GurobiSolver
+            # Optional setup parameters ############################################
+            MyFeasibilityTol = 1e-6 # Constraint (primal) feasibility tolerances. See https://www.gurobi.com/documentation/8.1/refman/feasibilitytol.html
+            if(haskey(setup, "Feasib_Tol")) MyFeasibilityTol = setup["Feasib_Tol"] end
+            MyOptimalityTol = 1e-6 # Dual feasibility tolerances. See https://www.gurobi.com/documentation/8.1/refman/optimalitytol.html#parameter:OptimalityTol
+            if(haskey(setup, "Optimal_Tol")) MyOptimalityTol = setup["Optimal_Tol"] end
+            MyPresolve = -1 	# Controls presolve level. See https://www.gurobi.com/documentation/8.1/refman/presolve.html
+            if(haskey(setup, "Pre_Solve")) MyPresolve = setup["Pre_Solve"] end
+            MyAggFill = -1 		# Allowed fill during presolve aggregation. See https://www.gurobi.com/documentation/8.1/refman/aggfill.html#parameter:AggFill
+            if(haskey(setup, "AggFill")) MyAggFill = setup["AggFill"] end
+            MyPreDual = -1		# Presolve dualization. See https://www.gurobi.com/documentation/8.1/refman/predual.html#parameter:PreDual
+            if(haskey(setup, "PreDual")) MyPreDual = setup["PreDual"] end
+            MyTimeLimit = Inf	# Limits total time solver. See https://www.gurobi.com/documentation/8.1/refman/timelimit.html
+            if(haskey(setup, "TimeLimit")) MyTimeLimit = setup["TimeLimit"] end
+            MyMIPGap = 1e-4		# Relative (p.u. of optimal) mixed integer optimality tolerance for MIP problems (ignored otherwise). See https://www.gurobi.com/documentation/8.1/refman/mipgap2.html
+            if(haskey(setup, "MIPGap")) MyMIPGap = setup["MIPGap"] end
+            MyCrossover = -1 	# Barrier crossver strategy. See https://www.gurobi.com/documentation/8.1/refman/crossover.html#parameter:Crossover
+            if(haskey(setup, "Crossover")) MyCrossover = setup["Crossover"] end
+            MyMethod = -1		# Algorithm used to solve continuous models (including MIP root relaxation). See https://www.gurobi.com/documentation/8.1/refman/method.html
+            if(haskey(setup, "Method")) MyMethod = setup["Method"] end
+            MyBarConvTol = 1e-8 	# Barrier convergence tolerance (determines when barrier terminates). See https://www.gurobi.com/documentation/8.1/refman/barconvtol.html
+            if(haskey(setup, "BarConvTol")) MyBarConvTol = setup["BarConvTol"] end
+            MyNumericFocus = 0 	# Numerical precision emphasis. See https://www.gurobi.com/documentation/8.1/refman/numericfocus.html
+            if(haskey(setup, "NumericFocus")) MyNumericFocus = setup["NumericFocus"] end
+        ########################################################################
+        MOMod = Model(Gurobi.Optimizer)
+
+        set_optimizer_attribute(MOMod, "OptimalityTol", MyOptimalityTol)
+        set_optimizer_attribute(MOMod, "FeasibilityTol", MyFeasibilityTol),
+        set_optimizer_attribute(MOMod, "Presolve", MyPresolve)
+        set_optimizer_attribute(MOMod, "AggFill", MyAggFill)
+        set_optimizer_attribute(MOMod, "PreDual", MyPreDual)
+        set_optimizer_attribute(MOMod, "TimeLimit", MyTimeLimit)
+        set_optimizer_attribute(MOMod, "MIPGap", MyMIPGap)
+        set_optimizer_attribute(MOMod, "Method", MyMethod)
+        set_optimizer_attribute(MOMod, "BarConvTol", MyBarConvTol)
+        set_optimizer_attribute(MOMod, "NumericFocus", MyNumericFocus)
+
+    elseif(setup["Solver"]=="CPLEX")
+        # Set solve to use CPLEX for MIP or LP problems
+            # Optional setup parameters ############################################
+            MyFeasibilityTol = 1e-6 # Constraint (primal) feasibility tolerances. See https://www.ibm.com/support/knowledgecenter/en/SSSA5P_12.5.1/ilog.odms.cplex.help/CPLEX/Parameters/topics/EpRHS.html
+            if(haskey(setup, "Feasib_Tol")) MyFeasibilityTol = setup["Feasib_Tol"] end
+            MyOptimalityTol = 1e-6 # Dual feasibility tolerances. See https://www.ibm.com/support/knowledgecenter/en/SSSA5P_12.5.1/ilog.odms.cplex.help/CPLEX/Parameters/topics/EpOpt.html
+            if(haskey(setup, "Optimal_Tol")) MyOptimalityTol = setup["Optimal_Tol"] end
+            MyPresolve = 1 	# Decides if presolve is applied. See https://www.ibm.com/support/knowledgecenter/en/SSSA5P_12.5.1/ilog.odms.cplex.help/CPLEX/Parameters/topics/PreInd.html
+            if(haskey(setup, "Pre_Solve")) MyPresolve = setup["Pre_Solve"] end
+            MyAggFill = 10 		# Allowed fill during presolve aggregation. See https://www.ibm.com/support/knowledgecenter/en/SSSA5P_12.5.1/ilog.odms.cplex.help/CPLEX/Parameters/topics/AggFill.html
+            if(haskey(setup, "AggFill")) MyAggFill = setup["AggFill"] end
+            MyPreDual = 0		# Decides whether presolve should pass the primal or dual linear programming problem to the LP optimization algorithm. See https://www.ibm.com/support/knowledgecenter/en/SSSA5P_12.5.1/ilog.odms.cplex.help/CPLEX/Parameters/topics/PreDual.html
+            if(haskey(setup, "PreDual")) MyPreDual = setup["PreDual"] end
+            MyTimeLimit = 1e+75	# Limits total time solver. See https://www.ibm.com/support/knowledgecenter/en/SSSA5P_12.5.1/ilog.odms.cplex.help/CPLEX/Parameters/topics/TiLim.html
+            if(haskey(setup, "TimeLimit")) MyTimeLimit = setup["TimeLimit"] end
+            MyMIPGap = 1e-4		# Relative (p.u. of optimal) mixed integer optimality tolerance for MIP problems (ignored otherwise). See https://www.ibm.com/support/knowledgecenter/en/SSSA5P_12.5.1/ilog.odms.cplex.help/CPLEX/Parameters/topics/EpGap.html
+            if(haskey(setup, "MIPGap")) MyMIPGap = setup["MIPGap"] end
+            MyCrossover = 0 	# Barrier crossver strategy. See https://www.ibm.com/support/knowledgecenter/hr/SSSA5P_12.8.0/ilog.odms.cplex.help/CPLEX/Parameters/topics/BarCrossAlg.html
+            if(haskey(setup, "Crossover")) MyCrossover = setup["Crossover"] end
+            MyMethod = 0		# Algorithm used to solve continuous models (including MIP root relaxation). See https://www.ibm.com/support/knowledgecenter/de/SSSA5P_12.7.0/ilog.odms.cplex.help/CPLEX/Parameters/topics/LPMETHOD.html
+            if(haskey(setup, "Method")) MyMethod = setup["Method"] end
+            MyBarConvTol = 1e-8 	# Barrier convergence tolerance (determines when barrier terminates). See https://www.ibm.com/support/knowledgecenter/en/SSSA5P_12.5.1/ilog.odms.cplex.help/CPLEX/Parameters/topics/BarEpComp.html
+            if(haskey(setup, "BarConvTol")) MyBarConvTol = setup["BarConvTol"] end
+            MyNumericFocus = 0 	# Numerical precision emphasis. See https://www.ibm.com/support/knowledgecenter/en/SSSA5P_12.5.1/ilog.odms.cplex.help/CPLEX/Parameters/topics/NumericalEmphasis.html
+            if(haskey(setup, "NumericFocus")) MyNumericFocus = setup["NumericFocus"] end
+            MyBarObjRng = 1e+75 	# Numerical precision emphasis. See https://www.ibm.com/support/knowledgecenter/en/SSSA5P_12.5.1/ilog.odms.cplex.help/CPLEX/Parameters/topics/NumericalEmphasis.html
+            if(haskey(setup, "BarObjRng")) MyBarObjRng = setup["BarObjRng"] end
+            MySolutionType = 2 	# Solution type for LP or QP. See https://www.ibm.com/support/knowledgecenter/hr/SSSA5P_12.8.0/ilog.odms.cplex.help/CPLEX/Parameters/topics/SolutionType.html
+            if(haskey(setup, "SolutionType")) MySolutionType = setup["SolutionType"] end
+        ########################################################################
+        CPLEX.Optimizer
+        MOMod=Model(CPLEX.Optimizer)
+        set_optimizer_attribute(MOMod, "CPX_PARAM_EPRHS", MyFeasibilityTol)
+        set_optimizer_attribute(MOMod, "CPX_PARAM_EPOPT", MyOptimalityTol)
+        set_optimizer_attribute(MOMod, "CPX_PARAM_AGGFILL", MyAggFill)
+        set_optimizer_attribute(MOMod, "CPX_PARAM_PREDUAL", MyPreDual)
+        set_optimizer_attribute(MOMod, "CPX_PARAM_TILIM", MyTimeLimit)
+        set_optimizer_attribute(MOMod, "CPX_PARAM_EPGAP", MyMIPGap)
+        set_optimizer_attribute(MOMod, "CPX_PARAM_BARCROSSALG", MyCrossover)
+        set_optimizer_attribute(MOMod, "CPX_PARAM_LPMETHOD", MyMethod)
+        set_optimizer_attribute(MOMod, "CPX_PARAM_BAREPCOMP", MyBarConvTol)
+        set_optimizer_attribute(MOMod, "CPX_PARAM_NUMERICALEMPHASIS", MyNumericFocus)
+        set_optimizer_attribute(MOMod, "CPX_PARAM_BAROBJRNG", MyBarObjRng)
+        set_optimizer_attribute(MOMod, "CPX_PARAM_SOLUTIONTYPE", MySolutionType)
+    elseif(setup["Solver"]=="CBC")
+        # Set solver to use Cbc for MIP problems
+        Cbc.Optimizer
+        # NEED TO TEST SETUP FOR CBC FOR MIP PROBLEMS
+        MOMod=Model(solver=CbcSolver(logLevel = 2))
+    elseif(setup["Solver"]=="CLP")
+        # Set solver to use Clp for LP problems
+        Clp.Optimizer
+        # NEED TO TES SETUP FOR CLP FOR LP PROBLEMS
+        MOMod=Model(solver=ClpSolver())
+    elseif(setup["Solver"]=="GLPK")
+        MOMod = Model(GLPK.Optimizer)
+    end
+
+     
+    @variable(MOMod, 0 <= candLineDecision[1:K] <= 1) #Decision variable 
+    @variable(MOMod, 0 <= CSFlowMW[1:S, 1:K, 1:T])  #Power flowing on shared candidate candLineDecision 
+    @variable(MOMod, 0 <= CSPhaseAngle[1:S, 1:K, 1:N, 1:T]) #Phase angle decision for  candidate shared lines
+    @variable(MOMod, 0 <= ESFlowMW[1:S, 1:H, 1:T])  #Power flowing on existing shared lines
+    @variable(MOMod, 0 <= ESPhaseAngle[1:S, 1:H, 1:N, 1:T]) #Phase angle decision for existing shared lines 
+    @variable(MOMod, F[1:S,1:Z])
+    for z in zoneList
+        for t in 1:T
+            for s in 1:S
+                for k in 1:K
+                    for h in 1:H
+                        @expression(MOMod, F[1:S,1:Z], -[sum(lagrangeMultPi[z,:].*candLineDecision[:]) 
+                            .+ sum(lagrangeMultXi[z,n,s].* CSPhaseAngleFrom[s,k,n,t] for n in union(sharedCLines["fromNode"][k],sharedCLines["toNode"][k]))       ####I am not sure if langrange multipliers should have time index
+                            .+ sum(lagrangeMultXi[z,n,s].* ESPhaseAngleFrom[s,h,n,t] for n in union(sharedELines["fromNode"][h],sharedELines["toNode"][h])) 
+                            
+                    end
                 end
-                @constraint(model, -10000 * (1-candLineDecision[k]) .<= candFlowMW[s,k] .- [candPhaseAngleFrom[s,k]./candReactance[k] .- candPhaseAngleTo[s,k]./candReactance[k]]) #Constraint regarding the power flowing on shared existing lines
-                @constraint(model, candFlowMW[s,k] .- [candPhaseAngleFrom[s,k]./candReactance[k] .- candPhaseAngleTo[s,k]./candReactance[k]] .<= 10000 * (1-candLineDecision[k])) #Constraint regarding the power flowing on shared existing lines
-                @constraint(model, candFlowMW[s,k]<= candCapacity[k])
+    
+            
+                for h in 1:H
+                    @constraint(MOMod, ESFlowMW[s,h,t] .== (sum(ESPhaseAngle[s,h,n,t] for n in sharedELines["fromNode"][h]) 
+                                        .- sum(ESPhaseAngle[s,h,n,t] for n in sharedELines["toNode"][h])) ./sharedELines["Reactance"][h]) #Constraint regarding the power flowing on shared existing lines
+                    @constraint(MOMod, ESFlowMW[s,h,t]<= sharedELines["lineLimit"][h])  # Capacity constraints
+                end
+                for k in 1:K
+                    if flag==1
+                        @constraint(MOMod, candLineDecision[k] in MOI.Integer())
+                    end
+                    @constraint(MOMod, -10000 * (1-candLineDecision[k]) .<= CSFlowMW[s,k] 
+                                            .- [(sum(CSPhaseAngle[s,k,n,t] for n in sharedCLines["fromNode"][k]) 
+                                        .- sum(CSPhaseAngle[s,k,n,t] for n in sharedCLines["toNode"][k])) ./sharedCLines["Reactance"][k])] #Constraint regarding the power flowing on shared candidate lines
+                    @constraint(MOMod, CSFlowMW[s,k,t] .- [(sum(CSPhaseAngle[s,k,n,t] for n in sharedCLines["fromNode"][k]) 
+                                        .- sum(CSPhaseAngle[s,k,n,t] for n in sharedCLines["toNode"][k])) 
+                                                    ./sharedCLines["Reactance"][k])] .<= 10000 * (1-candLineDecision[k])) #Constraint regarding the power flowing on shared candidate lines
+                    @constraint(MOMod, CSFlowMW[s,k,t]<= sharedCLines["lineLimit"][k])
+                end
             end
         end
     end
-    @objective(model, Min, sum(F[:,:]))
-    status = optimize!(model)
+    @objective(MOMod, Min, sum(F[:,:]))
+    status = optimize!(MOMod)
     @show(status, value.(candLineDecision))
     end
