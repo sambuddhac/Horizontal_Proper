@@ -66,7 +66,7 @@ class Nettran(object):
 			#end initialization for Nodes
 ##/* Generators */
 			#/* Instantiate Generators */
-        		matrixGen = json.load(open(os.path.join("data", self.genFile))) #ifstream constructor opens the file of Generators
+        	matrixGen = json.load(open(os.path.join("data", self.genFile))) #ifstream constructor opens the file of Generators
 			j = 0 #counter for generators
 			for matrixGenFile in matrixGen:
 				gNodeID = matrixGenFile['genNodeID'] #node object ID to which the particular generator object is connected

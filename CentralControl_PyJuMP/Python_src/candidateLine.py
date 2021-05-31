@@ -4,8 +4,8 @@ from Python_src.node import Node
 from Python_src.log import log
 
 class candLine(object):
-	def __init__(self, localRank, idOfTransl, nodeConnt1, nodeConnt2, PowertMax, Reactance, ROI, life, cap, absPres): #constructor begins
-		self.translID = idOfTransl
+	def __init__(self, local_rank, id_of_transl, node_connt1, node_connt2, powert_max, reactance, rate_of_interest, life, cap, abs_pres): #constructor begins
+		self.transl_id = id_of_transl
 		self.localIndex = localRank
 		self.connNodetPtr1 = nodeConnt1
 		self.connNodetPtr2 = nodeConnt2
@@ -15,8 +15,8 @@ class candLine(object):
 		self.fromNode = connNodetPtr1.getNodeID()
 		self.toNode = connNodetPtr2.getNodeID()
 		#log.info("\nInitializing the parameters of the transmission line with ID: {}".format(self.translID))
-		self.connNodetPtr1.setCandConn(idOfTransl, 1, self.reacT, self.toNode ) #increments the txr line connection variable to node 1
-		self.connNodetPtr2.setCandConn(idOfTransl, -1, self.reacT, self.fromNode ) #increments the txr line connection variable to node 1
+		self.connNodetPtr1.setCandConn(id_of_transl, 1, self.reacT, self.toNode ) #increments the txr line connection variable to node 1
+		self.connNodetPtr2.setCandConn(id_of_transl, -1, self.reacT, self.fromNode ) #increments the txr line connection variable to node 1
 		self.setTranData(cap, life, ROI) #calls setTranData member function to set the parameter values
 		#constructor ends
 
