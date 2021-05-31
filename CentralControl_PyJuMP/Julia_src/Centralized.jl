@@ -1,7 +1,7 @@
 using Pkg
 Pkg.activate("GTheoryJulEnv")
 #Defining sets
-function milp_avg_hr_central(network::Dict, Gen::Dict, CandLine::Dict, IntCandLine::Dict, Tran::Dict, setup::Dict)
+function milp_avg_hr_central(network::Dict, gen::Dict, cand_line::Dict, int_cand_line::Dict, tran::Dict, setup::Dict)
     C=network["sharedCLines"]
     I=network["internalCLines"] #The number of candidate Lines 
     S=network["CountofScenarios"] #Scenarios
@@ -110,27 +110,27 @@ function milp_avg_hr_central(network::Dict, Gen::Dict, CandLine::Dict, IntCandLi
 
 
     #Defining variables
-    @variable(CMod, dvCandLineDecision[1:C], Bin) #Binary Integer Decision variable for building or not building shared candidate line
-    @variable(CMod, dvIntCandLineDecision[1:I], Bin) #Binary Integer Decision variable for building or not building internal candidate line 
-    @variable(CMod, dvCandFlowMW[1:S, 1:C, 1:T])  #Power flowing on candidate candLineDecision 
-    @variable(CMod, dvIntCandFlowMW[1:S, 1:I, 1:T])  #Power flowing on internal candidate candLineDecision
-    @variable(CMod, 0 <= dvPhaseAngle[1:S, 1:N, 1:T] <= 44/7) #Phase angle decision
-    @variable(CMod, 0 <= dvPgen[1:S, 1:G, 1:T]) #Power of generator
+    @variable(CMod, dv_cand_line_decision[1:C], Bin) #Binary Integer Decision variable for building or not building shared candidate line
+    @variable(CMod, dv_int_cand_line_decision[1:I], Bin) #Binary Integer Decision variable for building or not building internal candidate line 
+    @variable(CMod, dv_cand_flow_mw[1:S, 1:C, 1:T])  #Power flowing on candidate candLineDecision 
+    @variable(CMod, dv_int_cand_flow_mw[1:S, 1:I, 1:T])  #Power flowing on internal candidate candLineDecision
+    @variable(CMod, 0 <= dv_phase_angle[1:S, 1:N, 1:T] <= 44/7) #Phase angle decision
+    @variable(CMod, 0 <= dv_p_gen[1:S, 1:G, 1:T]) #Power of generator
     #@variable(CMod, F) #Objective function
 
-    @expression(CMod, expTotalCost, sum(sum(prob[s,t].*sum(dvPgen[s,:,t].*Gen["linCostCoeff"][:])for s in S)for t in T)
-                                    .+sum(dvCandLineDecision[:].*CandLine["costPerCap"][:].*CandLine["interestRate"][:]
-                                    .*((ones(C).+CandLine["interestRate"][:]).^CandLine["lifeTime"][:])
-                                    ./((ones(C).+CandLine["interestRate"][:]).^CandLine["lifeTime"][:].-ones(C)))
-                                    .+sum(dvIntCandLineDecision[:].*IntCandLine["costPerCap"][:].*IntCandLine["interestRate"][:]
-                                    .*((ones(C).+IntCandLine["interestRate"][:]).^IntCandLine["lifeTime"][:])
-                                    ./((ones(C).+IntCandLine["interestRate"][:]).^IntCandLine["lifeTime"][:].-ones(C))))
+    @expression(CMod, expTotalCost, sum(sum(prob[s,t].*sum(dv_p_gen[s,:,t].*gen["linCostCoeff"][:])for s in S)for t in T)
+                                    .+sum(dv_cand_line_decision[:].*cand_line["costPerCap"][:].*cand_line["interestRate"][:]
+                                    .*((ones(C).+cand_line["interestRate"][:]).^cand_line["lifeTime"][:])
+                                    ./((ones(C).+cand_line["interestRate"][:]).^cand_line["lifeTime"][:].-ones(C)))
+                                    .+sum(dv_int_cand_line_decision[:].*int_cand_line["costPerCap"][:].*int_cand_line["interestRate"][:]
+                                    .*((ones(C).+int_cand_line["interestRate"][:]).^int_cand_line["lifeTime"][:])
+                                    ./((ones(C).+int_cand_line["interestRate"][:]).^int_cand_line["lifeTime"][:].-ones(C))))
     for t in 1:T #The Hour/time loop
         for s in 1:S #The scenario loop
             for h in 1:H #Transmission lines loop
-                @expression(CMod, expFlowMW[s,h,t], (dvPhaseAngle[s, Tran["fromNode"][h], t] - dvPhaseAngle[s, Tran["toNode"][h], t])/Tran["Reactance"][h]) #Constraint regarding the power flowing on existing lines
-                @constraint(CMod, expFlowMW[s,h,t]<= Tran["lineLimit"][h])  # Line capacity constraints
-                @constraint(CMod, -Tran["lineLimit"][h]<= EFlowMW[s,h,t])  # Line capacity constraints
+                @expression(CMod, expFlowMW[s,h,t], (dv_phase_angle[s, tran["fromNode"][h], t] - dv_phase_angle[s, tran["toNode"][h], t])/tran["Reactance"][h]) #Constraint regarding the power flowing on existing lines
+                @constraint(CMod, expFlowMW[s,h,t]<= tran["lineLimit"][h])  # Line capacity constraints
+                @constraint(CMod, -tran["lineLimit"][h]<= EFlowMW[s,h,t])  # Line capacity constraints
             end
             for k in 1:K
                 if CandLine["tranZoneID"][h]==z
