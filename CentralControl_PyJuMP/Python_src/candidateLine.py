@@ -9,7 +9,7 @@ class candLine(object):
 		self.local_index = local_rank
 		self.conn_nodet_ptr1 = node_connt1
 		self.conn_nodet_ptr2 = node_connt2
-		self.ptMax = powert_max
+		self.pt_max = powert_max
 		self.react = reactance
 		self.status = abs_pres
 		self.from_node = conn_nodet_ptr1.get_node_id()
@@ -43,7 +43,7 @@ class candLine(object):
 	def get_reactance(self):
 		return self.react
 
-	def set_tran_data(self, cap, life_time, inter_rate): #member function to set parameter values of transmission lines
+	def set_tran_data(self, cap_cost, life_time, inter_rate): #member function to set parameter values of transmission lines
 		self.capital_cost = cap_cost
 		self.life_years = life_time
 		self.rate_interest = inter_rate
