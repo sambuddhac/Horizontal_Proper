@@ -38,7 +38,7 @@ class intCandLine(object):
 		return self.pt_max
 		#Function get_flow_limit ends
 
-	def getreactance(self):
+	def get_reactance(self):
 		return self.react
 
 	def set_tran_data(self, cap_cost, life_time, inter_rate): #member function to set parameter values of transmission lines
