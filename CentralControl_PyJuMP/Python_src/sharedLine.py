@@ -1,44 +1,44 @@
 #Member functions for class SELine.
-#include Node class definition from node.py
-from Python_src.node import Node
+#include _node class definition from node.py
+from Python_src.node import _node
 from Python_src.log import log
 
 class SELine(object):
-	def __init__(self, localRank, idOfTransl, nodeConnt1, nodeConnt2, PowertMax, Reactance): #constructor begins
-		self.translID = idOfTransl
-		self.localIndex = localRank
-		self.connNodetPtr1 = nodeConnt1
-		self.connNodetPtr2 = nodeConnt2
-		self.ptMax = PowertMax
-		self.reacT = Reactance	
-		self.fromNode = self.connNodetPtr1.getNodeID()
-		self.toNode = self.connNodetPtr2.getNodeID()
-		log.info("\nInitializing the parameters of the shared transmission line with ID: {}".format(self.translID))
-		log.info("from node: {} To node: {}".format(self.fromNode, self.toNode))
-		self.connNodetPtr1.setSEConn(self.translID, 1, self.reacT, self.toNode) #increments the txr line connection variable to node 1
-		self.connNodetPtr2.setSEConn(self.translID, -1, self.reacT, self.fromNode) #increments the txr line connection variable to node 1 
+	def __init__(self, local_rank, id_of_transl, node_connt1, node_connt2, powert_max, reactance): #constructor begins
+		self.transl_id = id_of_transl
+		self.local_index = local_rank
+		self.conn_nodet_ptr1 = node_connt1
+		self.conn_nodet_ptr2 = node_connt2
+		self.pt_max = powert_max
+		self.react = reactance	
+		self.from_node = self.conn_nodet_ptr1.get__node_id()
+		self.to_node = self.conn_nodet_ptr2.get__node_id()
+		log.info("\nInitializing the parameters of the shared transmission line with _id: {}".format(self.transl_id))
+		log.info("from node: {} To node: {}".format(self.from_node, self.to_node))
+		self.conn_nodet_ptr1.set_se_conn(self.transl_id, 1, self.react, self.to_node) #increments the txr line connection variable to node 1
+		self.conn_nodet_ptr2.set_se_conn(self.transl_id, -1, self.react, self.from_node) #increments the txr line connection variable to node 1 
 		#constructor ends
 
 	#def __del__(): #destructor
-		#log.info("\nThe transmission line object having ID {} have been destroyed.\n".format(self.translID))
+		#log.info("\nThe transmission line object having _id {} have been destroyed.\n".format(self.transl_id))
 		# end of destructor
 
-	def getTranslID(self): #function gettranslID begins
-		return self.translID #returns the ID of the generator object 
-		#end of gettranslID function
+	def get_Transl_id(self): #function get_transl_id begins
+		return self.transl_id #returns the _id of the generator object 
+		#end of get_transl_id function
 
-	def getFromNodeID(self): #function getFromNodeID begins
-		return self.connNodetPtr1.getNodeID() #returns the ID number of the from node 
-		#end of getFromNodeID function
+	def get_from_node_id(self): #function get_from_node_id begins
+		return self.conn_nodet_ptr1.get_node_id() #returns the _id number of the from node 
+		#end of get_from_node_id function
 
-	def getToNodeID(self): #function getToNodeID begins
-		return self.connNodetPtr2.getNodeID() #returns the ID number of the to node
-		# end of getToNodeID function
+	def get_to_node_id(self): #function get_To_node_id begins
+		return self.conn_nodet_ptr2.get_node_id() #returns the _id number of the to node
+		# end of get_To_node_id function
 
 
-	def getFlowLimit(self): #Function getFlowLimit gets the value of power flow line limit
-		return self.ptMax
-		#Function getFlowLimit ends
+	def get_from_limit(self): #Function get_from_limit get_s the value of power flow line limit
+		return self.pt_max
+		#Function get_from_limit ends
 
-	def getReactance(self):
-		return self.reacT
+	def get_reactance(self):
+		return self.react

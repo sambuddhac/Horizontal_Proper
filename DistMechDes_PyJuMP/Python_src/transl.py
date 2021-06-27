@@ -5,41 +5,39 @@ from Python_src.log import log
 
 class transmissionLine(object):
 
-	def __init__(self,  idOfTransl, nodeConnt1, nodeConnt2, PowertMax, Reactance): #constructor begins
-		self.translID = idOfTransl
-		self.connNodet1Ptr = nodeConnt1 
-		self.connNodet2Ptr = nodeConnt2
-		self.ptMax = PowertMax
-		self.reacT = Reactance
-		self.deviceNature = 0
-		#log.info("\nInitializing the parameters of the transmission line with ID: {}".format(self.translID))
-		self.fromNode = self.connNodet1Ptr.getNodeID()
-		self.toNode = self.connNodet2Ptr.getNodeID()
-		self.connNodet1Ptr.settConn(self.idOfTransl, 1, self.reacT, self.toNode) #increments the txr line connection variable to node 1
-		self.connNodet2Ptr.settConn(self.idOfTransl, -1, self.reacT, self.fromNode) #increments the txr line connection variable to node 2
+	def __init__(self,  id_of_transl, node_connt1, node_connt2, powert_max, reactance): #constructor begins
+		self.transl_id = id_of_transl
+		self.conn_nodet1_ptr = node_connt1 
+		self.conn_nodet2_ptr = node_connt2
+		self.pt_max = powert_max
+		self.react = reactance
+		self.device_nature = 0
+		#log.info("\nInitializing the parameters of the transmission line with _id: {}".format(self.transl_id))
+		self.from_node = self.conn_nodet1_ptr.get_node_id()
+		self.to_node = self.conn_nodet2_ptr.get_node_id()
+		self.conn_nodet1_ptr.set_t_conn(self.id_of_transl, 1, self.react, self.to_node) #increments the txr line connection variable to node 1
+		self.conn_nodet2_ptr.set_t_conn(self.id_of_transl, -1, self.react, self.from_node) #increments the txr line connection variable to node 2
 		#constructor ends
 
 	#def __del__(): #destructor
-		#log.info("\nThe transmission line object having ID {} have been destroyed.\n".format(self.translID))
+		#log.info("\nThe transmission line object having _id {} have been destroyed.\n".format(self.transl_id))
 		#end of destructor
 
-	def getTranslID(self): #function gettranslID begins
-		return self.translID #returns the ID of the generator object
-		#end of gettranslID function
+	def get_transl_id(self): #function get_transl_id begins
+		return self.transl_id #returns the _id of the generator object
+		#end of get_transl_id function
 
-	def getFlowLimit(self): #function getFlowLimit begins
-		return self.ptMax #returns the Maximum power flow limit
-		# end of getFlowLimit function
+	def get_flow_limit(self): #function get_flow_limit begins
+		return self.pt_max #returns the Maximum power flow limit
+		# end of get_flow_limit function
 
-	def getTranslNodeID1(self): #function getGenNodeID begins
-		return self.connNodet1Ptr.getNodeID() #returns the ID number of the node to which the generator object is connected 
-		#end of getGenNodeID function
+	def get_transl_node_id1(self): #function get_gen_node_id begins
+		return self.conn_nodet1_ptr.get_node_id() #returns the _id number of the node to which the generator object is connected 
+		#end of get_gen_node_id function
 
-	def getTranslNodeID2(self): #function getGenNodeID begins
-		return self.connNodet2Ptr.getNodeID() #returns the ID number of the node to which the generator object is connected 
-		#end of getGenNodeID function
+	def get_transl_node_id2(self): #function get_gen_node_id begins
+		return self.conn_nodet2_ptr.get_node_id() #returns the _id number of the node to which the generator object is connected 
+		#end of get_gen_node_id function
 
-	def getReactance(self):
-		return self.reacT
-	
-
+	def get_reactance(self):
+		return self.react
