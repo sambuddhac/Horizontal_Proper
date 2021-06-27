@@ -24,7 +24,7 @@ class candLine(object):
 		#log.info("\nThe transmission line object having ID {} have been destroyed.\n".format(self.translID))
 		#end of destructor
 
-	def getTranslID(self): #function gettranslID begins
+	def get_transl_id(self): #function gettranslID begins
 		return self.translID #returns the ID of the generator object
 		#end of gettranslID function
 

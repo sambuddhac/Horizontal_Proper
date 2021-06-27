@@ -38,28 +38,28 @@ def hor_milp_central(): # Main method begins program execution
 	curve_choice = 1 # Number to indicate the type of Objective function among average heat rate, piecewise linear, or polynomial; Assume Average Heat Rate for now
 	# Read the master zones file, for deciding upon which other files to read for building the model
 	if system_choice==1:
-		zoneSummaryFile = open(os.path.join("data", "masterZonesSummary.json")) #opens the master zones summary file
+		zone_summary_file = open(os.path.join("data", "masterZonesSummary.json")) #opens the master zones summary file
 	else:
-		zoneSummaryFile = open(os.path.join("data", "masterZonesSummaryRevised.json")) #opens the master zones summary file
+		zone_summary_file = open(os.path.join("data", "masterZonesSummaryRevised.json")) #opens the master zones summary file
 	
-	matrixFirstFile = json.load(zoneSummaryFile) #opens the file
+	matrix_first_file = json.load(zone_summary_file) #opens the file
 
-	numberOfZones = int(input("\nEnter the number of zones")) #Number of zones between which horizontal investment coordination for transmission lines to be built is considered
+	number_of_zones = int(input("\nEnter the number of zones")) #Number of zones between which horizontal investment coordination for transmission lines to be built is considered
 	log.info("\n*** NETWORK INITIALIZATION STAGE BEGINS ***\n")
-	nettran_instance = Nettran(matrixFirstFile, number_of_zones, curve_choice) #create the network instances for the different zones
+	nettran_instance = Nettran(matrix_first_file, number_of_zones, curve_choice) #create the network instances for the different zones
 	log.info("\n*** NETWORK INITIALIZATION STAGE ENDS: ZONAL SUB-NETWORKS CREATED ***\n")
 	log.info("\n*** SOLUTION OF SINGLE AREA MILP HORIZONTAL COORDINATION BEGINS ***\n")
 	if curve_choice == 1:
 		log.info("\nSOLVING MILP")
-		solution = nettranInstance.MILPAvgHR() #Perform unit commitment for average heat rate objective
+		solution = nettran_instance.milp_avg_hr() #Perform unit commitment for average heat rate objective
 		log.info("\nMILP SOLVED")
 	elif curve_choice == 2:
 		log.info("\nSOLVING MILPPiecewiseLin")
-		nettranInstance.MILPPiecewiseLin() #Perform unit commitment for piecewise linear objective
+		nettran_instance.milp_piecewise_lin() #Perform unit commitment for piecewise linear objective
 		log.info("\nMILPPiecewiseLin SOLVED")
-	elif curve_choice == 2:
+	elif curve_choice == 3:
 		log.info("\nSOLVING MILPPolynomial")
-		nettranInstance.MILPPolynomial() #Perform unit commitment for polynomial objective
+		nettran_instance.milp_polynomial() #Perform unit commitment for polynomial objective
 		log.info("\nMILPPolynomial SOLVED")
 	else:
 		log.info("\nInvalid choice of Objective function")

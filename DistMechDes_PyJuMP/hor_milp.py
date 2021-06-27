@@ -11,8 +11,8 @@ import sys
 import traceback
 from Python_src.log import log
 from Python_src.profiler import Profiler
-import gurobipy as gp
-from gurobipy import GRB
+#import gurobipy as gp
+#from gurobipy import GRB
 from Python_src.nettran import Nettran
 from Python_src.marketoverseer import Marketover
 
@@ -31,11 +31,11 @@ julSol.eval('Pkg.activate(".")')
 julSol.include(os.path.join("JuMP_src", "HorMILPDistMech.jl")) # definition of Gensolver class for base case scenario first interval
 log.info(("Julia took {:..2f} seconds to start and include Horizontal Investment Coordination mechanism design models.".format(profiler.get_interval())))
 
-def HorMILPCentral(): # Main method begins program execution
-	systemChoice = int(input("Choose the type of System to be simulated: 1 for Simple two bus/two region, 2 for system combined of IEEE 14, 30, and 5 node systems"))
-	basisForComparison = int(input("Choose, for updating the Lagrange multipliers, 0 when the current zonal updates are compared to previous iteration MO update;else, 1"))
-	curveChoice = 1 # Number to indicate the type of Objective function among average heat rate, piecewise linear, or polynomial; Assume Average Heat Rate for now
-	if systemChoice==1:
+def hor_milp_distributed(): # Main method begins program execution
+	system_choice = int(input("Choose the type of System to be simulated: 1 for Simple two bus/two region, 2 for system combined of IEEE 14, 30, and 5 node systems"))
+	basis_for_comparison = int(input("Choose, for updating the Lagrange multipliers, 0 when the current zonal updates are compared to previous iteration MO update;else, 1"))
+	curve_choice = 1 # Number to indicate the type of Objective function among average heat rate, piecewise linear, or polynomial; Assume Average Heat Rate for now
+	if system_choice==1:
 		zoneSummaryFile = open(os.path.join("data", "masterZonesSummary.json")) #opens the master zones summary file
 	else:
 		zoneSummaryFile = open(os.path.join("data", "masterZonesSummaryRevised.json")) #opens the master zones summary file
@@ -438,7 +438,7 @@ def HorMILPCentral(): # Main method begins program execution
 print("\nThis is the simulation program for Stage-I and Stage-II of the Horizontal Investment Coordination MILP Market Mechanism Design Simulation application.\n")
 
 try:
-    if __name__ == '__main__': HorMILPCentral()
+    if __name__ == '__main__': hor_milp_distributed()
 except:
     log.warning("Simulation FAILED !!!!")
 

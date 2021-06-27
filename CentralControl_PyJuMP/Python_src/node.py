@@ -142,7 +142,7 @@ class Node(object):
 		return len(self.genSerialNum) #returns node ID to the caller 
 		#end of function getNodeID
 
-	def getGenSer(int colCount):
+	def getGenSer(colCount):
 		return self.genSerialNum[colCount-1]
 
 	#function redContNodeCount begins
