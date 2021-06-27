@@ -1,31 +1,37 @@
-#Member functions for class Load.
-#include definition from node
-from Python_src.node import Node
-from Python_src.log import log
+#Member functions for class _load.
+	#include definition from node
+	from Python_src.node import _node
+	from Python_src.log import log
+	
 
-class Load(object):
-	def __init__(self, idOfLoad, nodeConnl, scenarioCount, Load_P): #constructor begins
-		self.loadID = idOfLoad
-		self.connNodelPtr = nodeConnl
-		self.numberOfScenarios = scenarioCount
-		self.deviceNature = 0
-		self.setLoadValue(Load_P) #Sets the load for each scenario
-		self.connNodelPtr.setlConn(idOfLoad, self.Pl) #increments the load connection variable to node
-		#constructor ends
+	class _load(object):
+		def __init__(self, id_of_load, node_connl, scenario_count, load_p): #constructor begins
+			self.load_id = id_of_load
+			self.conn_nodel_ptr = node_connl
+			self.number_of_scenarios  = scenario_count
+			self.device_nature = 0
+			self.set_load_value(load_p) #Sets the load for each scenario
+			self.conn_nodel_ptr.setl_conn(id_of_load, self.pl) #increments the load connection variable to node
+			#constructor ends
+	
 
-	#def __del__(): #destructor
-		#log.info("\nThe load object having ID {} have been destroyed.\n".format(self.loadID ))
-		#end of destructor
+		#def __del__(): #destructor
+			#log.info("\nThe load object having _id {} have been destroyed.\n".format(self.load_id ))
+			#end of destructor
+	
 
-	def setLoadValue(self, Load_P): #Sets the load for each scenario
-		for i in range(numberOfScenarios):
-			self.Pl.append(Load_P[i])
+		def set_load_value(self, load_p): #Sets the load for each scenario
+			for i in range(number_of_scenarios ):
+				self.pl.append(load_p[i])
+	
 
-	def getLoadID(self): #function getLoadID begins
-		return self.loadID #returns the ID of the load object
-		#end of getLoadID function
+		def get_load_id(self): #function get_load_id begins
+			return self.load_id #returns the _id of the load object
+			#end of get_load_id function
+	
 
-	def getLoadNodeID(self): #function getLoadNodeID begins
-		return self.connNodelPtr.getNodeID() #returns the ID number of the node to which the load object is connected
-		#end of getLoadNodeID function
+		def get_load_node_id(self): #function get_load_node_id begins
+			return self.conn_nodel_ptr.get_node_id() #returns the _id number of the node to which the load object is connected
+			#end of get_load_node_id function
+
 	

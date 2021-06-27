@@ -1,56 +1,56 @@
 #Member functions for class intCandLine
-#include class definition from intcandidateLine, Node class definition from node
-from Python_src.node import Node
+#include class definition from intcandidateLine, _node class definition from node
+from Python_src.node import _node
 from Python_src.log import log
 
 class intCandLine(object):
-	def __init__(self, idOfTransl, nodeConnt1, nodeConnt2, PowertMax, Reactance, ROI, life, cap, absPres ): #constructor begins
-		self.translID = idOfTransl
-		self.connNodetPtr1 = nodeConnt1
-		self.connNodetPtr2 = nodeConnt2
-		self.ptMax = PowertMax
-		self.reacT = Reactance
-		self.statusOfConstruction = absPres
-		self.fromNode = self.connNodetPtr1.getNodeID()
-		self.toNode = self.connNodetPtr2.getNodeID()
-		self.connNodetPtr1.setIntCandConn(idOfTransl, 1, self.reacT, self.toNode, self.statusOfConstruction) #increments the txr line connection variable to node 1
-		self.connNodetPtr2.setIntCandConn(idOfTransl, -1, self.reacT, self.fromNode, self.statusOfConstruction) #increments the txr line connection variable to node 2
-		self.setTranData(cap, life, ROI) #calls setTranData member function to set the parameter values
+	def __init__(self, id_of_transl, node_connt1, node_connt2, powert_max, reactance, roi, life, cap, abs_pres ): #constructor begins
+		self.transl_id = id_of_transl
+		self.conn_nodet_ptr1 = node_connt1
+		self.conn_nodet_ptr2 = node_connt2
+		self.pt_max = powert_max
+		self.react = reactance
+		self.status = abs_pres
+		self.from_node = self.conn_nodet_ptr1.get_node_id()
+		self.to_node = self.conn_nodet_ptr2.get_node_id()
+		self.conn_nodet_ptr1.set_int_cand_conn(id_of_transl, 1, self.react, self.to_node, self.status) #increments the txr line connection variable to node 1
+		self.conn_nodet_ptr2.set_int_cand_conn(id_of_transl, -1, self.react, self.from_node, self.status) #increments the txr line connection variable to node 2
+		self.set_tran_data(cap, life, roi) #calls set_tran_data member function to set the parameter values
 		#constructor ends
 
 	def __del__(): #destructor
-		#log.info("\nThe transmission line object having ID {} have been destroyed.".format(self.translID))
+		#log.info("\nThe transmission line object having _id {} have been destroyed.".format(self.transl_id))
 		#end of destructor
 
-	def getTranslID(self): #function gettranslID begins
-		return self.translID #returns the ID of the generator object
-		#end of gettranslID function
+	def get_transl_id(self): #function get_transl_id begins
+		return self.transl_id #returns the _id of the generator object
+		#end of get_transl_id function
 
-	def getTranslNodeID1(self): #function getGenNodeID begins
-		return self.connNodetPtr1.getNodeID() #returns the ID number of the node to which the generator object is connected
-		#end of getGenNodeID function
+	def get_transl_node_id1(self): #function get_gen_node_id begins
+		return self.conn_nodet_ptr1.get_node_id() #returns the _id number of the node to which the generator object is connected
+		#end of get_gen_node_id function
 
-	def getTranslNodeID2(self): #function getGenNodeID begins
-		return self.connNodetPtr2.getNodeID() #returns the ID number of the node to which the generator object is connected
-		#end of getGenNodeID function
+	def get_transl_node_id2(self): #function get_gen_node_id begins
+		return self.conn_nodet_ptr2.get_node_id() #returns the _id number of the node to which the generator object is connected
+		#end of get_gen_node_id function
 
-	def getFlowLimit(self): #Function getFlowLimit gets the value of power flow line limit
-		return self.ptMax
-		#Function getFlowLimit ends
+	def get_flow_limit(self): #Function get_flow_limit gets the value of power flow line limit
+		return self.pt_max
+		#Function get_flow_limit ends
 
-	def getReactance(self):
-		return self.reacT
+	def get_reactance(self):
+		return self.react
 
-	def setTranData(self, capC, lifeTime, interRate): #member function to set parameter values of transmission lines
-		self.capitalCost = capC
-		self.lifeYears = lifeTime
-		self.rateInterest = interRate
+	def set_tran_data(self, cap_cost, life_time, inter_rate): #member function to set parameter values of transmission lines
+		self.capital_cost = cap_cost
+		self.life_years = life_time
+		self.rate_interest = inter_rate
 		#end function for setting parameter values
 
-	def getInvestCost(self): #member function getInvestCost begins
-		#return (self.capitalCost*self.rateInterest*(((1+self.rateInterest) ** self.lifeYears)))/(((1+self.rateInterest) ** self.lifeYears)-1) #1+self.rateInterest);self.capitalCost/100
-		return self.capitalCost
+	def get_invest_cost(self): #member function get_invest_cost begins
+		#return (self.capital_cost*self.rate_interest*(((1+self.rate_interest) ** self.life_years)))/(((1+self.rate_interest) ** self.life_years)-1) #1+self.rate_interest);self.capital_cost/100
+		return self.capital_cost
 
-	def returnPresAbsStatus(self): #Returns the construction status of the candidate line
-		return self.statusOfConstruction
+	def return_pres_abs_status(self): #Returns the construction status of the candidate line
+		return self.status
 
