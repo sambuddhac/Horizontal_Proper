@@ -101,7 +101,7 @@ class Node(object):
 				self.conn_react_rec.append(1/react)
 		log.info("The node {} in zone {} accessed by the SE line {} with reactance {} and dir {}".format(self.global_rank, self.zone_id, tran_id, react, dir))
 
-	def setCandConn(self, tran_id, dir, react, rank_of_other):
+	def set_cand_conn(self, tran_id, dir, react, rank_of_other):
 		self.cand_conn_number += 1 #increment the number of shared cand txr lines connected by one whenever a txr line is connected to the node
 		if dir == 1:
 			self.cand_from_serial.append(tran_id)
@@ -110,7 +110,7 @@ class Node(object):
 		self.conn_cand_point = 1 #Flag set to indicate that this node is connected to a cand line
 		log.info("The node {} in zone {} accessed by the shared candidate line {} with reactance {}".format(self.node_id, self.zone_id, tran_id, react))
 
-	def setIntCandConn(self, tran_id, dir, react, rank_of_other, const_stat):
+	def set_int_cand_Conn(self, tran_id, dir, react, rank_of_other, const_stat):
 		self.int_cand_conn_number += 1 #increment the number of shared cand txr lines connected by one whenever a txr line is connected to the node
 		if dir == 1:
 			self.int_cand_from_serial.append(tran_id)
