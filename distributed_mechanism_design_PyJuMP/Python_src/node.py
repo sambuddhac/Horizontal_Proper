@@ -9,238 +9,238 @@ import numpy as np
 #using namespace std;
 
 class Node(object):
-	def _init_(self, idOfNode, zoneIndex): # constructor begins
-		self.nodeID=idOfNode
-		self.zoneID=zoneIndex
-#cout << "\nInitializing the parameters of the node with ID: " << nodeID << endl;
+	def _init_(self, id_of_node, zone_index): # constructor begins
+		self.node_id=id_of_node
+		self.zone_id=zone_index
+#cout << "\nInitializing the parameters of the node with ID: " << node_id << endl;
 #initialize the connected devices to zero for node
-		self.gConnNumber = 0 # number of generators connected to a particular node
-		self.tConnNumber = 0 # number of transmission lines connected to a particular node
-		self.lConnNumber = 0 # number of loads connected to a particular node
-		self.sharedExConnNumber = 0  # number of shared existing transmission lines connected to this node
-		self.builtCandConnNumber = 0 # number of constructed candidate line connected to this node
-		self.builtIntCandConnNumber = 0 # number of constructed candidate line connected to this node
-		self.candConnNumber = 0 # number of shared candidate transmission lines connected to this node
-		self.intCandConnNumber = 0 # number of internal candidate transmission lines connected to this node 
-		self.sharedFlag = 0 # node flag to indicate whether a shared existing or candidate line has been connected to a node
-		self.PDevCount = 0 # initialize number of devices connectedto a node to zero
-		self.fromReact = 0.0 # Initialize the from reactance
-		self.toReact = 0.0  # Initialize the to reactance
-		self.globalRank = 0 # sets the globalRank to default value of 0 
+		self.g_conn_number = 0 # number of generators connected to a particular node
+		self.t_conn_number = 0 # number of transmission lines connected to a particular node
+		self.l_conn_number = 0 # number of loads connected to a particular node
+		self.shared_ex_conn_number = 0  # number of shared existing transmission lines connected to this node
+		self.built_cand_conn_number = 0 # number of constructed candidate line connected to this node
+		self.built_int_cand_conn_number = 0 # number of constructed candidate line connected to this node
+		self.cand_conn_number = 0 # number of shared candidate transmission lines connected to this node
+		self.int_cand_conn_number = 0 # number of internal candidate transmission lines connected to this node 
+		self.shared_flag = 0 # node flag to indicate whether a shared existing or candidate line has been connected to a node
+		self.p_dev_count = 0 # initialize number of devices connectedto a node to zero
+		self.from_react = 0.0 # Initialize the from reactance
+		self.to_react = 0.0  # Initialize the to reactance
+		self.global_rank = 0 # sets the global_rank to default value of 0 
 
 	# constructor ends
 
-	def getNodeID(self): # function getNodeID begins
-		return self.nodeID #returns node ID to the caller
- # end of function getNodeID
+	def get_node_id(self): # function get_node_id begins
+		return self.node_id #returns node ID to the caller
+ # end of function get_node_id
 
-	def setgConn(self, serialOfGen):
-		self.gConnNumber+=1 # increment the number of generators connected by one whenever a generator is connected to the node
-		self.genSerialNum.append(serialOfGen) # records the serial number of the generator connected to the node 
+	def set_g_conn(self, serial_of_gen):
+		self.g_conn_number+=1 # increment the number of generators connected by one whenever a generator is connected to the node
+		self.gen_serial_num.append(serial_of_gen) # records the serial number of the generator connected to the node 
 ### 
 
-	def settConn(self, tranID, dir, react, rankOfOther):
-		self.tConnNumber+=1 # increment the number of txr lines connected by one whenever a txr line is connected to the node
+	def set_t_conn(self, tran_id, dir, react, rank_of_other):
+		self.t_conn_number+=1 # increment the number of txr lines connected by one whenever a txr line is connected to the node
 		if dir == 1:
-			self.tranFromSerial.append(tranID)
-			self.fromReact += 1/react	
-			if  rankOfOther in self.connNodeList:  # If predecided Gen value is given for this particular Powergenerator
-				pos= self.connNodeList.index(rankOfOther) # find the position of the Powergenerator in the chart of predecided values
-				self.connReactRec[pos] -= 1/react
+			self.tran_from_serial.append(tran_id)
+			self.from_react += 1/react	
+			if  rank_of_other in self.conn_node_list:  # If predecided Gen value is given for this particular Powergenerator
+				pos= self.conn_node_list.index(rank_of_other) # find the position of the Powergenerator in the chart of predecided values
+				self.conn_react_rec[pos] -= 1/react
 			else: 
-				self.connNodeList.append(rankOfOther)
-				self.connReactRec.append(-1/react)
+				self.conn_node_list.append(rank_of_other)
+				self.conn_react_rec.append(-1/react)
 	
 		else:
-			self.tranToSerial.append(tranID)
-			self.toReact -= (1/react)
-			if rankOfOther in self.connNodeList: # If predecided Gen value is given for this particular Powergenerator
-				pos = self.connNodeList.index(rankOfOther) # find the position of the Powergenerator in the chart of predecided values
-				self.connReactRec[pos] += 1/react
+			self.tran_to_serial.append(tran_id)
+			self.to_react -= (1/react)
+			if rank_of_other in self.conn_node_list: # If predecided Gen value is given for this particular Powergenerator
+				pos = self.conn_node_list.index(rank_of_other) # find the position of the Powergenerator in the chart of predecided values
+				self.conn_react_rec[pos] += 1/react
 			else:
-				self.connNodeList.append(rankOfOther)
-				self.connReactRec.append(1/react)
+				self.conn_node_list.append(rank_of_other)
+				self.conn_react_rec.append(1/react)
 
-	def setSEConn(self, tranID, dir, react, connectZone):
-		self.sharedExConnNumber +=1  # increment the number of shared existing txr lines connected by one whenever a txr line is connected to the node
+	def set_se_conn(self, tran_id, dir, react, connect_zone):
+		self.shared_ex_conn_number +=1  # increment the number of shared existing txr lines connected by one whenever a txr line is connected to the node
 		if  dir == 1:
-			self.SEFromSerial.append(tranID)
-			self.fromReact += (1/react)		
+			self.se_from_serial.append(tran_id)
+			self.from_react += (1/react)		
 		else:
-			self.SEToSerial.append(tranID)
-			self.toReact -= (1/react)
-		self.connSharedPoint=1 #Flag set to indicate that this node is connected to an SE line
-		if connectZone not in self.connectedZoneList: # If the connected zone isn't in the list
-			self.connectedZoneList.append(connectZone) # Put it on the list
+			self.se_to_serial.append(tran_id)
+			self.to_react -= (1/react)
+		self.conn_shared_point=1 #Flag set to indicate that this node is connected to an SE line
+		if connect_zone not in self.connected_zone_list: # If the connected zone isn't in the list
+			self.connected_zone_list.append(connect_zone) # Put it on the list
 			self.multiplicity +=1 # increase the multiplicity by 1
 
-	def modifyReactAPP(self, tranID, dir, react, rankOfOther, deviceType): # Modifies the to and from reactances of lines connected to this node, to account for the newly constructed lines
-		if deviceType== 1:  # If shared candidate line
-			self.builtCandConnNumber+=1 # increment the number of shared constructed candidate lines connected by one whenever the line is connected to the node
+	def modify_react_app(self, tran_id, dir, react, rank_of_other, device_type): # Modifies the to and from reactances of lines connected to this node, to account for the newly constructed lines
+		if device_type== 1:  # If shared candidate line
+			self.built_cand_conn_number+=1 # increment the number of shared constructed candidate lines connected by one whenever the line is connected to the node
 			if  dir == 1:  
-				self.builtCandFromSerial.append(tranID)
-				self.fromReact += (1/react)		
+				self.built_cand_from_serial.append(tran_id)
+				self.from_react += (1/react)		
 			else:
-				self.builtCandToSerial.append(tranID)
-				self.toReact -= (1/react)
+				self.built_cand_to_serial.append(tran_id)
+				self.to_react -= (1/react)
 	
 		else: # If internal candidate line
-			self.builtIntCandConnNumber+=1 # increment the number of shared constructed candidate lines connected by one whenever the line is connected to the node
+			self.built_int_cand_conn_number+=1 # increment the number of shared constructed candidate lines connected by one whenever the line is connected to the node
 			if  dir == 1:
-				self.builtIntCandFromSerial.append(tranID)
-				self.fromReact += (1/react)	
-				if  rankOfOther in  self.connNodeList: # If predecided Gen value is given for this particular Powergenerator
-					pos = self.connNodeList.index(rankOfOther)  # find the position of the Powergenerator in the chart of predecided values
-					self.connReactRec[pos] -= (1/react)
+				self.builtint_cand_from_serial.append(tran_id)
+				self.from_react += (1/react)	
+				if  rank_of_other in  self.conn_node_list: # If predecided Gen value is given for this particular Powergenerator
+					pos = self.conn_node_list.index(rank_of_other)  # find the position of the Powergenerator in the chart of predecided values
+					self.conn_react_rec[pos] -= (1/react)
 				else:
-					self.connNodeList.append(rankOfOther)
-					self.connReactRec.append((-1/react))
+					self.conn_node_list.append(rank_of_other)
+					self.conn_react_rec.append((-1/react))
 			else:
-				self.builtIntCandToSerial.append(tranID)
-				self.toReact -= (1/react)
-				if  rankOfOther in self.connNodeList: # If predecided Gen value is given for this particular Powergenerator
-					pos = self.connNodeList.index(rankOfOther) # find the position of the Powergenerator in the chart of predecided values
-					self.connReactRec[pos] += (1/react)
+				self.builtint_cand_to_serial.append(tran_id)
+				self.to_react -= (1/react)
+				if  rank_of_other in self.conn_node_list: # If predecided Gen value is given for this particular Powergenerator
+					pos = self.conn_node_list.index(rank_of_other) # find the position of the Powergenerator in the chart of predecided values
+					self.conn_react_rec[pos] += (1/react)
 				else:
-					self.connNodeList.append(rankOfOther)
-					self.connReactRec.append((1/react))
-		self.connBuiltCandPoint=1
+					self.conn_node_list.append(rank_of_other)
+					self.conn_react_rec.append((1/react))
+		self.conn_built_cand_point=1
 
-	def setCandConn(self, tranID, dir, react, connectZone):
-		self.candConnNumber+=1 # increment the number of shared cand txr lines connected by one whenever a txr line is connected to the node
+	def set_cand_conn(self, tran_id, dir, react, connect_zone):
+		self.cand_conn_number+=1 # increment the number of shared cand txr lines connected by one whenever a txr line is connected to the node
 		if dir == 1:
-			self.CandFromSerial.append(tranID)
+			self.cand_from_serial.append(tran_id)
 		else:
-			self.CandToSerial.append(tranID)
-		self.connCandPoint=1 # Flag set to indicate that this node is connected to a cand line
-		if  connectZone not in self.connectedZoneList: # If the connected zone isn't in the list
-			self.connectedZoneList.append(connectZone) # Put it on the list
+			self.cand_to_serial.append(tran_id)
+		self.conn_cand_point=1 # Flag set to indicate that this node is connected to a cand line
+		if  connect_zone not in self.connected_zone_list: # If the connected zone isn't in the list
+			self.connected_zone_list.append(connect_zone) # Put it on the list
 			self.multiplicity+=1 # increase the multiplicity by 1
 
-	def getNodeMultiplicity(self): # get the multiplicity of the node i.e: the number of different zones (other than the one where it belongs) to which it is connected
+	def get_node_multiplicity(self): # get the multiplicity of the node i.e: the number of different zones (other than the one where it belongs) to which it is connected
 		return self.multiplicity
 
-	def setIntCandConn(self, tranID, dir, react, rankOfOther, constStat):
-		self.intCandConnNumber+=1 # increment the number of shared cand txr lines connected by one whenever a txr line is connected to the node
+	def set_int_cand_conn(self, tran_id, dir, react, rank_of_other, const_stat):
+		self.int_cand_conn_number+=1 # increment the number of shared cand txr lines connected by one whenever a txr line is connected to the node
 		if dir == 1:
-			self.IntCandFromSerial.append(tranID)
-			self.fromReact += constStat*(1/react)	
-			if  rankOfOther in self.connNodeList: # If predecided Gen value is given for this particular Powergenerator
-				pos = self.connNodeList.index(rankOfOther) # find the position of the Powergenerator in the chart of predecided values
-				self.connReactRec[pos] -= constStat*(1/react)
+			self.int_cand_from_serial.append(tran_id)
+			self.from_react += const_stat*(1/react)	
+			if  rank_of_other in self.conn_node_list: # If predecided Gen value is given for this particular Powergenerator
+				pos = self.conn_node_list.index(rank_of_other) # find the position of the Powergenerator in the chart of predecided values
+				self.conn_react_rec[pos] -= const_stat*(1/react)
 			else:
-				self.connNodeList.append(rankOfOther)
-				self.connReactRec.append(constStat*(-1/react))
+				self.conn_node_list.append(rank_of_other)
+				self.conn_react_rec.append(const_stat*(-1/react))
 		else:
-			self.IntCandToSerial.append(tranID)
-			self.toReact -= constStat*(1/react)
-			if rankOfOther in self.connNodeList: # If predecided Gen value is given for this particular Powergenerator
-				pos = self.connNodeList.index(rankOfOther)  # find the position of the Powergenerator in the chart of predecided values
-				self.connReactRec[pos] += constStat*(1/react)
+			self.int_cand_to_serial.append(tran_id)
+			self.to_react -= const_stat*(1/react)
+			if rank_of_other in self.conn_node_list: # If predecided Gen value is given for this particular Powergenerator
+				pos = self.conn_node_list.index(rank_of_other)  # find the position of the Powergenerator in the chart of predecided values
+				self.conn_react_rec[pos] += const_stat*(1/react)
 			else:
-				self.connNodeList.append(rankOfOther)
-				self.connReactRec.append(constStat*(1/react))
-		self.connIntCandPoint=1	 # Flag set to indicate that this node is connected to an internal cand line
+				self.conn_node_list.append(rank_of_other)
+				self.conn_react_rec.append(const_stat*(1/react))
+		self.conn_int_cand_point=1	 # Flag set to indicate that this node is connected to an internal cand line
 
-	def setlConn(self, lID, loadVal):
-		self.lConnNumber +=1 # increment the number of loads connected by one whenever a load is connected to the node
-		self.loadSerialNum.append(lID)
-		self.connLoadVal = []
-		self.connLoadVal = loadVal ####
+	def set_l_conn(self, l_id, load_val):
+		self.l_conn_number +=1 # increment the number of loads connected by one whenever a load is connected to the node
+		self.load_serial_num.append(l_id)
+		self.conn_load_val = []
+		self.conn_load_val = load_val ####
 
-	def getGenLength(self): # function getNodeID begins
-		return self.genSerialNum.len() # returns node ID to the caller 
+	def get_gen_length(self): # function get_node_id begins
+		return self.gen_serial_num.len() # returns node ID to the caller 
 
-	def getGenSer(self, colCount):
-		return self.genSerialNum[colCount-1] ###not sure at is
+	def get_gen_ser(self, col_count):
+		return self.gen_serial_num[col_count-1] ###not sure at is
 
-# function redContNodeCount begins
+# function red_cont_node_count begins
 
-	def initLoad(self,scenNum): # Initialize the default loads on all nodes to zero
-		i = 0 ### for (int i = 0; i < scenNum; ++i)
-		for i in range(scenNum):
-			self.connLoadVal.append(0) ###Not sure
+	def init_load(self,scen_num): # Initialize the default loads on all nodes to zero
+		i = 0 ### for (int i = 0; i < scen_num; ++i)
+		for i in range(scen_num):
+			self.conn_load_val.append(0) ###Not sure
 
-	def devpinitMessage(self,scenC): # function devpinitMessage begins
-		return self.connLoadVal[scenC] # return the total connected load ###Not sure
-# function devpinitMessage ends
+	def devpinit_message(self,scen_c): # function devpinit_message begins
+		return self.conn_load_val[scen_c] # return the total connected load ###Not sure
+# function devpinit_message ends
 
-	def sendExtNodeInfo(self, rankOfOuter, direction,reactance, indicatorSECand): # Function to populate the connected outer-node list
-		if rankOfOuter in self.shareNodeList: # If outer node rank is present in the list
-			pos = self.shareNodeList.index(rankOfOuter)  # find the position of the outer node
+	def send_ext_node_info(self, rank_of_outer, direction,reactance, indicator_se_cand): # Function to populate the connected outer-node list
+		if rank_of_outer in self.share_node_list: # If outer node rank is present in the list
+			pos = self.share_node_list.index(rank_of_outer)  # find the position of the outer node
 			if direction == 1:
-				self.shareReactRec[pos] -= (1-indicatorSECand)*(1/reactance)
+				self.share_react_rec[pos] -= (1-indicator_se_cand)*(1/reactance)
 			else:
-				self.shareReactRec[pos] += (1-indicatorSECand)*(1/reactance)
+				self.share_react_rec[pos] += (1-indicator_se_cand)*(1/reactance)
 		else:
 			if direction == 1:
-				self.shareNodeList.append(rankOfOuter)
-				self.shareReactRec.append((1-indicatorSECand)*(-1/reactance))
+				self.share_node_list.append(rank_of_outer)
+				self.share_react_rec.append((1-indicator_se_cand)*(-1/reactance))
 			else:
-				self.shareNodeList.append(rankOfOuter)
-				self.shareReactRec.append((1-indicatorSECand)*(1/reactance))
+				self.share_node_list.append(rank_of_outer)
+				self.share_react_rec.append((1-indicator_se_cand)*(1/reactance))
 
-	def getSharedFlag(self):
-		return self.connSharedPoint # return the status if this node is connected to a shared existing line		
+	def get_shared_flag(self):
+		return self.conn_shared_point # return the status if this node is connected to a shared existing line		
 
-	def getCandFlag(self):
-		return self.connCandPoint  # return the status if this node is connected to a shared cand line
+	def get_cand_flag(self):
+		return self.conn_cand_point  # return the status if this node is connected to a shared cand line
 
-	def getBuiltCandFlag(self):
-		return self.connBuiltCandPoint #return the status if this node is connected to a shared cand line that is built
+	def get_built_cand_flag(self):
+		return self.conn_built_cand_point #return the status if this node is connected to a shared cand line that is built
 
-	def getToReact(self):
-		return self.toReact  #return the total reciprocal of reactances for which this is the to node
+	def get_to_react(self):
+		return self.to_react  #return the total reciprocal of reactances for which this is the to node
 
-	def getFromReact(self):
-		return self.fromReact # return the total reciprocal of reactances for which this is the from node
+	def get_from_react(self):
+		return self.from_react # return the total reciprocal of reactances for which this is the from node
 
-	def getConNodeLength(self):
-		return self.connNodeList.len() # returns the length of the vector containing the connected intra-zonal nodes
+	def get_con_node_length(self):
+		return self.conn_node_list.len() # returns the length of the vector containing the connected intra-zonal nodes
 
-	def getConnSer(self,colCount):
-		return self.connNodeList[colCount-1] # returns the serial number of the connected internal node at this position
+	def get_conn_ser(self,col_count):
+		return self.conn_node_list[col_count-1] # returns the serial number of the connected internal node at this position
 
-	def getConnReact(self,colCount):
-		return self.connReactRec[colCount-1] # returns the serial number of the connected internal node at this position
+	def get_conn_react(self,col_count):
+		return self.conn_react_rec[col_count-1] # returns the serial number of the connected internal node at this position
 
-	def getExtraNodeLength(self):
-		return self.shareNodeList.len() # returns the length of the vector containing the connected outer-zonal nodes
+	def get_extra_node_length(self):
+		return self.share_node_list.len() # returns the length of the vector containing the connected outer-zonal nodes
 
-	def getExtConnSer(self,colCount):
-		return self.shareNodeList[colCount-1] # returns the serial number of the connected external node at this position
+	def get_ext_conn_ser(self,col_count):
+		return self.share_node_list[col_count-1] # returns the serial number of the connected external node at this position
 
-	def getExtConnReact(self,colCount):
-		return self.shareReactRec[colCount-1] # returns the serial number of the connected internal node at this position
+	def get_ext_conn_react(self,col_count):
+		return self.share_react_rec[col_count-1] # returns the serial number of the connected internal node at this position
 
-	def getCandLineLengthF(self):
-		return self.CandFromSerial.len() # returns the number of cand lines connected to this from node
+	def get_cand_line_length_f(self):
+		return self.cand_from_serial.len() # returns the number of cand lines connected to this from node
 
-	def getCandLineLengthT(self):
-		return self.CandToSerial.len() # returns the number of cand lines connected to this to node
+	def get_cand_line_length_t(self):
+		return self.cand_to_serial.len() # returns the number of cand lines connected to this to node
 
-	def getCandSerF(self,colCount):
-		return self.CandFromSerial[colCount-1] #returns the serial number of the cand line at this position
+	def get_cand_ser_f(self,col_count):
+		return self.cand_from_serial[col_count-1] #returns the serial number of the cand line at this position
 
-	def getCandSerT(self,colCount):
-		return self.CandToSerial[colCount-1]  # returns the serial number of the cand line at this position
+	def get_cand_ser_t(self,col_count):
+		return self.cand_to_serial[col_count-1]  # returns the serial number of the cand line at this position
 
-	def getIntCandLineLengthF(self):
-		return self.IntCandFromSerial.len() # returns the number of cand lines connected to this from node
+	def get_int_cand_line_length_f(self):
+		return self.int_cand_from_serial.len() # returns the number of cand lines connected to this from node
 
-	def getIntCandLineLengthT(self):
-		return self.IntCandToSerial.len()	# returns the number of cand lines connected to this to node
+	def get_int_cand_line_length_t(self):
+		return self.int_cand_to_serial.len()	# returns the number of cand lines connected to this to node
 
-	def getIntCandSerF(self,colCount):
-		return self.IntCandFromSerial[colCount-1] # returns the serial number of the cand line at this position
+	def get_int_cand_ser_f(self,col_count):
+		return self.int_cand_from_serial[col_count-1] # returns the serial number of the cand line at this position
 
-	def getIntCandSerT(self,colCount):
-		return self.IntCandToSerial[colCount-1]	# returns the serial number of the cand line at this position
+	def get_int_cand_ser_t(self,col_count):
+		return self.int_cand_to_serial[col_count-1]	# returns the serial number of the cand line at this position
 
-	def assignGlobalRank(self,rank): # Assigns the global rank to the nodes that are ends of shared lines
-		self.globalRank = rank # sets the rank 
-	def populateGlobalConn(self,rank): # Populates the extNodeGlobalRank vector with the global ranks
-		if rank in self.shareNodeList:	#If outer node rank is not present in the list
-			self.extNodeGlobalRank.append(rank)
-	def getGlobalRank(self): # Returns the global rank of this node
-		return self.globalRank # Global rank in the stitched list of shared line end nodes
+	def assign_global_rank(self,rank): # Assigns the global rank to the nodes that are ends of shared lines
+		self.global_rank = rank # sets the rank 
+	def populate_global_conn(self,rank): # Populates the ext_node_global_rank vector with the global ranks
+		if rank in self.share_node_list:	#If outer node rank is not present in the list
+			self.ext_node_global_rank.append(rank)
+	def get_global_rank(self): # Returns the global rank of this node
+		return self.global_rank # Global rank in the stitched list of shared line end nodes
