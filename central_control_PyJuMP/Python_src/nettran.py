@@ -255,5 +255,5 @@ class Nettran(object):
 			self.probability.append(1/self.count_of_scenarios)
 
 	def milp_avg_hr_gurobi(self): #Function MILPAvgHRGUROBI() implements the Mixed Integer Linear Programming Unit Commitment Solver routine by calling GUROBI routines for average heat rate objective for Horizontal Coordination Investment decision making
-		milp_avg_hr_central(matrix_net_file, matrix_gen_file, matrix_tran, )
+		milp_avg_hr_central(matrix_net_file, matrix_gen_file, matrix_tran)
  		#Function MILP() ends
