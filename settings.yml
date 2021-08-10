@@ -1,0 +1,6 @@
+OperatingSystem: Mac  # Set to either "Mac" (also works for Linux) or "Windows" to ensure use of proper file directory separator "\" or "/
+curveChoice: Secant #Piecewise_linear #Convex_cubic #Concex_quadratic
+InputFileFormat: CSV #JSON
+OutputFileFormat: CSV #JSON
+Algorithm: Centralized #Distributed_mech_Des #Non_Coop_Nash_Eq
+
