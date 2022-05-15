@@ -1,6 +1,6 @@
 #Include definition of Node class
 from Python_src.node import Node
-
+#This is the powergenerator file
 #constructor definition for the piecewise linear objective function
 class Powergenerator(object):
 	def __init__(self, _id, node_conng, inc_cost, no_load, max, min):

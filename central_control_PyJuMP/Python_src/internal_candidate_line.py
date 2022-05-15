@@ -1,4 +1,5 @@
 #Member functions for class intCandLine
+#SamChakrabartiand Hosna Khajeh's codebase
 #include class definition from intcandidateLine, _node class definition from node
 from Python_src.node import _node
 from Python_src.log import log
