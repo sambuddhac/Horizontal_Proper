@@ -19,7 +19,7 @@ class intCandLine(object):
 		self.set_tran_data(cap, life, roi) #calls set_tran_data member function to set the parameter values
 		#constructor ends
 
-	def __del__(): #destructor
+	#def __del__(): #destructor
 		#log.info("\nThe transmission line object having _id {} have been destroyed.".format(self.transl_id))
 		#end of destructor
 
