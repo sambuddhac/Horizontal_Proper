@@ -19,7 +19,7 @@ Pkg.add(Pkg.PackageSpec(name="StatsBase"))
 Pkg.add(Pkg.PackageSpec(name="YAML"))
 Pkg.add(Pkg.PackageSpec(name="Plots"))
 Pkg.add(Pkg.PackageSpec(name="XLSX"))
-
+Pkg.add(Pkg.PackageSpec(name="GeometryBasics"))
 # optimization packages
 Pkg.add(Pkg.PackageSpec(name="Cbc"))
 Pkg.add(Pkg.PackageSpec(name="Clp"))
