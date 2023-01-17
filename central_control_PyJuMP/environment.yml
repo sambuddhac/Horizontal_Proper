@@ -3,7 +3,7 @@ channels:
   - conda-forge
   - defaults
 dependencies:
-  - python=3.7
+  - python
   - pip
   - jupyterlab
   - black
@@ -15,11 +15,11 @@ dependencies:
   - isort
   - pre-commit
   - conda-forge::nb_conda_kernels
-  - numpy=1.17.0
-  - pandas=0.25.0
+  - numpy
+  - pandas
   - python-dateutil=2.8.0
   - pytz=2019.3
-  - six=1.12.0
+  - six=
 
   - pip:
     - python-dotenv
