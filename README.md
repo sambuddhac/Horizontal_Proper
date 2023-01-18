@@ -12,7 +12,7 @@ In order to install and run the GameCapEx software, go through the following ste
 git clone https://github.com/sambuddhac/Horizontal_Proper.git
 ```
 
-2. If you are interested to run the Centralized model, go inside the folder, `CentralControl_PyJuMP` and create a conda environment named `centralHorCoord` by the `environment.yml` file, by typing
+2. If you are interested to run the Centralized model, go inside the folder, `central_control_PyJuMP` and create a conda environment named `centralHorCoord` defined in the `environment.yml` file by typing
 
 ```sh
 conda env create -f environment.yml
@@ -24,7 +24,7 @@ conda env create -f environment.yml
 conda activate centralHorCoord
 ```
 
-4. If you are interested to run either the NE based game-theoretic model or the market-mechanism desing model, go inside the `DistMechDes_PyJuMP` and repeat step 2. For activating the conda environment `distHorCoord`, this time, type
+4. If you are interested to run either the NE based game-theoretic model or the market-mechanism desing model, go inside the `distributed_mechanism_design_PyJuMP` and repeat step 2. This will create environment `distHorCoord` which can be activated using the following command:
 
 ```sh
 conda activate distHorCoord
