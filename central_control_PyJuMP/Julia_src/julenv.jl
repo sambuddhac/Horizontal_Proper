@@ -6,7 +6,7 @@ Pkg.add("IJulia")
 
 # core packages
 Pkg.add(Pkg.PackageSpec(name="BenchmarkTools"))
-# Pkg.add(Pkg.PackageSpec(name="CSV", version="0.8.2")) # could not precompile CSV package with latest version....
+Pkg.add(Pkg.PackageSpec(name="CSV")) 
 Pkg.add(Pkg.PackageSpec(name="DataFrames"))
 Pkg.add(Pkg.PackageSpec(name="DataStructures"))
 Pkg.add(Pkg.PackageSpec(name="Dates"))
