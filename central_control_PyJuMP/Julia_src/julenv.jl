@@ -1,12 +1,12 @@
 # import all of the packages (and specific versions) needed
 import Pkg
 using Pkg
-Pkg.activate("CentJulEnv")
+#Pkg.activate("CentJulEnv")
 Pkg.add("IJulia")
 
 # core packages
 Pkg.add(Pkg.PackageSpec(name="BenchmarkTools"))
-Pkg.add(Pkg.PackageSpec(name="CSV", version="0.8.2")) #could not precompile CSV package with latest version....
+# Pkg.add(Pkg.PackageSpec(name="CSV", version="0.8.2")) # could not precompile CSV package with latest version....
 Pkg.add(Pkg.PackageSpec(name="DataFrames"))
 Pkg.add(Pkg.PackageSpec(name="DataStructures"))
 Pkg.add(Pkg.PackageSpec(name="Dates"))
@@ -21,10 +21,10 @@ Pkg.add(Pkg.PackageSpec(name="Plots"))
 Pkg.add(Pkg.PackageSpec(name="XLSX"))
 Pkg.add(Pkg.PackageSpec(name="GeometryBasics"))
 # optimization packages
-Pkg.add(Pkg.PackageSpec(name="Cbc"))
-Pkg.add(Pkg.PackageSpec(name="Clp"))
+# Pkg.add(Pkg.PackageSpec(name="Cbc"))
+# Pkg.add(Pkg.PackageSpec(name="Clp"))
 Pkg.add(Pkg.PackageSpec(name="GLPK"))
-Pkg.add(Pkg.PackageSpec(name="Gurobi")) #uncomment this if you want to use Gurobi
+# Pkg.add(Pkg.PackageSpec(name="Gurobi")) # uncomment this if you want to use Gurobi
 Pkg.add(Pkg.PackageSpec(name="HiGHS"))
 Pkg.add(Pkg.PackageSpec(name="Ipopt"))
 Pkg.add(Pkg.PackageSpec(name="JuMP"))
