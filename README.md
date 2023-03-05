@@ -6,7 +6,7 @@ GameCapEx is a mathematical model and a software tool-suite (based on the afore-
 
 ## Running code
 
-In order to run the code, you need to have Julia and Conda installed in your computer. Use [this link] (https://julialang.org/downloads/) to download and install Julia. Conda full package can be also downloaded and installed by following the instructions in [here](https://docs.conda.io/projects/conda/en/latest/user-guide/install/windows.html) or [this website](https://docs.conda.io/projects/conda/en/latest/user-guide/install/linux.html). Then, you need to open the Example folder. Select the file you want to run. Open the file and run the codes in the Jupyter Notebook.
+In order to run the code, you need to have Julia and Conda installed in your computer. Use [this link](https://julialang.org/downloads/) to download and install Julia. Conda full package can be also downloaded and installed by following the instructions in [here](https://docs.conda.io/projects/conda/en/latest/user-guide/install/windows.html) or [this website](https://docs.conda.io/projects/conda/en/latest/user-guide/install/linux.html). Then, you need to open the Example folder. Select the file you want to run. Open the file and run the codes in the Jupyter Notebook.
 
 ### Settings
 
